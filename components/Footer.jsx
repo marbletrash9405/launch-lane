@@ -7,9 +7,12 @@ export default function Footer() {
       <div className="wrap">
         <div className="footer-grid">
           <div>
-            <div className="brand" style={{ marginBottom: 10 }}>
-              <img src={site.logo} alt="" width={32} height={32} />
-              <span>{site.name}</span>
+            <div className="footer-brand">
+              <img src={site.logoMark} alt="" />
+              <div>
+                <strong>{site.name}</strong>
+                <small>for {site.community}</small>
+              </div>
             </div>
             <p style={{ maxWidth: 360 }}>{site.tagline}</p>
           </div>

@@ -27,8 +27,8 @@ Then open http://localhost:3000.
 
 ## Where to edit things
 
-- **Logo:** replace `public/logo.svg` (and `app/icon.svg` for the browser tab icon) with your logo. If yours is a PNG, drop it in `public/` and change `logo` in `lib/site.js` to `"/logo.png"`.
-- **Site name, tagline, contact email:** `lib/site.js`
+- **Logo:** `public/logo.png` (full logo, header), `public/logo-mark.png` (arrow only, footer), `app/icon.png` (browser tab icon). Replace a file with the same name to update it.
+- **Site name, "for Mercer Crossing" line, tagline, contact email:** `lib/site.js` (change `community` if Launch Lane expands)
 - **Listings:** `data/listings.js` (sample data right now — every name and email is a placeholder)
 - **About page placeholders:** `app/about/page.jsx` — search for `[` to find each one
 - **Colors and fonts:** top of `app/globals.css`

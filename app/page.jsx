@@ -27,8 +27,8 @@ export default function Home() {
       <section className="hero">
         <div className="wrap hero-grid">
           <div>
-            <p className="eyebrow">{site.community} community board</p>
             <h1>{site.name}</h1>
+            <p className="hero-sub">for {site.community}</p>
             <div className="hero-rule" />
             <p className="hero-tag">{site.tagline}</p>
             <div className="hero-actions">

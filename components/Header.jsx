@@ -15,9 +15,9 @@ export default function Header() {
   return (
     <header className="site-header">
       <div className="wrap header-row">
-        <Link href="/" className="brand" aria-label={`${site.name} home`}>
-          <img src={site.logo} alt="" />
-          <span>{site.name}</span>
+        <Link href="/" className="brand" aria-label={`${site.name} for ${site.community}, home`}>
+          <img className="brand-logo" src={site.logo} alt={site.name} />
+          <span className="brand-sub">for {site.community}</span>
         </Link>
 
         <button
