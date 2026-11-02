@@ -104,7 +104,7 @@ p { margin: 0; }
 
 /* Footer brand (dark background, so mark + light text) */
 .footer-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-.footer-brand img { height: 40px; width: auto; }
+.footer-brand img { height: 44px; width: auto; background: var(--white); border-radius: 10px; padding: 5px; }
 .footer-brand strong { display: block; font-family: var(--display); font-weight: 400; font-size: 1.35rem; color: var(--mint); line-height: 1.1; }
 .footer-brand small { font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
 
