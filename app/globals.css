@@ -291,3 +291,8 @@ p { margin: 0; }
 .footer-grid a { text-decoration: none; }
 .footer-grid a:hover { color: var(--mint); }
 .footer-small { margin-top: 32px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.1); font-size: .85rem; opacity: .75; }
+
+/* Home problem row: icon above text on wide screens */
+@media (min-width: 641px) {
+  .problem-grid .point { grid-template-columns: 1fr; gap: 16px; }
+}

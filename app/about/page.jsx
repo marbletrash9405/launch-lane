@@ -35,17 +35,15 @@ export default function AboutPage() {
           <div>
             <div className="section-head" style={{ marginBottom: 20 }}>
               <p className="eyebrow">Our story</p>
-              <h2>It started with trash bins</h2>
+              <h2>A summer business revealed the gap</h2>
             </div>
             <div style={{ display: "grid", gap: 16, color: "var(--muted)", fontSize: "1.05rem" }}>
               <p>
-                I started a trash bin cleaning business to gain experience and earn money. Finding
-                customers meant knocking on doors, one house at a time. My friends running their own
-                small services ran into the same wall.
+                I started a trash cleaning business to gain experience and earn money. Finding
+                customers meant knocking on doors. My friends faced the same challenge.
               </p>
               <p>
-                {site.name} gives {site.community} students and residents one place to find each other,
-                with guardians in the loop from the start.
+                {site.name} gives students and residents one place to find each other.
               </p>
               <p>
                 <span className="todo">[Placeholder: add a line about when Launch Lane launched, who helped, or a milestone, e.g. “Launched in [Month Year] with support from the {site.community} HOA.”]</span>

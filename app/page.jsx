@@ -44,46 +44,39 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Problem + story */}
+      {/* Problem */}
       <section className="section">
-        <div className="wrap split">
-          <div>
-            <div className="section-head">
-              <p className="eyebrow">Why it exists</p>
-              <h2>Neighbors and student businesses keep missing each other</h2>
+        <div className="wrap">
+          <div className="section-head">
+            <p className="eyebrow">Why it exists</p>
+            <h2>Neighbors and student businesses keep missing each other</h2>
+          </div>
+          <div className="grid-3 problem-grid">
+            <div className="point">
+              <IconRing><SearchIcon /></IconRing>
+              <div>
+                <h3>Students struggle to reach customers</h3>
+                <p>Students offering trash cleanup, babysitting, lawn care and henna lack a single, safe place to reach people in the neighborhood.</p>
+              </div>
             </div>
-            <div className="points">
-              <div className="point">
-                <IconRing><SearchIcon /></IconRing>
-                <div>
-                  <h3>Students struggle to reach customers</h3>
-                  <p>Students offering trash cleanup, babysitting, lawn care and henna lack a single, safe place to reach people in the neighborhood.</p>
-                </div>
+            <div className="point">
+              <IconRing><PeopleIcon /></IconRing>
+              <div>
+                <h3>Residents look outside the community</h3>
+                <p>People who need occasional help with babysitting, moving or hauling often don&apos;t know whom to ask nearby.</p>
               </div>
-              <div className="point">
-                <IconRing><PeopleIcon /></IconRing>
-                <div>
-                  <h3>Residents look outside the community</h3>
-                  <p>People who need occasional help with babysitting, moving or hauling often don&apos;t know whom to ask nearby.</p>
-                </div>
-              </div>
-              <div className="point">
-                <IconRing><ShieldXIcon /></IconRing>
-                <div>
-                  <h3>Door-to-door outreach falls short</h3>
-                  <p>Knocking on doors is unsafe and impractical in a community this large. No-solicitation signs and busy schedules make it hard to reach everyone.</p>
-                </div>
+            </div>
+            <div className="point">
+              <IconRing><ShieldXIcon /></IconRing>
+              <div>
+                <h3>Door-to-door outreach falls short</h3>
+                <p>Knocking on doors is unsafe and impractical in a community this large. No-solicitation signs and busy schedules make it hard to reach everyone.</p>
               </div>
             </div>
           </div>
-          <div className="story">
-            <h3>A summer business revealed the gap</h3>
-            <p>I started a trash cleaning business to gain experience and earn money. Finding customers meant knocking on doors, and my friends faced the same challenge.</p>
-            <p>{site.name} gives students and residents one place to find each other.</p>
-            <p style={{ marginTop: 22 }}>
-              <Link href="/about" className="btn btn-outline btn-sm">Read our story</Link>
-            </p>
-          </div>
+          <p style={{ marginTop: 32 }}>
+            <Link href="/about" className="btn btn-outline btn-sm">Read our story</Link>
+          </p>
         </div>
       </section>
 
