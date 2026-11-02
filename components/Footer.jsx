@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { site, nav } from "@/lib/site";
+import { site, nav, navCta } from "@/lib/site";
 
 export default function Footer() {
   return (
@@ -17,16 +17,16 @@ export default function Footer() {
             <p style={{ maxWidth: 360 }}>{site.tagline}</p>
           </div>
           <nav aria-label="Footer">
-            {nav.map((item) => (
+            {[...nav, navCta].map((item) => (
               <Link key={item.href} href={item.href}>{item.label}</Link>
             ))}
             <a href={`mailto:${site.contactEmail}`}>Contact</a>
           </nav>
         </div>
         <p className="footer-small">
-          For students 18 &amp; under and residents of {site.community}. Payments and work
-          arrangements stay between the student and resident; {site.name} takes no share.
-          Terms and conditions apply. © {new Date().getFullYear()} {site.name}.
+          {site.name} connects students (18 &amp; under) and residents in {site.community}. It
+          isn&apos;t a party to any job: work, payment, insurance and safety arrangements are made
+          directly between the student, their guardian and the resident. Terms and conditions apply. © {new Date().getFullYear()} {site.name}.
         </p>
       </div>
     </footer>

@@ -8,11 +8,12 @@ A neighborhood board where Mercer Crossing students (18 & under) list services a
 
 | Route | What it is |
 |---|---|
-| `/` | Home: hero, the problem, how it works, sample listings, trust & safety |
-| `/listings` | Browse board with Offering / Looking for tabs and a category filter |
+| `/` | Home: two paths (need help / offer a service), categories, latest listings, safety, FAQ |
+| `/listings` | Browse board with search, Offering / Looking for tabs and category filter |
+| `/how-it-works` | Step-by-step for neighbors and students, guardian info, what we do and don't check, full FAQ |
 | `/apply` | Student application (service, address, guardian info) |
 | `/request` | Resident request form |
-| `/about` | About us, with placeholders to fill in |
+| `/about` | Our story, mission, team and numbers (with placeholders) |
 
 ## Run it on your computer
 
@@ -30,6 +31,7 @@ Then open http://localhost:3000.
 - **Logo:** `public/logo.png` (full logo, header), `public/logo-mark.png` (arrow only, footer), `app/icon.png` (browser tab icon). Replace a file with the same name to update it.
 - **Site name, "for Mercer Crossing" line, tagline, contact email:** `lib/site.js` (change `community` if Launch Lane expands)
 - **Listings:** `data/listings.js` (sample data right now — every name and email is a placeholder)
+- **FAQ answers:** `data/faq.js`
 - **About page placeholders:** `app/about/page.jsx` — search for `[` to find each one
 - **Colors and fonts:** top of `app/globals.css`
 

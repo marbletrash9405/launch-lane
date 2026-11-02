@@ -38,3 +38,32 @@ export function IconRing({ children }) {
     <div className="icon-ring"><span>{children}</span></div>
   );
 }
+
+// Category icons
+export const BinIcon = () => (
+  <svg {...base}><path d="M4 7h16" /><path d="M9 7V4h6v3" /><path d="M6 7l1 13h10l1-13" /><path d="M10 11v6M14 11v6" /></svg>
+);
+export const LeafIcon = () => (
+  <svg {...base}><path d="M5 19c0-8 5-14 15-14 0 10-6 15-14 15" /><path d="M5 19 13 11" /></svg>
+);
+export const HeartIcon = () => (
+  <svg {...base}><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" /></svg>
+);
+export const PawIcon = () => (
+  <svg {...base}><circle cx="7" cy="9" r="1.6" /><circle cx="11" cy="6" r="1.6" /><circle cx="15" cy="6" r="1.6" /><circle cx="18" cy="10" r="1.6" /><path d="M8 17c0-2.8 2-5 4-5s4 2.2 4 5c0 1.7-1.5 2.5-4 2.5S8 18.7 8 17Z" /></svg>
+);
+export const BoxIcon = () => (
+  <svg {...base}><path d="M3 8l9-4 9 4-9 4-9-4Z" /><path d="M3 8v8l9 4 9-4V8" /><path d="M12 12v8" /></svg>
+);
+export const BrushIcon = () => (
+  <svg {...base}><path d="M14 4l6 6-8 8-4-1-1-4 7-9Z" /><path d="M7 17c-1 2-2 3-4 3 0-2 1-3 3-4" /></svg>
+);
+export const BookIcon = () => (
+  <svg {...base}><path d="M4 5c3-1 5-1 8 1 3-2 5-2 8-1v14c-3-1-5-1-8 1-3-2-5-2-8-1V5Z" /><path d="M12 6v14" /></svg>
+);
+export const SparkIcon = () => (
+  <svg {...base}><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18" /></svg>
+);
+export const ArrowIcon = () => (
+  <svg {...base} width={18} height={18}><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+);

@@ -37,21 +37,43 @@ export default function AboutPage() {
               <p className="eyebrow">Our story</p>
               <h2>A summer business revealed the gap</h2>
             </div>
-            <div style={{ display: "grid", gap: 16, color: "var(--muted)", fontSize: "1.05rem" }}>
+            <div className="prose">
               <p>
-                I started a trash cleaning business to gain experience and earn money. Finding
-                customers meant knocking on doors. My friends faced the same challenge.
+                One summer I started a trash bin cleaning business to get some real experience and
+                earn my own money. The work was the easy part. Finding customers was hard: the only
+                way to reach people was knocking on doors, one house at a time.
               </p>
               <p>
-                {site.name} gives students and residents one place to find each other.
+                Talking to friends, I realized I wasn&apos;t alone. Kids around {site.community} were
+                babysitting, mowing lawns and doing henna, and all of us were stuck with the same
+                problem. Meanwhile, neighbors who needed a hand often had no idea there was a
+                student down the street who could help, so they hired from outside the community.
               </p>
               <p>
-                <span className="todo">[Placeholder: add a line about when Launch Lane launched, who helped, or a milestone, e.g. “Launched in [Month Year] with support from the {site.community} HOA.”]</span>
+                {site.name} fixes that by giving students and neighbors one place to find each other,
+                with parents in the loop from the start.
+              </p>
+              <p>
+                <span className="todo">[Placeholder: when Launch Lane launched, who helped, or a first milestone, e.g. “Launched in [Month Year] with support from the {site.community} HOA.”]</span>
               </p>
             </div>
           </div>
           <div className="placeholder" style={{ minHeight: 320 }}>
             [Photo placeholder]<br />e.g. you with your bin-cleaning setup
+          </div>
+        </div>
+      </section>
+
+      {/* Why door-to-door doesn't work */}
+      <section className="section" style={{ paddingTop: 0 }}>
+        <div className="wrap">
+          <div className="quote-band">
+            <p>
+              Door-to-door doesn&apos;t work in a neighborhood this big. No-soliciting signs, people who
+              aren&apos;t home, and only so many hours after school. And it isn&apos;t the safest way
+              for a kid to find work.
+            </p>
+            <span>Why {site.name} is online, and neighbors-only</span>
           </div>
         </div>
       </section>

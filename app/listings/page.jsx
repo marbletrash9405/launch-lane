@@ -11,8 +11,8 @@ export default function ListingsPage() {
       <section className="page-head">
         <div className="wrap">
           <p className="eyebrow">Browse</p>
-          <h1>Services &amp; requests</h1>
-          <p>Every student listing is guardian-approved and limited to {site.community}. Reach out by email to talk details.</p>
+          <h1>Find help nearby</h1>
+          <p>Services from {site.community} students and requests from neighbors. Find one that fits and tap Email to talk details.</p>
         </div>
       </section>
       <section className="section">

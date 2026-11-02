@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { site, nav } from "@/lib/site";
+import { site, nav, navCta } from "@/lib/site";
 import { MenuIcon, CloseIcon } from "./Icons";
 
 export default function Header() {
@@ -40,6 +40,9 @@ export default function Header() {
               {item.label}
             </Link>
           ))}
+          <Link href={navCta.href} className="btn btn-teal btn-sm nav-cta">
+            {navCta.label}
+          </Link>
         </nav>
       </div>
     </header>
