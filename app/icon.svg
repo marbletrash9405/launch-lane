@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Launch Lane logo placeholder">
+  <!-- Placeholder mark. Replace this file with the real Launch Lane logo. -->
+  <rect width="64" height="64" rx="16" fill="#144d48"/>
+  <path d="M14 46 L30 18 L36 28 L50 46 Z" fill="#bde5d6"/>
+  <path d="M14 50 H50" stroke="#e2a93b" stroke-width="4" stroke-linecap="round"/>
+</svg>
