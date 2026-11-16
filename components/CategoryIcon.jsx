@@ -1,14 +1,14 @@
-import { BinIcon, LeafIcon, HeartIcon, PawIcon, BoxIcon, BrushIcon, BookIcon, SparkIcon } from "./Icons";
+import { BinIcon, LeafIcon, HeartIcon, PawIcon, BoxIcon, MonitorIcon, BookIcon, SparkIcon } from "./Icons";
 
 const map = {
   "Bin cleaning": BinIcon,
-  "Lawn & yard": LeafIcon,
+  "Lawn care": LeafIcon,
   "Babysitting": HeartIcon,
   "Pet care": PawIcon,
-  "Moving & hauling": BoxIcon,
-  "Henna & art": BrushIcon,
+  "Digital support": MonitorIcon,
+  "Hauling": BoxIcon,
   "Tutoring": BookIcon,
-  "Other": SparkIcon,
+  "Others": SparkIcon,
 };
 
 export default function CategoryIcon({ name }) {

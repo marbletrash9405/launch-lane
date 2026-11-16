@@ -6,8 +6,8 @@ import { categories } from "@/data/listings";
 
 const TABS = [
   { id: "all", label: "All" },
-  { id: "offering", label: "Offering" },
-  { id: "request", label: "Looking for" },
+  { id: "offering", label: "Student services" },
+  { id: "job", label: "Jobs" },
 ];
 
 export default function ListingsBrowser({ listings }) {
@@ -15,10 +15,13 @@ export default function ListingsBrowser({ listings }) {
   const [category, setCategory] = useState("");
   const [query, setQuery] = useState("");
 
-  // Support links like /listings?category=Pet%20care from the home page.
+  // Support links like /explore?category=Pet%20care from the home page.
   useEffect(() => {
-    const c = new URLSearchParams(window.location.search).get("category");
+    const params = new URLSearchParams(window.location.search);
+    const c = params.get("category");
     if (c && categories.includes(c)) setCategory(c);
+    const t = params.get("type");
+    if (t && TABS.some((x) => x.id === t)) setTab(t);
   }, []);
 
   const shown = useMemo(() => {
@@ -37,7 +40,7 @@ export default function ListingsBrowser({ listings }) {
         <input
           className="input search"
           type="search"
-          placeholder="Search listings, e.g. lawn, dog, tutoring"
+          placeholder="Search, e.g. lawn, dog, tutoring"
           aria-label="Search listings"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -72,7 +75,7 @@ export default function ListingsBrowser({ listings }) {
         </div>
       ) : (
         <div className="empty">
-          Nothing matches yet. Try another search, or <a href="/request">post a request</a> so students can find you.
+          Nothing matches yet. Try another search, or <a href="/hirers#post-a-job">post a job</a> so students can apply.
         </div>
       )}
     </>

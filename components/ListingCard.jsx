@@ -1,17 +1,26 @@
 export default function ListingCard({ listing }) {
   const isOffer = listing.type === "offering";
-  const subject = encodeURIComponent(`Launch Lane: ${listing.title}`);
+  const subject = encodeURIComponent(
+    isOffer ? `Launch Lane: ${listing.title}` : `Launch Lane: applying for ${listing.title}`
+  );
 
   return (
-    <article className={`listing ${isOffer ? "offering" : "request"}`}>
-      <span className={`pill ${isOffer ? "pill-offer" : "pill-request"}`}>
-        {isOffer ? "Offering" : "Looking for"}
+    <article className={`listing ${isOffer ? "offering" : "job"}`}>
+      <span className={`pill ${isOffer ? "pill-offer" : "pill-job"}`}>
+        {isOffer ? "Student service" : "Job"}
       </span>
       <div>
         <h3>{listing.title}</h3>
         <p className="cat">{listing.category}</p>
       </div>
       <p className="desc">{listing.description}</p>
+
+      {!isOffer && (listing.timing || listing.pay) && (
+        <dl className="job-meta">
+          {listing.timing && (<><dt>When</dt><dd>{listing.timing}</dd></>)}
+          {listing.pay && (<><dt>Pay</dt><dd>{listing.pay}</dd></>)}
+        </dl>
+      )}
 
       {isOffer && (
         <div className="stars" aria-label={listing.reviews ? `${listing.rating} out of 5 stars` : "No reviews yet"}>
@@ -32,7 +41,7 @@ export default function ListingCard({ listing }) {
           className={`btn btn-sm ${isOffer ? "btn-teal" : "btn-blue"}`}
           href={`mailto:${listing.email}?subject=${subject}`}
         >
-          Email
+          {isOffer ? "Email" : "Apply by email"}
         </a>
       </div>
     </article>

@@ -15,9 +15,8 @@ export default function Header() {
   return (
     <header className="site-header">
       <div className="wrap header-row">
-        <Link href="/" className="brand" aria-label={`${site.name} for ${site.community}, home`}>
+        <Link href="/" className="brand" aria-label={`${site.name} home`}>
           <img className="brand-logo" src={site.logo} alt={site.name} />
-          <span className="brand-sub">for {site.community}</span>
         </Link>
 
         <button
@@ -35,7 +34,7 @@ export default function Header() {
             <Link
               key={item.href}
               href={item.href}
-              aria-current={pathname === item.href ? "page" : undefined}
+              aria-current={pathname.startsWith(item.href) ? "page" : undefined}
             >
               {item.label}
             </Link>

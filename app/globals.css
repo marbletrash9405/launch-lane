@@ -76,18 +76,14 @@ p { margin: 0; }
 .header-row { display: flex; align-items: center; justify-content: space-between; height: 76px; }
 .brand { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-decoration: none; }
 .brand-logo { height: 34px; width: auto; }
-.brand-sub {
-  font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
-  color: var(--brown); font-weight: 500; padding-left: 2px;
-}
-.nav { display: flex; align-items: center; gap: 28px; }
+.nav { display: flex; align-items: center; gap: 22px; }
 .nav a { text-decoration: none; font-weight: 400; color: var(--ink); }
 .nav a:hover, .nav a[aria-current="page"] { color: var(--teal); text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 2px; }
 .menu-btn {
   display: none; background: none; border: 0; color: var(--ink);
   padding: 8px; cursor: pointer;
 }
-@media (max-width: 760px) {
+@media (max-width: 1020px) {
   .header-row { height: 68px; }
   .brand-logo { height: 28px; }
   .menu-btn { display: block; }
@@ -110,16 +106,16 @@ p { margin: 0; }
 
 /* Hero subtitle under the title */
 .hero-sub {
-  font-size: clamp(1.05rem, 2.4vw, 1.4rem); letter-spacing: .14em; text-transform: uppercase;
+  font-size: clamp(.85rem, 1.6vw, 1rem); letter-spacing: .16em; text-transform: uppercase;
   color: var(--gold); font-weight: 400; margin-top: 6px;
 }
 
 /* Hero */
-.hero { background: var(--teal); color: var(--white); padding: 72px 0 96px; overflow: hidden; }
+.hero { background: var(--teal); color: var(--white); padding: 56px 0 64px; overflow: hidden; }
 .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 56px; align-items: center; }
-.hero h1 { font-size: clamp(3rem, 8vw, 5.5rem); color: var(--mint); margin: 14px 0 0; }
-.hero-rule { width: 100%; max-width: 520px; height: 3px; background: var(--white); margin: 22px 0; }
-.hero-tag { font-size: clamp(1.15rem, 2.2vw, 1.45rem); font-weight: 300; max-width: 560px; }
+.hero h1 { font-size: clamp(2.4rem, 5.5vw, 3.6rem); color: var(--mint); margin: 0; }
+.hero-rule { width: 100%; max-width: 360px; height: 2px; background: rgba(255,255,255,.7); margin: 20px 0; }
+.hero-tag { font-size: clamp(1.05rem, 1.8vw, 1.25rem); font-weight: 300; max-width: 680px; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
 .hero-card {
   background: var(--teal-2); border-radius: var(--radius); padding: 28px;
@@ -197,13 +193,13 @@ p { margin: 0; }
   border-radius: var(--radius); padding: 26px; display: flex; flex-direction: column; gap: 14px;
   background: var(--cream); border: 1px solid transparent;
 }
-.listing.request { background: var(--sand); }
+.listing.job { background: var(--sand); }
 .pill {
   align-self: flex-start; padding: 6px 16px; border-radius: 999px;
   font-size: .74rem; letter-spacing: .14em; text-transform: uppercase; font-weight: 400;
 }
 .pill-offer { background: var(--mint-soft); color: var(--teal); }
-.pill-request { background: var(--blue-soft); color: var(--blue); }
+.pill-job { background: var(--blue-soft); color: var(--blue); }
 .listing h3 { font-size: 1.3rem; font-weight: 400; }
 .listing .desc { color: var(--muted); }
 .listing .cat { font-size: .85rem; color: var(--brown); }
@@ -300,7 +296,7 @@ p { margin: 0; }
 /* ---------- v3: product-site components ---------- */
 .nav .nav-cta { color: var(--white); text-decoration: none; }
 .nav .nav-cta:hover { color: var(--white); text-decoration: none; }
-@media (max-width: 760px) { .nav .nav-cta { margin-top: 16px; border-bottom: 0; padding: 12px 20px; } }
+@media (max-width: 1020px) { .nav .nav-cta { margin-top: 16px; border-bottom: 0; padding: 12px 20px; } }
 
 .text-link { display: inline-flex; align-items: center; gap: 6px; color: var(--teal); font-weight: 500; text-decoration: none; }
 .text-link:hover { text-decoration: underline; text-underline-offset: 4px; }
@@ -352,6 +348,7 @@ p { margin: 0; }
 .faq summary::after { content: "+"; position: absolute; right: 0; top: 14px; font-size: 1.4rem; color: var(--teal); transition: transform .2s; }
 .faq details[open] summary::after { transform: rotate(45deg); }
 .faq details p { padding: 0 0 18px; color: var(--muted); }
+.faq details p + p { margin-top: -6px; }
 .section-head a:not(.btn) { color: var(--teal); }
 
 /* How it works */
@@ -383,3 +380,52 @@ p { margin: 0; }
 .filters .search { flex: 1 1 280px; width: auto; border-radius: 999px; padding-left: 20px; }
 .result-count { color: var(--muted); font-size: .9rem; margin: -12px 0 18px; }
 .empty a { color: var(--teal); }
+
+/* ---------- v4: feedback round ---------- */
+.section-head.wide { max-width: 760px; }
+.section-head p + p { margin-top: 12px; }
+.section-head h2 + p { margin-top: 0; }
+
+.job-meta { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; font-size: .92rem; }
+.job-meta dt { color: var(--brown); }
+.job-meta dd { margin: 0; color: var(--ink); }
+
+.notice {
+  background: var(--sand); border-left: 4px solid var(--gold); border-radius: 12px;
+  padding: 18px 22px; font-weight: 500; color: var(--ink); max-width: 860px;
+}
+
+.bg-cream .form-card { background: var(--white); border-radius: var(--radius); padding: 32px; }
+.bg-cream .aside { background: var(--white); }
+.aside .check-list { margin-top: 0; }
+.aside .note a, .login-note a, .inline-link { color: var(--teal); }
+@media (max-width: 640px) { .bg-cream .form-card { padding: 22px 18px; } }
+
+.how-cols { gap: 56px; align-items: start; }
+.how-cols .col-title { font-size: clamp(1.6rem, 3vw, 2.1rem); margin: 8px 0 28px; }
+.how-cols .hero-actions { margin-top: 28px; }
+@media (max-width: 640px) { .how-cols { gap: 56px; } }
+
+.disclaimer {
+  margin-top: 28px; padding: 22px 26px; border-radius: 14px;
+  background: var(--white); border: 1.5px solid var(--line);
+  font-weight: 500; color: var(--ink); font-size: .98rem;
+}
+
+.mission { max-width: 860px; }
+.mission-text { font-family: var(--display); font-size: clamp(1.6rem, 3.4vw, 2.4rem); line-height: 1.2; margin: 10px 0 18px; }
+.mission-sub { color: var(--muted); font-size: 1.1rem; max-width: 720px; }
+.ethos-label { display: block; margin: 0 0 14px !important; }
+.quote-band .ethos-sub { font-family: var(--body); font-size: 1.08rem; line-height: 1.6; color: rgba(255,255,255,.9); margin-top: 16px; max-width: 760px; }
+
+.page-head a.on-dark { color: var(--mint); }
+
+.login-section { min-height: 60vh; display: flex; align-items: center; }
+.login-card { max-width: 440px; margin: 0 auto; background: var(--white); border-radius: 22px; padding: 36px; display: grid; gap: 16px; }
+.login-card h1 { font-size: 2.2rem; }
+.login-card .form { gap: 16px; }
+.login-note { color: var(--muted); font-size: .95rem; }
+@media (max-width: 640px) { .login-card { padding: 28px 22px; } }
+
+.listing-foot .btn { white-space: nowrap; flex: none; }
+.bg-cream .faq details { background: var(--white); }

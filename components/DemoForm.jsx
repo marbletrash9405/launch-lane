@@ -29,7 +29,7 @@ export default function DemoForm({ children, successTitle, successBody, submitLa
           Preview mode: this form isn&apos;t connected yet, so nothing was actually sent.
         </p>
         <p style={{ marginTop: 22 }}>
-          <Link href="/listings" className="btn btn-teal">Browse listings</Link>
+          <Link href="/explore" className="btn btn-teal">Explore listings</Link>
         </p>
       </div>
     );

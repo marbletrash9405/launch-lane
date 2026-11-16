@@ -1,13 +1,15 @@
 import { faq } from "@/data/faq";
 
-export default function Faq({ limit }) {
-  const items = limit ? faq.slice(0, limit) : faq;
+export default function Faq({ items = faq, limit }) {
+  const shown = limit ? items.slice(0, limit) : items;
   return (
     <div className="faq">
-      {items.map((f) => (
+      {shown.map((f) => (
         <details key={f.q}>
           <summary>{f.q}</summary>
-          <p>{f.a}</p>
+          {(Array.isArray(f.a) ? f.a : [f.a]).map((p, i) => (
+            <p key={i}>{p}</p>
+          ))}
         </details>
       ))}
     </div>

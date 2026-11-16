@@ -8,12 +8,16 @@ A neighborhood board where Mercer Crossing students (18 & under) list services a
 
 | Route | What it is |
 |---|---|
-| `/` | Home: two paths (need help / offer a service), categories, latest listings, safety, FAQ |
-| `/listings` | Browse board with search, Offering / Looking for tabs and category filter |
-| `/how-it-works` | Step-by-step for neighbors and students, guardian info, what we do and don't check, full FAQ |
-| `/apply` | Student application (service, address, guardian info) |
-| `/request` | Resident request form |
-| `/about` | Our story, mission, team and numbers (with placeholders) |
+| `/` | Home: intro, "Work, your way" categories, two ways to use it, latest listings, safety, FAQ preview |
+| `/explore` | Student services and neighborhood jobs, with search, type tabs and category filter |
+| `/students` | For students: steps and the "offer a service" application form (`#apply`) |
+| `/hirers` | For neighbors: steps and the "post a job" form (`#post-a-job`) |
+| `/how-it-works` | Both sides' steps, plus "Before you agree to a job" (safety, insurance, payment, liability) |
+| `/our-story` | Mission, how it started, ethos, team and numbers (team/numbers are placeholders) |
+| `/faq` | All FAQs, grouped |
+| `/login` | Placeholder: accounts aren't built yet |
+
+Old addresses (`/listings`, `/apply`, `/request`, `/about`) redirect to the new pages.
 
 ## Run it on your computer
 
@@ -29,10 +33,11 @@ Then open http://localhost:3000.
 ## Where to edit things
 
 - **Logo:** `public/logo.png` (full logo, header), `public/logo-mark.png` (arrow only, footer), `app/icon.png` (browser tab icon). Replace a file with the same name to update it.
-- **Site name, "for Mercer Crossing" line, tagline, contact email:** `lib/site.js` (change `community` if Launch Lane expands)
+- **Site name, "for Mercer Crossing" line, tagline, contact email, header tabs:** `lib/site.js` (change `community` if Launch Lane expands)
 - **Listings:** `data/listings.js` (sample data right now — every name and email is a placeholder)
 - **FAQ answers:** `data/faq.js`
-- **About page placeholders:** `app/about/page.jsx` — search for `[` to find each one
+- **Student / neighbor steps:** `data/steps.js`
+- **Our story placeholders:** `app/our-story/page.jsx` — search for `[` to find each one
 - **Colors and fonts:** top of `app/globals.css`
 
 ## Deploy to Vercel

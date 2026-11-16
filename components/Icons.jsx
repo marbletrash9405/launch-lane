@@ -67,3 +67,6 @@ export const SparkIcon = () => (
 export const ArrowIcon = () => (
   <svg {...base} width={18} height={18}><path d="M5 12h14M13 6l6 6-6 6" /></svg>
 );
+export const MonitorIcon = () => (
+  <svg {...base}><rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8M12 16v4" /></svg>
+);

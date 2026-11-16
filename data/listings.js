@@ -1,17 +1,18 @@
 // Sample listings so the site has something to show.
 // Replace with real, guardian-approved listings (or a database) before launch.
 // type: "offering" = a student offering a service
-// type: "request"  = a resident looking for help
+// type: "job"      = a neighbor posting a job students can apply for
+// Newest first: the home page shows the first few.
 
 export const categories = [
   "Bin cleaning",
-  "Lawn & yard",
+  "Lawn care",
   "Babysitting",
   "Pet care",
-  "Moving & hauling",
-  "Henna & art",
+  "Digital support",
+  "Hauling",
   "Tutoring",
-  "Other",
+  "Others",
 ];
 
 export const listings = [
@@ -28,10 +29,12 @@ export const listings = [
   },
   {
     id: "2",
-    type: "request",
+    type: "job",
     title: "Weekly Lawn Mowing",
-    category: "Lawn & yard",
-    description: "Small front and back yard. Will pay per visit — flexible on day of the week.",
+    category: "Lawn care",
+    description: "Small front and back yard. Flexible on the day of the week.",
+    timing: "Weekly, any day",
+    pay: "$25 per visit",
     name: "Alex Taylor",
     email: "alex.taylor@example.com",
     street: "Sample Lane",
@@ -39,9 +42,9 @@ export const listings = [
   {
     id: "3",
     type: "offering",
-    title: "Henna Designs for Events",
-    category: "Henna & art",
-    description: "Simple to detailed henna for birthdays, festivals and parties. Weekends preferred.",
+    title: "Social Media Content for Small Businesses",
+    category: "Digital support",
+    description: "Short videos, photos and captions for your shop or side business. Happy to share past examples.",
     name: "Sample Student",
     email: "student2@example.com",
     rating: 0,
@@ -60,10 +63,12 @@ export const listings = [
   },
   {
     id: "5",
-    type: "request",
+    type: "job",
     title: "Help Moving Boxes to Garage",
-    category: "Moving & hauling",
-    description: "About 20 boxes, one Saturday morning, roughly two hours of work.",
+    category: "Hauling",
+    description: "About 20 boxes, roughly two hours of work.",
+    timing: "One Saturday morning",
+    pay: "$40 total",
     name: "Sample Resident",
     email: "resident2@example.com",
     street: "Sample Court",

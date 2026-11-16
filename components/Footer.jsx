@@ -9,10 +9,7 @@ export default function Footer() {
           <div>
             <div className="footer-brand">
               <img src={site.logoMark} alt="" />
-              <div>
-                <strong>{site.name}</strong>
-                <small>for {site.community}</small>
-              </div>
+              <strong>{site.name}</strong>
             </div>
             <p style={{ maxWidth: 360 }}>{site.tagline}</p>
           </div>
@@ -24,9 +21,10 @@ export default function Footer() {
           </nav>
         </div>
         <p className="footer-small">
-          {site.name} connects students (18 &amp; under) and residents in {site.community}. It
-          isn&apos;t a party to any job: work, payment, insurance and safety arrangements are made
-          directly between the student, their guardian and the resident. Terms and conditions apply. © {new Date().getFullYear()} {site.name}.
+          {site.name} connects students (18 &amp; under) and residents in {site.community},{" "}
+          {site.location}. It isn&apos;t a party to any job: the scope of work, payment, insurance and
+          safety arrangements are agreed directly between the student, their guardian and the
+          neighbor. Terms and conditions apply. © {new Date().getFullYear()} {site.name}.
         </p>
       </div>
     </footer>
