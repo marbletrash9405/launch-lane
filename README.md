@@ -25,19 +25,23 @@ Every student application, job post, booking request ("Book") and job applicatio
 to the Launch Lane inbox first — never straight to the other person. Lister emails stay on the server.
 The email's reply-to is the person who submitted it, so you can just hit Reply.
 
-To switch it on (free):
+Submissions go to **contact@launch-laneco.com** (set in `lib/site.js`; that's also the public
+"Email us" address). To switch sending on (free):
 
-1. Sign up at **resend.com** using the email you want submissions sent to.
-2. In Resend → **API Keys** → create a key (Sending access).
-3. In Vercel → launch-lane → **Settings → Environment Variables**, add:
-   - `RESEND_API_KEY` = the key from step 2
-   - `NOTIFY_EMAIL` = your inbox (comma-separate to send to more than one person)
-4. Redeploy (Vercel → Deployments → ⋯ → Redeploy).
+1. Make sure contact@launch-laneco.com can actually receive mail (a mailbox or forwarding set up for
+   the domain).
+2. Sign up at **resend.com** and add `launch-laneco.com` under **Domains**. Add the DNS records Resend
+   shows at Northwest Registered Agent (don't delete existing records), then click Verify.
+3. In Resend → **API Keys** → create a key (Sending access).
+4. In Vercel → launch-lane → **Settings → Environment Variables**, add:
+   - `RESEND_API_KEY` = the key from step 3
+   - `NOTIFY_FROM` = `Launch Lane <notifications@launch-laneco.com>`
+5. Redeploy (Vercel → Deployments → ⋯ → Redeploy).
 
-Until the domain is verified in Resend, emails come from `onboarding@resend.dev` and can only be
-delivered to the email you signed up to Resend with. To send from your own domain (and to other
-inboxes), add `launch-laneco.com` under Resend → **Domains**, add the DNS records it shows at your
-domain provider, then set `NOTIFY_FROM` = `Launch Lane <hello@launch-laneco.com>`.
+Shortcut while the domain isn't verified yet: skip `NOTIFY_FROM`. Emails then come from
+`onboarding@resend.dev`, which Resend only delivers to the address you signed up to Resend with —
+so sign up to Resend *as* contact@launch-laneco.com. Optional: `NOTIFY_EMAIL` sends submissions to a
+different inbox instead (comma-separate for several).
 
 Until these are set, the forms show "we can't accept submissions just yet".
 
@@ -71,12 +75,12 @@ Then open http://localhost:3000.
 ## Where to edit things
 
 - **Logo:** `public/logo.png` (full logo, header), `public/logo-mark.png` (arrow only, footer), `app/icon.png` (browser tab icon). Replace a file with the same name to update it.
-- **Site name, "for Mercer Crossing" line, tagline, contact email, header tabs:** `lib/site.js`
-- **Form fields and email wording:** `lib/forms.js` (change `community` if Launch Lane expands)
+- **Site name, "for Mercer Crossing" line, tagline, contact email, header tabs:** `lib/site.js` (change `community` if Launch Lane expands)
+- **Form fields and email wording:** `lib/forms.js`
 - **Listings:** `data/listings.js` (sample data right now — every name and email is a placeholder)
 - **FAQ answers:** `data/faq.js`
 - **Student / neighbor steps:** `data/steps.js`
-- **Our story placeholders:** `app/about/page.jsx` — search for `[` to find each one
+- **About us placeholders:** `app/about/page.jsx` — search for `[` to find each one
 - **Colors and fonts:** top of `app/globals.css`
 
 ## Deploy to Vercel
