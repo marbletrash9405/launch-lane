@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
 
-export const metadata = { title: "Our story" };
+export const metadata = { title: "About us" };
 
 // TODO: Replace the bracketed placeholders below with real content.
 // Photos: add images to /public (e.g. /public/team/founder.jpg) and swap
@@ -12,12 +12,12 @@ const team = [
   { name: "[Team Member]", role: "[Role, e.g. Safety & Reviews]", bio: "[Short bio placeholder.]" },
 ];
 
-export default function OurStoryPage() {
+export default function AboutPage() {
   return (
     <>
       <section className="page-head">
         <div className="wrap">
-          <p className="eyebrow">Our story</p>
+          <p className="eyebrow">About us</p>
           <h1>Built by a student, for the neighborhood</h1>
           <p>{site.tagline}</p>
         </div>

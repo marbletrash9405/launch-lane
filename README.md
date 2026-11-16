@@ -8,16 +8,54 @@ A neighborhood board where Mercer Crossing students (18 & under) list services a
 
 | Route | What it is |
 |---|---|
-| `/` | Home: intro, "Work, your way" categories, two ways to use it, latest listings, safety, FAQ preview |
-| `/explore` | Student services and neighborhood jobs, with search, type tabs and category filter |
-| `/students` | For students: steps and the "offer a service" application form (`#apply`) |
-| `/hirers` | For neighbors: steps and the "post a job" form (`#post-a-job`) |
+| `/` | Home: intro, "Work, your way" categories, two ways to use it, sample listings, safety, FAQ preview |
 | `/how-it-works` | Both sides' steps, plus "Before you agree to a job" (safety, insurance, payment, liability) |
-| `/our-story` | Mission, how it started, ethos, team and numbers (team/numbers are placeholders) |
+| `/explore` | Explore Services: student services and neighborhood jobs, with Book / Apply buttons |
+| `/students` | Students – Apply: steps and the application form (`#apply`) |
+| `/residents` | Residents – Post a job: steps and the job form (`#post-a-job`) |
+| `/about` | About us: mission, how it started, ethos, team and numbers (team/numbers are placeholders) |
 | `/faq` | All FAQs, grouped |
-| `/login` | Placeholder: accounts aren't built yet |
+| `/login`, `/signup` | Google sign-in and sign-up |
 
-Old addresses (`/listings`, `/apply`, `/request`, `/about`) redirect to the new pages.
+Old addresses (`/listings`, `/apply`, `/request`, `/hirers`, `/our-story`) redirect to the new pages.
+
+## Where submissions go
+
+Every student application, job post, booking request ("Book") and job application ("Apply") is emailed
+to the Launch Lane inbox first — never straight to the other person. Lister emails stay on the server.
+The email's reply-to is the person who submitted it, so you can just hit Reply.
+
+To switch it on (free):
+
+1. Sign up at **resend.com** using the email you want submissions sent to.
+2. In Resend → **API Keys** → create a key (Sending access).
+3. In Vercel → launch-lane → **Settings → Environment Variables**, add:
+   - `RESEND_API_KEY` = the key from step 2
+   - `NOTIFY_EMAIL` = your inbox (comma-separate to send to more than one person)
+4. Redeploy (Vercel → Deployments → ⋯ → Redeploy).
+
+Until the domain is verified in Resend, emails come from `onboarding@resend.dev` and can only be
+delivered to the email you signed up to Resend with. To send from your own domain (and to other
+inboxes), add `launch-laneco.com` under Resend → **Domains**, add the DNS records it shows at your
+domain provider, then set `NOTIFY_FROM` = `Launch Lane <hello@launch-laneco.com>`.
+
+Until these are set, the forms show "we can't accept submissions just yet".
+
+## Google sign-in
+
+1. Go to **console.cloud.google.com** → create a project (e.g. "Launch Lane").
+2. **APIs & Services → OAuth consent screen**: External, app name "Launch Lane", your email, then add yourself as a test user while testing.
+3. **APIs & Services → Credentials → Create credentials → OAuth client ID** → Web application.
+   - Authorized JavaScript origins: `https://launch-laneco.com` and `https://launch-lane-sigma.vercel.app`
+   - Authorized redirect URIs: `https://launch-laneco.com/api/auth/callback/google` and `https://launch-lane-sigma.vercel.app/api/auth/callback/google`
+4. In Vercel → Environment Variables, add:
+   - `AUTH_GOOGLE_ID` = the Client ID
+   - `AUTH_GOOGLE_SECRET` = the Client secret
+   - `AUTH_SECRET` = a long random string (run `npx auth secret`, or use a password generator, 32+ characters)
+5. Redeploy.
+
+Until then, the Google buttons are greyed out with "almost ready". Accounts don't use a database yet,
+so signing in shows the person's name in the header; their Student/Resident choice lasts for that session.
 
 ## Run it on your computer
 
@@ -33,11 +71,12 @@ Then open http://localhost:3000.
 ## Where to edit things
 
 - **Logo:** `public/logo.png` (full logo, header), `public/logo-mark.png` (arrow only, footer), `app/icon.png` (browser tab icon). Replace a file with the same name to update it.
-- **Site name, "for Mercer Crossing" line, tagline, contact email, header tabs:** `lib/site.js` (change `community` if Launch Lane expands)
+- **Site name, "for Mercer Crossing" line, tagline, contact email, header tabs:** `lib/site.js`
+- **Form fields and email wording:** `lib/forms.js` (change `community` if Launch Lane expands)
 - **Listings:** `data/listings.js` (sample data right now — every name and email is a placeholder)
 - **FAQ answers:** `data/faq.js`
 - **Student / neighbor steps:** `data/steps.js`
-- **Our story placeholders:** `app/our-story/page.jsx` — search for `[` to find each one
+- **Our story placeholders:** `app/about/page.jsx` — search for `[` to find each one
 - **Colors and fonts:** top of `app/globals.css`
 
 ## Deploy to Vercel

@@ -1,18 +1,18 @@
 import Link from "next/link";
-import DemoForm from "@/components/DemoForm";
+import SubmitForm from "@/components/SubmitForm";
 import Steps from "@/components/Steps";
 import { categories } from "@/data/listings";
 import { hirerSteps } from "@/data/steps";
 import { site } from "@/lib/site";
 
-export const metadata = { title: "For neighbors" };
+export const metadata = { title: "Residents – Post a job" };
 
-export default function HirersPage() {
+export default function ResidentsPage() {
   return (
     <>
       <section className="page-head">
         <div className="wrap">
-          <p className="eyebrow">For neighbors</p>
+          <p className="eyebrow">Residents – Post a job</p>
           <h1>Find it close to home</h1>
           <p>
             From lawn mowing and trash cleanup to social media help, discover what {site.community}{" "}
@@ -49,11 +49,12 @@ export default function HirersPage() {
           </div>
           <div className="form-wrap">
             <div className="form-card">
-              <DemoForm
+              <SubmitForm
+                kind="job-post"
                 submitLabel="Post job"
                 submitClass="btn-blue"
                 successTitle="Job submitted"
-                successBody={`Once we confirm your address is in ${site.community}, your job appears on Explore and students can apply by email.`}
+                successBody={`Thanks! We'll review it and confirm your address is in ${site.community}. Once approved, your job appears on Explore Services and students can apply.`}
               >
                 <fieldset className="fieldset">
                   <legend>The job</legend>
@@ -107,13 +108,13 @@ export default function HirersPage() {
                     <span>I understand the scope, schedule, price, payment, safety and any insurance are agreed directly between me and the student.</span>
                   </label>
                 </fieldset>
-              </DemoForm>
+              </SubmitForm>
             </div>
 
             <aside className="aside">
               <h3>Good to know</h3>
               <ul className="check-list">
-                <li>Students apply by email, and their guardian gets a copy.</li>
+                <li>Every application comes to us first, then we connect you with the student.</li>
                 <li>A guardian signs off before a student accepts your job.</li>
                 <li>You pay the student directly. {site.name} takes no cut.</li>
               </ul>

@@ -1,18 +1,18 @@
 import Link from "next/link";
-import DemoForm from "@/components/DemoForm";
+import SubmitForm from "@/components/SubmitForm";
 import Steps from "@/components/Steps";
 import { categories } from "@/data/listings";
 import { studentSteps } from "@/data/steps";
 import { site } from "@/lib/site";
 
-export const metadata = { title: "For students" };
+export const metadata = { title: "Students – Apply" };
 
 export default function StudentsPage() {
   return (
     <>
       <section className="page-head">
         <div className="wrap">
-          <p className="eyebrow">For students</p>
+          <p className="eyebrow">Students – Apply</p>
           <h1>Put your skills to work close to home.</h1>
           <p>
             Mow lawns, help with trash cleanup, or sell your handmade jewelry. If you&apos;re 18 or
@@ -45,10 +45,11 @@ export default function StudentsPage() {
           </div>
           <div className="form-wrap">
             <div className="form-card">
-              <DemoForm
+              <SubmitForm
+                kind="student-application"
                 submitLabel="Submit application"
                 successTitle="Application received"
-                successBody="We'll review your application, then email your guardian to review and sign. Your listing goes live once they approve."
+                successBody="Thanks! We'll review your application, then email your guardian to review and sign. Your listing goes live once they approve."
               >
                 <fieldset className="fieldset">
                   <legend>Your service</legend>
@@ -111,7 +112,7 @@ export default function StudentsPage() {
                     <span>I understand my guardian must approve my listing and any job I take, and will receive a copy of every email sent to me through {site.name}.</span>
                   </label>
                 </fieldset>
-              </DemoForm>
+              </SubmitForm>
             </div>
 
             <aside className="aside">

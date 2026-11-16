@@ -75,7 +75,7 @@ export default function ListingsBrowser({ listings }) {
         </div>
       ) : (
         <div className="empty">
-          Nothing matches yet. Try another search, or <a href="/hirers#post-a-job">post a job</a> so students can apply.
+          Nothing matches yet. Try another search, or <a href="/residents#post-a-job">post a job</a> so students can apply.
         </div>
       )}
     </>

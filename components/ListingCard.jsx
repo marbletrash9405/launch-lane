@@ -1,8 +1,7 @@
+import RequestButton from "./RequestButton";
+
 export default function ListingCard({ listing }) {
   const isOffer = listing.type === "offering";
-  const subject = encodeURIComponent(
-    isOffer ? `Launch Lane: ${listing.title}` : `Launch Lane: applying for ${listing.title}`
-  );
 
   return (
     <article className={`listing ${isOffer ? "offering" : "job"}`}>
@@ -37,12 +36,7 @@ export default function ListingCard({ listing }) {
           <strong>{listing.name}</strong>
           {isOffer ? "Student" : `${listing.street}, Mercer Crossing`}
         </div>
-        <a
-          className={`btn btn-sm ${isOffer ? "btn-teal" : "btn-blue"}`}
-          href={`mailto:${listing.email}?subject=${subject}`}
-        >
-          {isOffer ? "Email" : "Apply by email"}
-        </a>
+        <RequestButton listing={listing} />
       </div>
     </article>
   );

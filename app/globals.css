@@ -15,7 +15,7 @@
   --white: #ffffff;
 
   --display: "Alfa Slab One", Georgia, serif;
-  --body: "Lexend", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   --radius: 18px;
   --wrap: 1120px;
@@ -26,7 +26,7 @@ html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
   font-family: var(--body);
-  font-weight: 300;
+  font-weight: 400;
   color: var(--ink);
   background: var(--white);
   line-height: 1.6;
@@ -76,14 +76,15 @@ p { margin: 0; }
 .header-row { display: flex; align-items: center; justify-content: space-between; height: 76px; }
 .brand { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-decoration: none; }
 .brand-logo { height: 34px; width: auto; }
-.nav { display: flex; align-items: center; gap: 22px; }
+.nav { display: flex; align-items: center; gap: 20px; }
+.nav a { white-space: nowrap; font-size: .97rem; }
 .nav a { text-decoration: none; font-weight: 400; color: var(--ink); }
 .nav a:hover, .nav a[aria-current="page"] { color: var(--teal); text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 2px; }
 .menu-btn {
   display: none; background: none; border: 0; color: var(--ink);
   padding: 8px; cursor: pointer;
 }
-@media (max-width: 1020px) {
+@media (max-width: 1100px) {
   .header-row { height: 68px; }
   .brand-logo { height: 28px; }
   .menu-btn { display: block; }
@@ -115,7 +116,7 @@ p { margin: 0; }
 .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 56px; align-items: center; }
 .hero h1 { font-size: clamp(2.4rem, 5.5vw, 3.6rem); color: var(--mint); margin: 0; }
 .hero-rule { width: 100%; max-width: 360px; height: 2px; background: rgba(255,255,255,.7); margin: 20px 0; }
-.hero-tag { font-size: clamp(1.05rem, 1.8vw, 1.25rem); font-weight: 300; max-width: 680px; }
+.hero-tag { font-size: clamp(1.05rem, 1.8vw, 1.25rem); font-weight: 400; max-width: 680px; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
 .hero-card {
   background: var(--teal-2); border-radius: var(--radius); padding: 28px;
@@ -221,7 +222,7 @@ p { margin: 0; }
 }
 .tabs button[aria-pressed="true"] { background: var(--teal); color: var(--white); }
 .select, .input, .textarea {
-  width: 100%; font: 300 1rem var(--body); color: var(--ink);
+  width: 100%; font: 400 1rem var(--body); color: var(--ink);
   border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--white);
 }
 .filters .select { width: auto; min-width: 190px; border-radius: 999px; }
@@ -296,7 +297,7 @@ p { margin: 0; }
 /* ---------- v3: product-site components ---------- */
 .nav .nav-cta { color: var(--white); text-decoration: none; }
 .nav .nav-cta:hover { color: var(--white); text-decoration: none; }
-@media (max-width: 1020px) { .nav .nav-cta { margin-top: 16px; border-bottom: 0; padding: 12px 20px; } }
+@media (max-width: 1100px) { .nav .nav-cta { margin-top: 16px; border-bottom: 0; padding: 12px 20px; } }
 
 .text-link { display: inline-flex; align-items: center; gap: 6px; color: var(--teal); font-weight: 500; text-decoration: none; }
 .text-link:hover { text-decoration: underline; text-underline-offset: 4px; }
@@ -429,3 +430,55 @@ p { margin: 0; }
 
 .listing-foot .btn { white-space: nowrap; flex: none; }
 .bg-cream .faq details { background: var(--white); }
+
+/* ---------- v5: request forms, auth ---------- */
+.hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.form-error { background: #fbe9e4; color: #8a2f1b; border-radius: 10px; padding: 12px 14px; font-size: .95rem; }
+.optional { color: var(--muted); font-weight: 400; font-size: .85rem; }
+.btn[disabled] { opacity: .6; cursor: default; transform: none; }
+
+.modal {
+  width: min(560px, calc(100vw - 24px)); max-height: calc(100vh - 32px);
+  border: 0; border-radius: 22px; padding: 0; color: var(--ink); background: var(--white);
+  box-shadow: 0 30px 80px rgba(0,0,0,.25);
+}
+.modal::backdrop { background: rgba(20, 40, 38, .55); }
+.modal-body { padding: 30px; position: relative; display: grid; gap: 10px; }
+.modal-body h2 { font-size: 1.7rem; padding-right: 36px; }
+.modal-body .form { gap: 16px; margin-top: 8px; }
+.modal-note { color: var(--muted); font-size: .95rem; }
+.modal-close {
+  position: absolute; top: 16px; right: 16px; background: var(--cream); border: 0;
+  width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; color: var(--ink);
+}
+.modal .success { padding: 24px; }
+.modal .success h2 { font-size: 1.6rem; }
+@media (max-width: 560px) { .modal-body { padding: 24px 18px; } }
+
+.google-btn {
+  display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%;
+  padding: 13px 20px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--white);
+  font: 600 1rem var(--body); color: var(--ink); cursor: pointer; transition: border-color .15s, background .15s;
+}
+.google-btn:hover:not([disabled]) { border-color: var(--teal); background: var(--cream); }
+.google-btn[disabled] { opacity: .55; cursor: default; }
+.google-btn svg { width: 20px; height: 20px; flex: none; }
+.auth-switch { text-align: center; color: var(--muted); font-size: .95rem; }
+.auth-switch a { color: var(--teal); font-weight: 600; }
+.role-picker { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; }
+.role-picker legend { font-weight: 600; margin-bottom: 8px; padding: 0; }
+.role-option {
+  display: grid; grid-template-columns: 20px 1fr; gap: 12px; align-items: start; cursor: pointer;
+  border: 1.5px solid var(--line); border-radius: 14px; padding: 14px 16px;
+}
+.role-option:has(input:checked) { border-color: var(--teal); background: var(--mint-soft); }
+.role-option input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--teal); }
+.role-option strong { display: block; font-weight: 600; }
+.role-option span span { color: var(--muted); font-size: .9rem; }
+.nav .nav-user { display: flex; align-items: center; gap: 10px; }
+.nav .nav-user span { font-weight: 600; color: var(--teal); white-space: nowrap; }
+.nav .nav-user button {
+  background: none; border: 1.5px solid var(--line); border-radius: 999px; padding: 7px 14px;
+  font: 500 .9rem var(--body); color: var(--ink); cursor: pointer;
+}
+@media (max-width: 1100px) { .nav .nav-user { padding: 14px 0; justify-content: space-between; } }

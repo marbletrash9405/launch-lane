@@ -1,4 +1,4 @@
-// Step-by-step text for the Students, Hirers and How it works pages.
+// Step-by-step text for the Students, Residents and How it works pages.
 
 export const studentSteps = [
   { t: "Tell us what you offer", b: "Describe your service or business and share your email, home address, and your guardian's contact details." },

@@ -5,12 +5,25 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { site, nav, navCta } from "@/lib/site";
 import { MenuIcon, CloseIcon } from "./Icons";
+import { signOutAction } from "@/app/actions/auth";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
+  const [user, setUser] = useState(null);
+
   useEffect(() => setOpen(false), [pathname]);
+
+  // Show who's signed in (works once Google sign-in is set up; otherwise stays signed out).
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/auth/session")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((s) => { if (alive) setUser(s?.user ?? null); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [pathname]);
 
   return (
     <header className="site-header">
@@ -39,9 +52,18 @@ export default function Header() {
               {item.label}
             </Link>
           ))}
-          <Link href={navCta.href} className="btn btn-teal btn-sm nav-cta">
-            {navCta.label}
-          </Link>
+          {user ? (
+            <div className="nav-user">
+              <span>Hi, {(user.name || user.email || "there").split(" ")[0]}</span>
+              <form action={signOutAction}>
+                <button type="submit">Sign out</button>
+              </form>
+            </div>
+          ) : (
+            <Link href={navCta.href} className="btn btn-teal btn-sm nav-cta">
+              {navCta.label}
+            </Link>
+          )}
         </nav>
       </div>
     </header>

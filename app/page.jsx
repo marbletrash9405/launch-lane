@@ -2,7 +2,7 @@ import Link from "next/link";
 import ListingCard from "@/components/ListingCard";
 import CategoryIcon from "@/components/CategoryIcon";
 import Faq from "@/components/Faq";
-import { listings, categories } from "@/data/listings";
+import { publicListings as listings, categories } from "@/data/listings";
 import { site } from "@/lib/site";
 import { IconRing, ShieldCheckIcon, GuardianIcon, MailIcon, ArrowIcon } from "@/components/Icons";
 
@@ -70,7 +70,7 @@ export default function Home() {
               </ol>
               <div className="hero-actions">
                 <Link href="/explore" className="btn btn-teal">Browse services</Link>
-                <Link href="/hirers#post-a-job" className="btn btn-outline">Post a job</Link>
+                <Link href="/residents#post-a-job" className="btn btn-outline">Post a job</Link>
               </div>
             </div>
             <div className="path-card path-student">
@@ -95,8 +95,8 @@ export default function Home() {
         <div className="wrap">
           <div className="section-head row-head">
             <div>
-              <p className="eyebrow">Explore</p>
-              <h2>Latest listings</h2>
+              <p className="eyebrow">Explore Services</p>
+              <h2>Sample listings</h2>
             </div>
             <Link href="/explore" className="text-link">See all <ArrowIcon /></Link>
           </div>
@@ -164,7 +164,7 @@ export default function Home() {
             </div>
             <div className="hero-actions">
               <Link href="/students#apply" className="btn btn-gold">Offer a service</Link>
-              <Link href="/hirers#post-a-job" className="btn btn-ghost">Post a job</Link>
+              <Link href="/residents#post-a-job" className="btn btn-ghost">Post a job</Link>
             </div>
           </div>
         </div>

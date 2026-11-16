@@ -46,7 +46,7 @@ export default function HowItWorks() {
             <h2 className="col-title">Find it close to home</h2>
             <Steps steps={hirerSteps} />
             <div className="hero-actions">
-              <Link href="/hirers#post-a-job" className="btn btn-teal">Post a job</Link>
+              <Link href="/residents#post-a-job" className="btn btn-teal">Post a job</Link>
             </div>
           </div>
           <div id="students">

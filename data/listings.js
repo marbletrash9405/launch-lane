@@ -85,3 +85,7 @@ export const listings = [
     reviews: 0,
   },
 ];
+
+// What the public pages get: everything except the lister's email, which stays on the
+// server so requests always go through the Launch Lane team first.
+export const publicListings = listings.map(({ email, ...rest }) => rest);

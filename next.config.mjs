@@ -5,8 +5,9 @@ const nextConfig = {
     return [
       { source: "/listings", destination: "/explore", permanent: false },
       { source: "/apply", destination: "/students#apply", permanent: false },
-      { source: "/request", destination: "/hirers#post-a-job", permanent: false },
-      { source: "/about", destination: "/our-story", permanent: false },
+      { source: "/request", destination: "/residents#post-a-job", permanent: false },
+      { source: "/hirers", destination: "/residents", permanent: false },
+      { source: "/our-story", destination: "/about", permanent: false },
     ];
   },
 };
