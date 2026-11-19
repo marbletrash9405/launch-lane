@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { site, nav, navCta } from "@/lib/site";
 import { MenuIcon, CloseIcon } from "./Icons";
-import { signOutAction } from "@/app/actions/auth";
+import { firebaseConfigured } from "@/lib/firebase-config";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -15,15 +15,22 @@ export default function Header() {
 
   useEffect(() => setOpen(false), [pathname]);
 
-  // Show who's signed in (works once Google sign-in is set up; otherwise stays signed out).
+  // Show who's signed in via Firebase (only loads Firebase once it's configured).
   useEffect(() => {
+    if (!firebaseConfigured) return;
+    let unsub = () => {};
     let alive = true;
-    fetch("/api/auth/session")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((s) => { if (alive) setUser(s?.user ?? null); })
-      .catch(() => {});
-    return () => { alive = false; };
-  }, [pathname]);
+    import("@/lib/firebase").then((fb) => {
+      if (!alive) return;
+      unsub = fb.watchUser((u) => setUser(u ? { name: u.displayName, email: u.email } : null));
+    });
+    return () => { alive = false; unsub(); };
+  }, []);
+
+  async function handleSignOut() {
+    const fb = await import("@/lib/firebase");
+    await fb.signOutUser();
+  }
 
   return (
     <header className="site-header">
@@ -55,9 +62,7 @@ export default function Header() {
           {user ? (
             <div className="nav-user">
               <span>Hi, {(user.name || user.email || "there").split(" ")[0]}</span>
-              <form action={signOutAction}>
-                <button type="submit">Sign out</button>
-              </form>
+              <button type="button" onClick={handleSignOut}>Sign out</button>
             </div>
           ) : (
             <Link href={navCta.href} className="btn btn-teal btn-sm nav-cta">

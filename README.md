@@ -13,9 +13,9 @@ A neighborhood board where Mercer Crossing students (18 & under) list services a
 | `/explore` | Explore Services: student services and neighborhood jobs, with Book / Apply buttons |
 | `/students` | Students – Apply: steps and the application form (`#apply`) |
 | `/residents` | Residents – Post a job: steps and the job form (`#post-a-job`) |
-| `/about` | About us: mission, how it started, ethos, team and numbers (team/numbers are placeholders) |
+| `/about` | About us: mission, how it started (with a photo placeholder), ethos |
 | `/faq` | All FAQs, grouped |
-| `/login`, `/signup` | Google sign-in and sign-up |
+| `/login`, `/signup` | Google sign-in and sign-up through Firebase |
 
 Old addresses (`/listings`, `/apply`, `/request`, `/hirers`, `/our-story`) redirect to the new pages.
 
@@ -45,21 +45,30 @@ different inbox instead (comma-separate for several).
 
 Until these are set, the forms show "we can't accept submissions just yet".
 
-## Google sign-in
+## Google sign-in (Firebase)
 
-1. Go to **console.cloud.google.com** → create a project (e.g. "Launch Lane").
-2. **APIs & Services → OAuth consent screen**: External, app name "Launch Lane", your email, then add yourself as a test user while testing.
-3. **APIs & Services → Credentials → Create credentials → OAuth client ID** → Web application.
-   - Authorized JavaScript origins: `https://launch-laneco.com` and `https://launch-lane-sigma.vercel.app`
-   - Authorized redirect URIs: `https://launch-laneco.com/api/auth/callback/google` and `https://launch-lane-sigma.vercel.app/api/auth/callback/google`
-4. In Vercel → Environment Variables, add:
-   - `AUTH_GOOGLE_ID` = the Client ID
-   - `AUTH_GOOGLE_SECRET` = the Client secret
-   - `AUTH_SECRET` = a long random string (run `npx auth secret`, or use a password generator, 32+ characters)
-5. Redeploy.
+Log in and Sign up use **Firebase Authentication** with Google. Each account gets a Firestore document at
+`users/{uid}` with name, email, photo, sign-up date, last login, and the Student / Resident choice from Sign up.
 
-Until then, the Google buttons are greyed out with "almost ready". Accounts don't use a database yet,
-so signing in shows the person's name in the header; their Student/Resident choice lasts for that session.
+1. Go to **console.firebase.google.com** → **Add project** → name it "Launch Lane" (Google Analytics optional).
+2. **Build → Authentication → Get started → Sign-in method → Google → Enable**. Pick
+   contact@launch-laneco.com (or your Gmail) as the support email → Save.
+3. **Authentication → Settings → Authorized domains → Add domain**: add `launch-laneco.com`,
+   `www.launch-laneco.com` and `launch-lane-sigma.vercel.app` (`localhost` is there already).
+4. **Build → Firestore Database → Create database** → Production mode → location `us-central` (or nearest).
+   Then open the **Rules** tab, replace everything with the contents of `firestore.rules` in this repo → **Publish**.
+5. **Project settings (gear) → General → Your apps → Web (`</>`)** → register an app called "Launch Lane web"
+   (no Hosting needed). Copy the `firebaseConfig` values.
+6. Either paste them into `lib/firebase-config.js`, or add them in Vercel → Environment Variables and redeploy:
+   - `NEXT_PUBLIC_FIREBASE_API_KEY`
+   - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+   - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+   - `NEXT_PUBLIC_FIREBASE_APP_ID`
+   - `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` and `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` (optional)
+
+The web config isn't secret: it only identifies the project. Access is controlled by the authorized
+domains and the Firestore rules. Until it's set, the Google buttons are greyed out with "almost ready".
+To see who has signed up: Firebase → Authentication → Users, and Firestore → `users`.
 
 ## Run it on your computer
 
@@ -80,7 +89,8 @@ Then open http://localhost:3000.
 - **Listings:** `data/listings.js` (sample data right now — every name and email is a placeholder)
 - **FAQ answers:** `data/faq.js`
 - **Student / neighbor steps:** `data/steps.js`
-- **About us placeholders:** `app/about/page.jsx` — search for `[` to find each one
+- **About us photo placeholder:** `app/about/page.jsx`
+- **Firebase settings:** `lib/firebase-config.js`; Firestore rules in `firestore.rules`
 - **Colors and fonts:** top of `app/globals.css`
 
 ## Deploy to Vercel

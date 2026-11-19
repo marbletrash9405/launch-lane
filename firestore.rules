@@ -1,0 +1,23 @@
+rules_version = '2';
+
+// Firestore security rules for Launch Lane.
+// Paste into Firebase console → Firestore Database → Rules → Publish.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Each signed-in person can read and write only their own profile.
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth != null
+        && request.auth.uid == userId
+        && (!('role' in request.resource.data)
+            || request.resource.data.role in ['student', 'resident']);
+      allow delete: if false;
+    }
+
+    // Everything else is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

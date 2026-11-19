@@ -8,9 +8,12 @@
     "start": "next start"
   },
   "dependencies": {
-    "next": "^16.4.4",
-    "next-auth": "5.0.0-beta.32",
+    "firebase": "13.4.0",
+    "next": "^16.4.6",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.7"
   }
 }

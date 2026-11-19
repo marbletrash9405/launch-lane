@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import GoogleButtonClient from "./GoogleButtonClient";
+import GoogleSignIn from "./GoogleSignIn";
 
-export default function SignupForm({ enabled, community }) {
+export default function SignupForm({ community }) {
   const [role, setRole] = useState("student");
 
   return (
@@ -25,7 +25,7 @@ export default function SignupForm({ enabled, community }) {
           </span>
         </label>
       </fieldset>
-      <GoogleButtonClient label="Sign up with Google" enabled={enabled} role={role} />
+      <GoogleSignIn label="Sign up with Google" role={role} />
     </div>
   );
 }

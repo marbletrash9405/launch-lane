@@ -3,14 +3,8 @@ import { site } from "@/lib/site";
 
 export const metadata = { title: "About us" };
 
-// TODO: Replace the bracketed placeholders below with real content.
-// Photos: add images to /public (e.g. /public/team/founder.jpg) and swap
-// the <div className="placeholder"> blocks for <img src="/team/founder.jpg" alt="..." />.
-const team = [
-  { name: "[Founder Name]", role: "Founder", bio: "[One or two sentences about you: grade, school, what you run, why you started Launch Lane.]" },
-  { name: "[Team Member]", role: "[Role, e.g. Outreach]", bio: "[Short bio placeholder.]" },
-  { name: "[Team Member]", role: "[Role, e.g. Safety & Reviews]", bio: "[Short bio placeholder.]" },
-];
+// TODO: Replace the photo placeholder in "How it started" with a real image: add it to /public
+// (e.g. /public/story.jpg) and swap the <div className="placeholder"> for <img src="/story.jpg" alt="..." />.
 
 export default function AboutPage() {
   return (
@@ -89,46 +83,8 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Team */}
-      <section className="section" style={{ paddingTop: 0 }}>
-        <div className="wrap">
-          <div className="section-head">
-            <p className="eyebrow">The team</p>
-            <h2>Who&apos;s behind {site.name}</h2>
-          </div>
-          <div className="grid-3">
-            {team.map((m, i) => (
-              <div className="team-card" key={i}>
-                <div className="placeholder">[Photo]</div>
-                <h3>{m.name}</h3>
-                <p className="role">{m.role}</p>
-                <p className="bio">{m.bio}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Numbers placeholder */}
-      <section className="section bg-cream">
-        <div className="wrap">
-          <div className="section-head">
-            <p className="eyebrow">So far</p>
-            <h2>By the numbers</h2>
-          </div>
-          <div className="grid-3">
-            {["Student listings", "Jobs posted", "Jobs completed"].map((label) => (
-              <div className="feature" key={label} style={{ background: "var(--white)" }}>
-                <p style={{ fontFamily: "var(--display)", fontSize: "2.6rem", color: "var(--teal)" }}>[#]</p>
-                <p>{label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Contact */}
-      <section className="section">
+      <section className="section" style={{ paddingTop: 0 }}>
         <div className="wrap">
           <div className="cta">
             <div>
