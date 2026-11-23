@@ -70,6 +70,19 @@ The web config isn't secret: it only identifies the project. Access is controlle
 domains and the Firestore rules. Until it's set, the Google buttons are greyed out with "almost ready".
 To see who has signed up: Firebase → Authentication → Users, and Firestore → `users`.
 
+## Develop in the cloud (Codespaces)
+
+A ready-made cloud dev machine is defined in `.devcontainer/devcontainer.json`.
+
+1. On GitHub, open the repo → green **Code** button → **Codespaces** tab → **Create codespace on main**.
+2. Wait for it to finish setting up (it runs `npm install` for you).
+3. In the terminal at the bottom, run `npm run dev`. A preview of the site opens on port 3000.
+4. Commit and push from the Source Control tab. Pushing to `main` updates the live site.
+
+Stop the codespace when you're done (GitHub → Codespaces → ⋯ → Stop) so it doesn't use up the free monthly hours.
+To test Google sign-in inside a codespace, add the codespace's `*.app.github.dev` address under Firebase →
+Authentication → Settings → Authorized domains.
+
 ## Run it on your computer
 
 Requires Node.js 20 or newer.
