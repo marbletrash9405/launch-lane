@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Launch Lane"
+description = "A neighborhood board connecting students offering local services with residents posting requests and jobs."
+version = "1.0.0"
+id = "artifacts/launch-lane"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24976
+
+[services.development]
+run = "pnpm --filter @workspace/launch-lane run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/launch-lane", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/launch-lane/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24976"
+BASE_PATH = "/"
