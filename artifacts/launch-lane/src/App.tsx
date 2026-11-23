@@ -1,61 +1,48 @@
-import { type ReactNode } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ErrorBoundary } from '@/components/error-boundary';
-import { Toaster } from '@/components/ui/toaster';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import NotFound from '@/pages/not-found';
-import {
-  Route,
-  Switch,
-  useLocation,
-  Router as WouterRouter,
-} from 'wouter';
+import { Route, Switch, Router as WouterRouter, Redirect } from 'wouter';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import Home from '@/pages/page';
+import HowItWorks from '@/pages/how_it_works';
+import Explore from '@/pages/explore';
+import Students from '@/pages/students';
+import Residents from '@/pages/residents';
+import About from '@/pages/about';
+import Faq from '@/pages/faq';
+import Login from '@/pages/login';
+import Signup from '@/pages/signup';
+import NotFound from '@/pages/not_found';
 
-const queryClient = new QueryClient();
-
-function Home() {
-  return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Replit Agent is building...
-        </h1>
-        <p className="mt-2 text-sm text-gray-600">
-          Your app will appear here once it's ready.
-        </p>
-      </div>
-    </div>
-  );
-}
+import './globals.css';
 
 function Router() {
   return (
-    // Keep a shared shell (sidebar, navbar) outside the boundary so it
-    // survives a page crash.
-    <RoutedErrorBoundary>
       <Switch>
         <Route path="/" component={Home} />
-        <Route component={NotFound} />
+        <Route path="/how-it-works" component={HowItWorks} />
+        <Route path="/explore" component={Explore} />
+        <Route path="/students" component={Students} />
+        <Route path="/residents" component={Residents} />
+        <Route path="/about" component={About} />
+        <Route path="/faq" component={Faq} />
+        <Route path="/login" component={Login} />
+        <Route path="/signup" component={Signup} />
+        <Route path="/listings"><Redirect to="/explore" /></Route>
+        <Route path="/apply"><Redirect to="/students#apply" /></Route>
+        <Route path="/request"><Redirect to="/residents#post-a-job" /></Route>
+        <Route path="/hirers"><Redirect to="/residents" /></Route>
+        <Route path="/our-story"><Redirect to="/about" /></Route>
+        <Route><NotFound /></Route>
       </Switch>
-    </RoutedErrorBoundary>
   );
-}
-
-function RoutedErrorBoundary({ children }: { children: ReactNode }) {
-  const [location] = useLocation();
-  return <ErrorBoundary resetKey={location}>{children}</ErrorBoundary>;
 }
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+      <Header />
+      <main><Router /></main>
+      <Footer />
+    </WouterRouter>
   );
 }
 
