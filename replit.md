@@ -10,7 +10,8 @@ A neighborhood marketplace connecting Mercer Crossing students with nearby resid
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string; `ADMIN_EMAIL` — the founder account used for administrator access
-- Optional email env: `RESEND_API_KEY` and `NOTIFY_FROM`; without a Resend key, email attempts are logged for administrator testing
+- Email delivery: `RESEND_USE_CONNECTOR=true` uses the connected Resend account; `RESEND_API_KEY` remains supported for direct delivery outside Replit. `NOTIFY_FROM` must be a verified sender to email people other than the Resend account owner. Without either delivery option, emails are logged for administrator testing.
+- Administrator review notifications (businesses, jobs, student job applications, and chat reports) go to `NOTIFY_EMAIL`, falling back to `ADMIN_EMAIL`, then the public contact inbox. Synthetic `.invalid` test recipients are logged only and never emailed.
 - Optional URL env: `PUBLIC_APP_URL` — canonical base URL for guardian approval links; it must use an approved Replit/local host or `launch-laneco.com` / `www.launch-laneco.com`
 
 ## Stack
@@ -31,6 +32,7 @@ A neighborhood marketplace connecting Mercer Crossing students with nearby resid
 - `artifacts/launch-lane/public/` — logo and site image assets
 - `artifacts/api-server/src/routes/` — auth, business, booking, job, guardian, chat, moderation, storage, and health APIs
 - `artifacts/api-server/src/lib/` — authorization helpers, site settings, and email delivery/logging
+- `artifacts/api-server/src/scripts/seed-review-tests.ts` — manually run, idempotent synthetic review fixtures; never loaded at app startup. All fixtures start pending review. Approve test jobs before their applications; approving a test job makes it visible on Explore. Test accounts cannot sign in and their email is log-only.
 - `lib/db/src/schema/` — PostgreSQL/Drizzle tables for accounts, profiles, businesses, bookings, jobs, applications, guardian approvals, chats, and email logs
 - `docs/launch-lane-spec.md` — product requirements and phased build plan
 - `.migration-backup/` — historical Next.js source; not used to run the app

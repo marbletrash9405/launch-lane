@@ -26,3 +26,4 @@ channel = "stable-25_05"
 
 [userenv.shared]
 NOTIFY_EMAIL = "launchlanecompany@gmail.com"
+RESEND_USE_CONNECTOR = "true"

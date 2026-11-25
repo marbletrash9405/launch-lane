@@ -1,7 +1,8 @@
 // Server-only Launch Lane email delivery and the persistent testing log.
 //
 // Set in Replit Secrets:
-//   RESEND_API_KEY  your Resend API key (required)
+//   RESEND_API_KEY  optional direct Resend API key
+//   RESEND_USE_CONNECTOR=true uses the connected Resend account instead
 //   NOTIFY_EMAIL    optional: send submissions somewhere other than site.contactEmail
 //                   (comma-separate for more than one inbox)
 //   NOTIFY_FROM     optional sender, e.g. "Launch Lane <notifications@launch-laneco.com>" once the
@@ -9,16 +10,18 @@
 //                   onboarding@resend.dev works, but only delivers to your Resend account email.
 
 import { randomUUID } from "node:crypto";
+import { ReplitConnectors } from "@replit/connectors-sdk";
 import { desc, db, emailLogsTable, sql } from "@workspace/db";
 import { logger } from "./logger";
 import { site } from "./site";
 
 const RESEND_URL = process.env.RESEND_API_URL || "https://api.resend.com/emails";
-const notifyTo = () => process.env.NOTIFY_EMAIL || site.contactEmail;
+const notifyTo = () => process.env.NOTIFY_EMAIL || process.env.ADMIN_EMAIL || site.contactEmail;
+const connectors = new ReplitConnectors();
 const EMAIL_LOG_LIMIT = 500;
 
 export function emailConfigured() {
-  return Boolean(process.env.RESEND_API_KEY && notifyTo());
+  return Boolean((process.env.RESEND_API_KEY || process.env.RESEND_USE_CONNECTOR === "true") && notifyTo());
 }
 
 function escapeHtml(s) {
@@ -105,20 +108,20 @@ export async function sendEmail({
     detail: null,
   };
 
-  if (!process.env.RESEND_API_KEY) {
-    entry.detail = "RESEND_API_KEY is not set; this email was logged but not sent.";
+  if ([...entry.to, ...entry.cc].some((email) => /\.invalid$/i.test(email))) {
+    entry.detail = "Synthetic test recipient; logged only to avoid sending to a nonexistent inbox.";
+    await recordEmail(entry);
+    return { status: entry.status, id: entry.id };
+  }
+
+  if (!process.env.RESEND_API_KEY && process.env.RESEND_USE_CONNECTOR !== "true") {
+    entry.detail = "Resend is not configured; this email was logged but not sent.";
     await recordEmail(entry);
     return { status: entry.status, id: entry.id };
   }
 
   try {
-    const response = await fetch(RESEND_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    const payload = {
         from: process.env.NOTIFY_FROM || "Launch Lane <onboarding@resend.dev>",
         to: entry.to,
         ...(entry.cc.length ? { cc: entry.cc } : {}),
@@ -126,14 +129,29 @@ export async function sendEmail({
         text,
         ...(html ? { html } : {}),
         ...(replyTo ? { reply_to: replyTo } : {}),
-      }),
-    });
+      };
+    const response = process.env.RESEND_API_KEY
+      ? await fetch(RESEND_URL, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+            "Content-Type": "application/json",
+            "Idempotency-Key": entry.id,
+          },
+          body: JSON.stringify(payload),
+        })
+      : await connectors.proxy("resend", "/emails", {
+          method: "POST",
+          headers: { "Idempotency-Key": entry.id },
+          body: payload,
+        });
+    const result = await response.json().catch(() => ({}));
     if (!response.ok) {
       entry.status = "failed";
-      entry.detail = `Resend returned HTTP ${response.status}.`;
+      entry.detail = `Resend returned HTTP ${response.status}${typeof result.message === "string" ? `: ${result.message.slice(0, 300)}` : "."}`;
     } else {
       entry.status = "sent";
-      entry.detail = "Sent through Resend.";
+      entry.detail = `Accepted by Resend${result.id ? ` (${result.id})` : ""}.`;
     }
   } catch {
     entry.status = "failed";
