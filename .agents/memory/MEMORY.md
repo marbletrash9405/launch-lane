@@ -1,1 +1,0 @@
-- [Verified sign-in identity](verified-sign-in-identity.md) — Resolve verified email server-side; direct founder login must not depend on public signup.

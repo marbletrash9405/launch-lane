@@ -10,12 +10,20 @@ globalThis.require = createRequire(import.meta.url);
 
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
 
+// `node build.mjs` builds the local server (dist/index.mjs).
+// `node build.mjs --vercel <outdir>` builds the Vercel function (index.mjs) into <outdir>.
+const vercelIndex = process.argv.indexOf("--vercel");
+const forVercel = vercelIndex !== -1;
+const vercelOutDir = forVercel ? path.resolve(process.argv[vercelIndex + 1] || "") : "";
+
 async function buildAll() {
-  const distDir = path.resolve(artifactDir, "dist");
+  const distDir = forVercel ? vercelOutDir : path.resolve(artifactDir, "dist");
   await rm(distDir, { recursive: true, force: true });
 
   await esbuild({
-    entryPoints: [path.resolve(artifactDir, "src/index.ts")],
+    entryPoints: forVercel
+      ? { index: path.resolve(artifactDir, "src/vercel.ts") }
+      : [path.resolve(artifactDir, "src/index.ts")],
     platform: "node",
     bundle: true,
     format: "esm",
@@ -27,7 +35,9 @@ async function buildAll() {
     // Examples of unbundleable packages:
     // - uses native modules and loads them dynamically (e.g. sharp)
     // - use path traversal to read files (e.g. @google-cloud/secret-manager loads sibling .proto files)
-    external: [
+    // The Vercel function ships as one self-contained file, so only optional
+    // native add-ons that are never installed stay external there.
+    external: forVercel ? ["*.node", "pg-native"] : [
       "*.node",
       "sharp",
       "better-sqlite3",

@@ -53,3 +53,9 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Local env and uploads
+.env
+.env.*
+!.env.example
+.local-uploads/

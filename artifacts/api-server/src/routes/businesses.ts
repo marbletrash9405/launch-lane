@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { createHash, randomBytes } from "node:crypto";
-import sharp from "sharp";
 import {
   CreateBusinessResponse,
   CreateBusinessBody,
@@ -35,16 +34,15 @@ import {
   requireRole,
   requireSignedIn,
 } from "../lib/authorization";
-import { ObjectStorageService } from "../lib/objectStorage";
+import { isPhotoObjectPath, MAX_IMAGE_BYTES, photoInfo, readPhoto } from "../lib/photo-storage";
+import { readWebpInfo } from "../lib/webp";
 import { getPublicOrigin as buildPublicOrigin } from "../lib/public-origin";
 // @ts-ignore - this module preserves the original JavaScript email delivery helper.
 import { getEmailLog, sendEmail, sendNotification } from "../lib/notify.js";
 
 const router = Router();
-const objectStorage = new ObjectStorageService();
 const studentAccess = [requireSignedIn, requireAccount, requireRole("student")];
 const adminAccess = [requireSignedIn, requireAccount, requireRole("admin")];
-const MAX_IMAGE_BYTES = 215040;
 
 function toPhotoUrl(objectPath: string) {
   return `/api/storage/objects/${objectPath.replace(/^\/objects\//, "")}`;
@@ -114,28 +112,18 @@ async function validatePhotoPaths(paths: string[], ownerId: string) {
     if (
       typeof path !== "string" ||
       !path.startsWith(ownUploadPrefix) ||
-      !/^\/objects\/uploads\/[0-9a-f-]{36}\/[0-9a-f-]{36}$/i.test(path)
+      !isPhotoObjectPath(path)
     ) {
       return false;
     }
     try {
-      const file = await objectStorage.getObjectEntityFile(path);
-      const [metadata] = await file.getMetadata();
-      if (
-        metadata.contentType !== "image/webp" ||
-        Number(metadata.size || 0) > MAX_IMAGE_BYTES
-      ) {
+      const info = await photoInfo(path);
+      if (!info || info.contentType !== "image/webp" || info.size > MAX_IMAGE_BYTES) {
         return false;
       }
-      const [imageBytes] = await file.download();
-      const imageInfo = await sharp(imageBytes, {
-        limitInputPixels: 40_000_000,
-      }).metadata();
-      if (
-        imageInfo.format !== "webp" ||
-        !imageInfo.width ||
-        imageInfo.width > 1600
-      ) {
+      const imageBytes = await readPhoto(path);
+      const imageInfo = imageBytes ? readWebpInfo(imageBytes) : null;
+      if (!imageInfo || imageInfo.width > 1600) {
         return false;
       }
     } catch {
@@ -145,16 +133,10 @@ async function validatePhotoPaths(paths: string[], ownerId: string) {
   return true;
 }
 
-async function setPrivatePhotoOwners(paths: string[], ownerId: string) {
-  await Promise.all(
-    paths.map((path) =>
-      objectStorage.trySetObjectEntityAclPolicy(path, {
-        owner: ownerId,
-        visibility: "private",
-      }),
-    ),
-  );
-}
+// Photos are stored privately from the moment they are uploaded, and who may
+// see each one is decided per request from the businesses table (see
+// routes/storage.ts), so there is no separate per-file permission to set.
+async function setPrivatePhotoOwners(_paths: string[], _ownerId: string) {}
 
 async function emailAdminAboutBusiness(
   business: typeof businessesTable.$inferSelect,

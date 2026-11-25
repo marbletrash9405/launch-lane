@@ -1,6 +1,7 @@
 // Server-only Launch Lane email delivery and the persistent testing log.
 //
-// Set in Replit Secrets:
+// Set as environment variables (Vercel → Project → Settings → Environment Variables,
+// or the .env file for local development):
 //   RESEND_API_KEY  your Resend API key (required)
 //   NOTIFY_EMAIL    optional: send submissions somewhere other than site.contactEmail
 //                   (comma-separate for more than one inbox)
