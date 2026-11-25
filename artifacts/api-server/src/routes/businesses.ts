@@ -36,6 +36,7 @@ import {
   requireSignedIn,
 } from "../lib/authorization";
 import { ObjectStorageService } from "../lib/objectStorage";
+import { getPublicOrigin as buildPublicOrigin } from "../lib/public-origin";
 // @ts-ignore - this module preserves the original JavaScript email delivery helper.
 import { getEmailLog, sendEmail, sendNotification } from "../lib/notify.js";
 
@@ -499,7 +500,12 @@ router.post("/admin/businesses/:businessId/review", ...adminAccess, async (req, 
     const token = randomBytes(32).toString("base64url");
     const tokenHash = createHash("sha256").update(token).digest("hex");
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    const approvalUrl = `${getPublicOrigin(req)}/guardian/approval/${token}`;
+    const approvalUrl = `${buildPublicOrigin({
+      publicAppUrl: process.env.PUBLIC_APP_URL,
+      forwardedHost: req.get("x-forwarded-host"),
+      host: req.get("host"),
+      forwardedProtocol: req.get("x-forwarded-proto"),
+    })}/guardian/approval/${token}`;
     const updated = await db.transaction(async (tx) => {
       const [row] = await tx
         .update(businessesTable)
@@ -541,26 +547,6 @@ router.post("/admin/businesses/:businessId/review", ...adminAccess, async (req, 
     res.status(500).json({ error: "We couldn't complete the review. Please try again." });
   }
 });
-
-function getPublicOrigin(req: import("express").Request) {
-  const configuredUrl = process.env.PUBLIC_APP_URL;
-  const forwardedHost =
-    req.get("x-forwarded-host")?.split(",")[0]?.trim() || req.get("host");
-  const forwardedProtocol =
-    req.get("x-forwarded-proto")?.split(",")[0]?.trim() || "https";
-  const value = configuredUrl || (forwardedHost ? `${forwardedProtocol}://${forwardedHost}` : "");
-  if (!value) throw new Error("Could not determine the Launch Lane website URL.");
-  const url = new URL(value);
-  const hostname = url.hostname.toLowerCase();
-  const isAllowed =
-    hostname.endsWith(".replit.dev") ||
-    hostname.endsWith(".replit.app") ||
-    hostname.endsWith(".repl.co") ||
-    hostname === "localhost" ||
-    hostname === "127.0.0.1";
-  if (!isAllowed) throw new Error("The website host is not an approved Launch Lane host.");
-  return url.origin;
-}
 
 router.post("/admin/businesses/:businessId/pause", ...adminAccess, async (req, res) => {
   const params = UpdateBusinessParams.safeParse(req.params);

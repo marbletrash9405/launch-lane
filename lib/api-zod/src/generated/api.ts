@@ -174,6 +174,115 @@ export const SetBusinessPauseResponse = zod.object({
 
 
 /**
+ * @summary List requests for the signed-in student's businesses
+ */
+export const GetIncomingBookingsResponse = zod.object({
+  "bookings": zod.array(zod.object({
+  "id": zod.uuid(),
+  "businessId": zod.uuid(),
+  "businessName": zod.string(),
+  "residentFirstName": zod.string(),
+  "residentStreetName": zod.string().nullable(),
+  "message": zod.string(),
+  "preferredTiming": zod.string(),
+  "status": zod.enum(['requested', 'accepted', 'declined', 'completed', 'cancelled']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}))
+})
+
+
+/**
+ * @summary List bookings for the signed-in resident
+ */
+export const GetMyBookingsResponse = zod.object({
+  "bookings": zod.array(zod.object({
+  "id": zod.uuid(),
+  "businessId": zod.uuid(),
+  "businessName": zod.string(),
+  "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "studentFirstName": zod.string(),
+  "message": zod.string(),
+  "preferredTiming": zod.string(),
+  "status": zod.enum(['requested', 'accepted', 'declined', 'completed', 'cancelled']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}))
+})
+
+
+/**
+ * @summary Request a live business booking as a resident
+ */
+export const createBookingBodyMessageMin = 3;
+export const createBookingBodyMessageMax = 2000;
+
+export const createBookingBodyPreferredTimingMax = 300;
+
+
+
+export const CreateBookingBody = zod.object({
+  "businessId": zod.uuid(),
+  "message": zod.string().min(createBookingBodyMessageMin).max(createBookingBodyMessageMax),
+  "preferredTiming": zod.string().max(createBookingBodyPreferredTimingMax).optional()
+})
+
+export const CreateBookingResponse = zod.object({
+  "id": zod.uuid(),
+  "businessId": zod.uuid(),
+  "businessName": zod.string(),
+  "status": zod.enum(['requested', 'accepted', 'declined', 'completed', 'cancelled']),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Accept, decline, or complete a booking owned by the student
+ */
+export const UpdateBookingStatusParams = zod.object({
+  "bookingId": zod.uuid()
+})
+
+export const UpdateBookingStatusBody = zod.object({
+  "action": zod.enum(['accept', 'decline', 'complete'])
+})
+
+export const UpdateBookingStatusResponse = zod.object({
+  "id": zod.uuid(),
+  "businessId": zod.uuid(),
+  "businessName": zod.string(),
+  "residentFirstName": zod.string(),
+  "residentStreetName": zod.string().nullable(),
+  "message": zod.string(),
+  "preferredTiming": zod.string(),
+  "status": zod.enum(['requested', 'accepted', 'declined', 'completed', 'cancelled']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Cancel the signed-in resident's unfinished booking
+ */
+export const CancelBookingParams = zod.object({
+  "bookingId": zod.uuid()
+})
+
+export const CancelBookingResponse = zod.object({
+  "id": zod.uuid(),
+  "businessId": zod.uuid(),
+  "businessName": zod.string(),
+  "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "studentFirstName": zod.string(),
+  "message": zod.string(),
+  "preferredTiming": zod.string(),
+  "status": zod.enum(['requested', 'accepted', 'declined', 'completed', 'cancelled']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
  * @summary List businesses for administrator review and management
  */
 export const GetAdminBusinessesResponse = zod.object({

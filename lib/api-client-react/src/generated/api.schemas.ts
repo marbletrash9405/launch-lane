@@ -34,6 +34,76 @@ export const BusinessStatus = {
   rejected: 'rejected',
 } as const;
 
+export type BookingStatus = typeof BookingStatus[keyof typeof BookingStatus];
+
+
+export const BookingStatus = {
+  requested: 'requested',
+  accepted: 'accepted',
+  declined: 'declined',
+  completed: 'completed',
+  cancelled: 'cancelled',
+} as const;
+
+export interface BookingInput {
+  businessId: string;
+  /**
+     * @minLength 3
+     * @maxLength 2000
+     */
+  message: string;
+  /** @maxLength 300 */
+  preferredTiming?: string;
+}
+
+export type BookingStatusInputAction = typeof BookingStatusInputAction[keyof typeof BookingStatusInputAction];
+
+
+export const BookingStatusInputAction = {
+  accept: 'accept',
+  decline: 'decline',
+  complete: 'complete',
+} as const;
+
+export interface BookingStatusInput {
+  action: BookingStatusInputAction;
+}
+
+export interface BookingCreated {
+  id: string;
+  businessId: string;
+  businessName: string;
+  status: BookingStatus;
+  createdAt: string;
+}
+
+export interface IncomingBooking {
+  id: string;
+  businessId: string;
+  businessName: string;
+  residentFirstName: string;
+  /** @nullable */
+  residentStreetName: string | null;
+  message: string;
+  preferredTiming: string;
+  status: BookingStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ResidentBooking {
+  id: string;
+  businessId: string;
+  businessName: string;
+  category: BusinessCategory;
+  studentFirstName: string;
+  message: string;
+  preferredTiming: string;
+  status: BookingStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface BusinessInput {
   /**
      * @minLength 2
@@ -153,6 +223,14 @@ export type GetMyBusinesses200 = {
 
 export type SetBusinessPauseBody = {
   paused: boolean;
+};
+
+export type GetIncomingBookings200 = {
+  bookings: IncomingBooking[];
+};
+
+export type GetMyBookings200 = {
+  bookings: ResidentBooking[];
 };
 
 export type GetAdminBusinesses200 = {

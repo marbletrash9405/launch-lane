@@ -4,7 +4,7 @@ import { useState } from "react";
 import GoogleSignIn from "./GoogleSignIn";
 
 export default function SignupForm({ community }) {
-  const [role, setRole] = useState("student");
+  const [role, setRole] = useState(() => new URLSearchParams(window.location.search).get("role") === "resident" ? "resident" : "student");
 
   return (
     <div className="form" style={{ gap: 18 }}>

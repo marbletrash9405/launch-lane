@@ -11,6 +11,7 @@ A neighborhood marketplace connecting Mercer Crossing students with nearby resid
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string; `ADMIN_EMAIL` — the founder account used for administrator access
 - Optional email env: `RESEND_API_KEY` and `NOTIFY_FROM`; without a Resend key, email attempts are logged for administrator testing
+- Optional URL env: `PUBLIC_APP_URL` — canonical base URL for guardian approval links; it must use an approved Replit/local host or `launch-laneco.com` / `www.launch-laneco.com`
 
 ## Stack
 
@@ -40,6 +41,7 @@ A neighborhood marketplace connecting Mercer Crossing students with nearby resid
 - The only administrator is the database account whose verified Clerk email matches the `ADMIN_EMAIL` secret. Registration accepts only `student` or `resident`; the server derives admin status from the secret.
 - Every protected API request resolves the account from the verified Clerk session and checks role and ownership on the server. Browser-provided roles and owner IDs are not authorization inputs.
 - Public listing and photo routes expose only businesses that have passed administrator and guardian approval; private addresses and guardian details are restricted to the owner and administrator.
+- Guardian approval URLs prefer `PUBLIC_APP_URL` when set; otherwise they use the request host, and both paths enforce the same explicit host allowlist.
 
 ## Product
 

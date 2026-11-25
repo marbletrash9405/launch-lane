@@ -20,6 +20,7 @@ import {
   requireSignedIn,
   resolveUserRole,
 } from "../lib/authorization";
+import { deriveResidentStreetName } from "../lib/resident-street";
 
 const router = Router();
 
@@ -150,10 +151,17 @@ router.patch("/auth/profile", requireSignedIn, async (req, res) => {
       }
       await db
         .insert(residentProfilesTable)
-        .values({ userId: user.id, ...parsed.data })
+        .values({
+          userId: user.id,
+          ...parsed.data,
+          streetName: deriveResidentStreetName(parsed.data.homeAddress),
+        })
         .onConflictDoUpdate({
           target: residentProfilesTable.userId,
-          set: parsed.data,
+          set: {
+            ...parsed.data,
+            streetName: deriveResidentStreetName(parsed.data.homeAddress),
+          },
         });
     }
 

@@ -12,6 +12,8 @@ tags:
     description: Health operations
   - name: businesses
     description: Student-owned businesses and public listings
+  - name: bookings
+    description: Resident booking requests and student booking management
   - name: moderation
     description: Administrator business review and email log
   - name: guardian
@@ -156,6 +158,140 @@ paths:
                 $ref: "#/components/schemas/StudentBusiness"
         "403":
           description: Student role or ownership required
+  /bookings/incoming:
+    get:
+      operationId: getIncomingBookings
+      tags: [bookings]
+      summary: List requests for the signed-in student's businesses
+      responses:
+        "200":
+          description: Booking requests with only resident first name and street name
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bookings:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/IncomingBooking"
+                required: [bookings]
+        "401":
+          description: Sign in required
+        "403":
+          description: Student role required
+  /bookings/mine:
+    get:
+      operationId: getMyBookings
+      tags: [bookings]
+      summary: List bookings for the signed-in resident
+      responses:
+        "200":
+          description: The resident's booking history without private student data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bookings:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ResidentBooking"
+                required: [bookings]
+        "401":
+          description: Sign in required
+        "403":
+          description: Resident role required
+  /bookings:
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Request a live business booking as a resident
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingInput"
+      responses:
+        "201":
+          description: Booking request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingCreated"
+        "400":
+          description: Invalid booking details
+        "401":
+          description: Sign in required
+        "403":
+          description: Resident role and profile required
+        "404":
+          description: Business is not available for booking
+        "429":
+          description: Too many booking requests
+  /bookings/{bookingId}/status:
+    patch:
+      operationId: updateBookingStatus
+      tags: [bookings]
+      summary: Accept, decline, or complete a booking owned by the student
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingStatusInput"
+      responses:
+        "200":
+          description: Booking status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IncomingBooking"
+        "400":
+          description: Invalid action
+        "401":
+          description: Sign in required
+        "403":
+          description: Student role and business ownership required
+        "404":
+          description: Booking not found
+        "409":
+          description: Booking cannot move to the requested status
+  /bookings/{bookingId}/cancel:
+    post:
+      operationId: cancelBooking
+      tags: [bookings]
+      summary: Cancel the signed-in resident's unfinished booking
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Booking cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResidentBooking"
+        "401":
+          description: Sign in required
+        "403":
+          description: Resident role and booking ownership required
+        "404":
+          description: Booking not found
+        "409":
+          description: A completed or already cancelled booking cannot be cancelled
   /admin/businesses:
     get:
       operationId: getAdminBusinesses
@@ -396,6 +532,98 @@ components:
     BusinessStatus:
       type: string
       enum: [pending_review, pending_guardian, live, paused, rejected]
+    BookingStatus:
+      type: string
+      enum: [requested, accepted, declined, completed, cancelled]
+    BookingInput:
+      type: object
+      properties:
+        businessId:
+          type: string
+          format: uuid
+        message:
+          type: string
+          minLength: 3
+          maxLength: 2000
+        preferredTiming:
+          type: string
+          maxLength: 300
+      required: [businessId, message]
+    BookingStatusInput:
+      type: object
+      properties:
+        action:
+          type: string
+          enum: [accept, decline, complete]
+      required: [action]
+    BookingCreated:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        businessId:
+          type: string
+          format: uuid
+        businessName:
+          type: string
+        status:
+          $ref: "#/components/schemas/BookingStatus"
+        createdAt:
+          type: string
+      required: [id, businessId, businessName, status, createdAt]
+    IncomingBooking:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        businessId:
+          type: string
+          format: uuid
+        businessName:
+          type: string
+        residentFirstName:
+          type: string
+        residentStreetName:
+          type: [string, "null"]
+        message:
+          type: string
+        preferredTiming:
+          type: string
+        status:
+          $ref: "#/components/schemas/BookingStatus"
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, businessId, businessName, residentFirstName, residentStreetName, message, preferredTiming, status, createdAt, updatedAt]
+    ResidentBooking:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        businessId:
+          type: string
+          format: uuid
+        businessName:
+          type: string
+        category:
+          $ref: "#/components/schemas/BusinessCategory"
+        studentFirstName:
+          type: string
+        message:
+          type: string
+        preferredTiming:
+          type: string
+        status:
+          $ref: "#/components/schemas/BookingStatus"
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, businessId, businessName, category, studentFirstName, message, preferredTiming, status, createdAt, updatedAt]
     BusinessInput:
       type: object
       properties:

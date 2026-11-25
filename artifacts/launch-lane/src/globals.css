@@ -437,6 +437,42 @@ p { margin: 0; }
 .optional { color: var(--muted); font-weight: 400; font-size: .85rem; }
 .btn[disabled] { opacity: .6; cursor: default; transform: none; }
 
+/* Phase 4 booking lists */
+.booking-section { margin: 38px 0 12px; }
+.booking-section .phase-section-title { margin-top: 0; }
+.booking-list { display: grid; gap: 13px; }
+.booking-card {
+  display: grid; gap: 14px; padding: 22px 24px; border-radius: 18px;
+  border: 1px solid var(--line); background: var(--white);
+}
+.booking-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.booking-card-head h3 { color: var(--teal); font-size: 1.15rem; }
+.booking-business { margin-bottom: 5px; color: var(--brown); font-size: .79rem; letter-spacing: .1em; text-transform: uppercase; }
+.booking-street { color: var(--muted); font-weight: 400; font-size: .92rem; }
+.booking-byline { color: var(--muted); font-size: .92rem; }
+.booking-message { white-space: pre-wrap; overflow-wrap: anywhere; }
+.booking-timing { display: flex; gap: 9px; flex-wrap: wrap; color: var(--muted); font-size: .92rem; }
+.booking-timing strong { color: var(--ink); font-weight: 600; }
+.booking-actions { display: flex; flex-wrap: wrap; gap: 9px; padding-top: 4px; }
+.booking-card .status-pill { flex: none; }
+.booking-status-requested { background: #fff1d5; color: #79520f; }
+.booking-status-accepted { background: var(--mint-soft); color: var(--teal); }
+.booking-status-declined, .booking-status-cancelled { background: #f4e8e2; color: #754735; }
+.booking-status-completed { background: var(--blue-soft); color: var(--blue); }
+.booking-empty { text-align: left; }
+.booking-empty h3 { margin: 8px 0; color: var(--teal); }
+.booking-empty p + p { margin-top: 8px; }
+.booking-skeleton { display: grid; gap: 12px; }
+.booking-skeleton span { display: block; height: 124px; border-radius: 18px; background: var(--sand); animation: booking-pulse 1.4s ease-in-out infinite alternate; }
+@keyframes booking-pulse { to { opacity: .52; } }
+.booking-signin { display: grid; gap: 16px; color: var(--muted); }
+.booking-signin .phase-actions { margin-top: 0; }
+@media (max-width: 640px) {
+  .booking-card { padding: 19px 16px; }
+  .booking-card-head { flex-direction: column; }
+  .phase-welcome.resident-welcome { align-items: flex-start; }
+}
+
 .modal {
   width: min(560px, calc(100vw - 24px)); max-height: calc(100vh - 32px);
   border: 0; border-radius: 22px; padding: 0; color: var(--ink); background: var(--white);
