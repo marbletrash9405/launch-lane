@@ -203,9 +203,6 @@ export default function DashboardPage() {
               {actionError && <p className="phase-error" role="alert" data-testid="error-business-action">{actionError}</p>}
               {editor !== undefined && <BusinessEditor key={editor?.id ?? "new"} existing={editor} onClose={() => setEditor(undefined)} onSaved={refreshAfterSave} />}
               <div className="phase-section-title"><div><p className="eyebrow">Your services</p><h2>Business listings</h2></div><span className="phase-count" data-testid="count-my-businesses">{businesses.length} {businesses.length === 1 ? "listing" : "listings"}</span></div>
-              <IncomingBookings account={account} />
-              <BusinessOpenings businesses={businesses} />
-              <StudentJobApplications />
               {myBusinessesQuery.isLoading ? <div className="phase-panel skeleton-panel" data-testid="loading-my-businesses"><span /><span /><span /></div> :
                 myBusinessesQuery.isError ? <div className="phase-empty" role="alert" data-testid="error-my-businesses"><p>We couldn&apos;t load your businesses.</p><button className="text-button" type="button" onClick={() => myBusinessesQuery.refetch()} data-testid="button-retry-my-businesses">Try again</button></div> :
                   sortedBusinesses.length ? <div className="phase-business-list">{sortedBusinesses.map((business) => <article className="phase-business" key={business.id} data-testid={`card-my-business-${business.id}`}>
@@ -216,6 +213,9 @@ export default function DashboardPage() {
                     </div>
                   </article>)}</div> :
                     <div className="phase-empty" data-testid="empty-my-businesses"><div className="empty-stamp">01</div><p className="eyebrow">A good place to start</p><h2>Your first service starts here.</h2><p>Add a clear description and fair pricing. We&apos;ll guide you and your guardian through the review.</p><button type="button" className="btn btn-teal" onClick={() => setEditor(null)} data-testid="button-create-first-business">Create your first listing</button></div>}
+              <IncomingBookings account={account} />
+              <BusinessOpenings businesses={businesses} />
+              <StudentJobApplications />
             </>
           ) : account.role === "admin" ? (
             <div className="phase-panel role-panel" data-testid="admin-dashboard-placeholder"><p className="eyebrow">Administrator</p><h2>Review tools are ready.</h2><p>Open the admin workspace to review student services and check testing email delivery.</p><Link href="/admin" className="btn btn-teal" data-testid="link-admin-workspace">Open admin workspace</Link></div>

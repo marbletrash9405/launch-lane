@@ -30,7 +30,7 @@ console.log("Photo upload");
 r = await call("POST", "/api/storage/uploads/request-url", { json: { name: "a.webp", size: photo.length, contentType: "image/webp" } }); ok("signed-out upload refused", r.status === 401);
 r = await call("POST", "/api/storage/uploads/request-url", { user: ADMIN, json: { name: "a.webp", size: photo.length, contentType: "image/webp" } }); ok("non-student upload refused", r.status === 403);
 r = await call("POST", "/api/storage/uploads/request-url", { user: STUDENT, json: { name: "a.webp", size: photo.length, contentType: "image/webp" } });
-ok("student gets upload URL", r.status === 200 && r.data.uploadURL.startsWith("https://localhost:4100/api/storage/uploads/"), r.raw);
+ok("student gets upload URL", r.status === 200 && r.data.uploadURL.startsWith(base.replace("http:", "https:") + "/api/storage/uploads/"), r.raw);
 const { uploadURL, objectPath } = r.data;
 const putPath = new URL(uploadURL).pathname;
 r = await call("PUT", putPath, { user: STUDENT, body: png, type: "image/webp" }); ok("PNG disguised as WebP rejected", r.status === 400, r.raw);

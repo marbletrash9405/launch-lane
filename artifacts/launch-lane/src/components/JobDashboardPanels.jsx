@@ -9,7 +9,7 @@ import {
 import { categories } from "@/data/categories";
 
 const jobStatus = { pending_review: "In review", open: "Open", filled: "Filled", closed: "Closed", rejected: "Needs changes" };
-const applicationStatus = { pending_review: "Under safety review", applied: "Approved · sent to the poster", rejected: "Not approved", chosen: "Selected", guardian_approved: "Guardian approved", declined: "Not selected", withdrawn: "Withdrawn" };
+const applicationStatus = { pending_review: "Under safety review", applied: "Approved by Launch Lane", rejected: "Not approved", chosen: "Selected", guardian_approved: "Guardian approved", declined: "Not selected", withdrawn: "Withdrawn" };
 
 function PosterJobCard({ job, chooseApplicant, closeJob, act }) {
   return <article className="booking-card" data-testid={`card-resident-job-${job.id}`}>

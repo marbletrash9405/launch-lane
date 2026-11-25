@@ -184,12 +184,12 @@ export default function RequestButton({ listing }) {
               ) : (
                 <form className="form" onSubmit={submitApplication} data-testid={`form-application-${uid}`}>
                   <div className="field"><label htmlFor={`${uid}-message`}>Why you&apos;re a good fit</label><textarea className="textarea" id={`${uid}-message`} required minLength="3" maxLength="2000" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Mention work you've done that relates to this job." /></div>
-                  <fieldset className="field" data-testid={`field-other-job-${uid}`}><legend>Do you have another job right now?</legend>
+                  <div className="field" role="radiogroup" aria-labelledby={`${uid}-other-job-label`} data-testid={`field-other-job-${uid}`}><label id={`${uid}-other-job-label`}>Do you have another job right now?</label>
                     <div className="phase-actions">
                       <label><input type="radio" name={`${uid}-other-job`} checked={hasOtherJob === false} onChange={() => setHasOtherJob(false)} required /> No</label>
                       <label><input type="radio" name={`${uid}-other-job`} checked={hasOtherJob === true} onChange={() => setHasOtherJob(true)} /> Yes</label>
                     </div>
-                  </fieldset>
+                  </div>
                   {hasOtherJob && <div className="field"><label htmlFor={`${uid}-other-job-details`}>What is it, and when do you work?</label><input className="input" id={`${uid}-other-job-details`} required minLength="2" maxLength="500" value={otherJobDetails} onChange={(event) => setOtherJobDetails(event.target.value)} placeholder="e.g. Lifeguard, Sat–Sun 9am–2pm" /></div>}
                   <div className="field"><label htmlFor={`${uid}-availability`}>When are you available?</label><input className="input" id={`${uid}-availability`} required minLength="2" maxLength="500" value={availability} onChange={(event) => setAvailability(event.target.value)} placeholder="e.g. Weekdays after 4pm, Saturday mornings" /></div>
                   <p className="phase-help">Your age comes from your profile. Launch Lane and the poster see it with your application.</p>

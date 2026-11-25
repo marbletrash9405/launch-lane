@@ -10,7 +10,7 @@ How it's built and the rules it must keep: [`docs/architecture.md`](docs/archite
 
 Do these in order. Every key goes into Vercel → your project → **Settings → Environment Variables** (all environments), never into the code.
 
-1. **Database (Neon).** Vercel project → **Storage → Create → Neon (Postgres)** → Free plan → connect to this project. Vercel adds `DATABASE_URL` for you. The tables are created automatically on the first production deploy.
+1. **Database (Neon).** Vercel project → **Storage → Create → Neon (Postgres)** → Free plan → connect to this project. Vercel adds `DATABASE_URL` for you. The tables are created automatically when it deploys.
 2. **Photos (Vercel Blob).** Vercel project → **Storage → Create → Blob** → set access to **Private** (this can't be changed later) → connect to this project. Vercel adds the Blob settings for you.
 3. **Sign-in (Clerk).** Make a free account at [clerk.com](https://clerk.com) → **Create application** named "Launch Lane" → turn on **Google** and **Email** (email verification code) → **Create**. Then open **Configure → API keys** and add to Vercel:
    - `CLERK_PUBLISHABLE_KEY` = the `pk_test_…` key
@@ -23,7 +23,8 @@ Do these in order. Every key goes into Vercel → your project → **Settings �
    - `NOTIFY_FROM` = `Launch Lane <notifications@launch-laneco.com>`
 
    Until this is done, emails aren't sent. They're saved in the **Email log** on `/admin`, so you can still test.
-6. **Deploy.** Vercel → **Deployments → Redeploy** (or push to `main`).
+6. **Test on a preview link first.** Every push to the `free-stack` branch makes a private preview deployment (Vercel → **Deployments**, only you can open it while signed in to Vercel). Make sure the variables above are enabled for **Preview** as well as Production. The tables are created automatically on each deploy.
+7. **Go live** only when you're ready: merge `free-stack` into `main`. ⚠️ If launch-laneco.com is already added under Vercel → Settings → Domains, merging makes the new app live on it, so check that first.
 
 Admin login: open the site, sign in with Google or an email code as `launchlanecompany@gmail.com`, then go to `/admin`.
 

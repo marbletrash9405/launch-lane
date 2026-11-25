@@ -25,9 +25,10 @@ if (!publishableKey) {
 
 await rm(output, { recursive: true, force: true });
 
-// 1. Update the database tables on production deploys (safe changes only;
-//    drizzle stops and fails the build instead of deleting data).
-if (process.env.VERCEL_ENV === "production" && process.env.DATABASE_URL && process.env.SKIP_DB_PUSH !== "1") {
+// 1. Create/update the database tables on Vercel deploys (production and
+//    preview). Additive changes only: drizzle stops and fails the build rather
+//    than deleting data. Set SKIP_DB_PUSH=1 to turn this off.
+if (process.env.VERCEL && process.env.DATABASE_URL && process.env.SKIP_DB_PUSH !== "1") {
   run("pnpm --filter @workspace/db run push");
 }
 
