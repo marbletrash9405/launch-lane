@@ -17,7 +17,7 @@ export default function ListingsPage() {
     title: business.name,
     name: business.studentName,
   })).concat((jobsQuery.data?.jobs ?? []).map((job) => ({
-    ...job, type: "job", name: "Mercer Crossing neighbor", street: job.residentStreetName || "",
+    ...job, type: "job", name: job.businessName || "Mercer Crossing neighbor", street: job.residentStreetName || "",
     pay: job.payText, timing: job.timing,
   }))), [data?.businesses, jobsQuery.data?.jobs]);
   return (

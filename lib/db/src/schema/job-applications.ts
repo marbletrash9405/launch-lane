@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   pgEnum,
   pgTable,
@@ -30,6 +31,11 @@ export const jobApplicationsTable = pgTable(
       .notNull()
       .references(() => usersTable.id, { onDelete: "cascade" }),
     message: text("message").notNull(),
+    // Asked on every application so the admin and the poster can check
+    // availability. Null on applications made before these questions existed.
+    hasOtherJob: boolean("has_other_job").notNull().default(false),
+    otherJobDetails: text("other_job_details"),
+    availability: text("availability"),
     status: jobApplicationStatusEnum("status").notNull().default("pending_review"),
     rejectionReason: text("rejection_reason"),
     createdAt: timestamp("created_at", { withTimezone: true })

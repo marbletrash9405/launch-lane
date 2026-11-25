@@ -121,6 +121,14 @@ export interface JobApplicationInput {
      * @maxLength 2000
      */
   message: string;
+  hasOtherJob: boolean;
+  /** @maxLength 500 */
+  otherJobDetails?: string;
+  /**
+     * @minLength 2
+     * @maxLength 500
+     */
+  availability: string;
 }
 
 export type JobReviewInputAction = typeof JobReviewInputAction[keyof typeof JobReviewInputAction];
@@ -160,6 +168,10 @@ export interface PublicJob {
   payText: string;
   /** @nullable */
   residentStreetName: string | null;
+  /** @nullable */
+  businessId: string | null;
+  /** @nullable */
+  businessName: string | null;
 }
 
 export interface ResidentJobApplication {
@@ -167,6 +179,11 @@ export interface ResidentJobApplication {
   studentFirstName: string;
   age: number;
   message: string;
+  hasOtherJob: boolean;
+  /** @nullable */
+  otherJobDetails: string | null;
+  /** @nullable */
+  availability: string | null;
   status: JobApplicationStatus;
   createdAt: string;
 }
@@ -182,6 +199,10 @@ export interface ResidentJob {
   /** @nullable */
   rejectionReason: string | null;
   applications: ResidentJobApplication[];
+  /** @nullable */
+  businessId: string | null;
+  /** @nullable */
+  businessName: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -191,6 +212,8 @@ export interface StudentJobApplication {
   jobId: string;
   jobTitle: string;
   category: BusinessCategory;
+  /** @nullable */
+  businessName: string | null;
   message: string;
   status: JobApplicationStatus;
   /** @nullable */
@@ -219,6 +242,13 @@ export interface AdminJobApplication {
      */
   age: number;
   message: string;
+  hasOtherJob: boolean;
+  /** @nullable */
+  otherJobDetails: string | null;
+  /** @nullable */
+  availability: string | null;
+  /** @nullable */
+  businessName: string | null;
   status: JobApplicationStatus;
   /** @nullable */
   rejectionReason: string | null;
@@ -516,6 +546,10 @@ export type GetMyBusinesses200 = {
 
 export type SetBusinessPauseBody = {
   paused: boolean;
+};
+
+export type GetMyBusinessOpenings200 = {
+  jobs: ResidentJob[];
 };
 
 export type GetIncomingBookings200 = {

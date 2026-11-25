@@ -23,11 +23,16 @@ import {
   WithdrawJobApplicationParams,
   WithdrawJobApplicationResponse,
   ChooseJobApplicantParams,
+  CreateBusinessOpeningBody,
+  CreateBusinessOpeningParams,
+  CreateBusinessOpeningResponse,
+  GetMyBusinessOpeningsResponse,
   ChooseJobApplicantResponse,
   CloseMyJobParams,
   CloseMyJobResponse,
 } from "@workspace/api-zod";
 import {
+  businessesTable,
   db,
   guardianApprovalsTable,
   jobApplicationsTable,
@@ -39,18 +44,21 @@ import {
 import {
   getAccount,
   requireAccount,
+  requireAnyRole,
   requireRole,
   requireSignedIn,
 } from "../lib/authorization";
 import { deriveResidentStreetName } from "../lib/resident-street";
 import { getPublicOrigin } from "../lib/public-origin";
-import { getResidentJob, listResidentJobs } from "../lib/job-helpers";
+import { getPosterContact, getResidentJob, listResidentJobs } from "../lib/job-helpers";
 // @ts-ignore - the shared mail helper is maintained in JavaScript.
 import { sendEmail, sendNotification } from "../lib/notify.js";
 
 const router = Router();
 const residentAccess = [requireSignedIn, requireAccount, requireRole("resident")];
 const studentAccess = [requireSignedIn, requireAccount, requireRole("student")];
+// Residents manage their jobs; student owners manage openings at their business.
+const posterAccess = [requireSignedIn, requireAccount, requireAnyRole(["resident", "student"])];
 const jobCreationLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: 5,
@@ -142,12 +150,15 @@ router.get("/jobs/public", async (req, res): Promise<void> => {
         job: jobsTable,
         streetName: residentProfilesTable.streetName,
         homeAddress: residentProfilesTable.homeAddress,
+        businessName: businessesTable.name,
+        businessStatus: businessesTable.status,
       })
       .from(jobsTable)
-      .innerJoin(
+      .leftJoin(
         residentProfilesTable,
         eq(residentProfilesTable.userId, jobsTable.residentId),
       )
+      .leftJoin(businessesTable, eq(businessesTable.id, jobsTable.businessId))
       .where(
         and(
           eq(jobsTable.status, "open"),
@@ -155,17 +166,24 @@ router.get("/jobs/public", async (req, res): Promise<void> => {
         ),
       )
       .orderBy(desc(jobsTable.createdAt));
+    // Neighborhood jobs need a resident profile; openings need a live business.
+    const visible = rows.filter((row) =>
+      row.job.businessId ? row.businessStatus === "live" : row.homeAddress !== null,
+    );
     res.json(
       GetPublicJobsResponse.parse({
-        jobs: rows.map((row) => ({
+        jobs: visible.map((row) => ({
           id: row.job.id,
           title: row.job.title,
           category: row.job.category,
           description: row.job.description,
           timing: row.job.timing,
           payText: row.job.payText,
-          residentStreetName:
-            row.streetName ?? deriveResidentStreetName(row.homeAddress),
+          residentStreetName: row.job.businessId
+            ? null
+            : row.streetName ?? deriveResidentStreetName(row.homeAddress ?? ""),
+          businessId: row.job.businessId ?? null,
+          businessName: row.job.businessId ? row.businessName : null,
         })),
       }),
     );
@@ -253,7 +271,12 @@ router.post(
     const params = CreateJobApplicationParams.safeParse(req.params);
     const parsed = CreateJobApplicationBody.safeParse(req.body);
     if (!params.success || !parsed.success) {
-      res.status(400).json({ error: "Add a short message about your relevant experience." });
+      res.status(400).json({ error: "Add a short message about your experience, your availability, and whether you have another job." });
+      return;
+    }
+    const otherJobDetails = parsed.data.otherJobDetails?.trim() ?? "";
+    if (parsed.data.hasOtherJob && otherJobDetails.length < 2) {
+      res.status(400).json({ error: "Tell us about your other job so we can check your availability." });
       return;
     }
 
@@ -276,6 +299,17 @@ router.post(
           .for("update")
           .limit(1);
         if (!job || job.status !== "open") return { kind: "unavailable" as const };
+        if (job.residentId === account.user.id) return { kind: "own_post" as const };
+        let businessName: string | null = null;
+        if (job.businessId) {
+          const [business] = await tx
+            .select({ name: businessesTable.name, status: businessesTable.status })
+            .from(businessesTable)
+            .where(eq(businessesTable.id, job.businessId))
+            .limit(1);
+          if (!business || business.status !== "live") return { kind: "unavailable" as const };
+          businessName = business.name;
+        }
 
         const now = new Date();
         const activeChoice = await tx
@@ -348,10 +382,13 @@ router.post(
             jobId: job.id,
             studentId: account.user.id,
             message: parsed.data.message.trim(),
+            hasOtherJob: parsed.data.hasOtherJob,
+            otherJobDetails: parsed.data.hasOtherJob ? otherJobDetails : null,
+            availability: parsed.data.availability.trim(),
             status: "pending_review",
           })
           .returning();
-        return { kind: "created" as const, job, application };
+        return { kind: "created" as const, job, application, businessName };
       });
 
       if (result.kind === "unavailable") {
@@ -360,6 +397,10 @@ router.post(
       }
       if (result.kind === "duplicate") {
         res.status(409).json({ error: "You already have an active application for this job." });
+        return;
+      }
+      if (result.kind === "own_post") {
+        res.status(403).json({ error: "You can't apply to your own business's opening." });
         return;
       }
 
@@ -373,8 +414,18 @@ router.post(
           ["Private address", profile.homeAddress],
           ["Guardian", profile.guardianName],
           ["Guardian email", profile.guardianEmail],
+          ...(result.businessName
+            ? [["Opening at", result.businessName] as [string, string]]
+            : []),
           ["Job", result.job.title],
           ["Experience", result.application.message],
+          [
+            "Other job",
+            result.application.hasOtherJob
+              ? `Yes: ${result.application.otherJobDetails}`
+              : "No",
+          ],
+          ["Availability", result.application.availability ?? ""],
         ],
       });
       res.status(201).json(
@@ -383,6 +434,7 @@ router.post(
           jobId: result.job.id,
           jobTitle: result.job.title,
           category: result.job.category,
+          businessName: result.businessName,
           message: result.application.message,
           status: result.application.status,
           rejectionReason: result.application.rejectionReason,
@@ -408,9 +460,11 @@ router.get(
           application: jobApplicationsTable,
           jobTitle: jobsTable.title,
           category: jobsTable.category,
+          businessName: businessesTable.name,
         })
         .from(jobApplicationsTable)
         .innerJoin(jobsTable, eq(jobsTable.id, jobApplicationsTable.jobId))
+        .leftJoin(businessesTable, eq(businessesTable.id, jobsTable.businessId))
         .where(eq(jobApplicationsTable.studentId, account.user.id))
         .orderBy(desc(jobApplicationsTable.createdAt));
       res.json(
@@ -420,6 +474,7 @@ router.get(
             jobId: row.application.jobId,
             jobTitle: row.jobTitle,
             category: row.category,
+            businessName: row.businessName ?? null,
             message: row.application.message,
             status: row.application.status,
             rejectionReason: row.application.rejectionReason,
@@ -504,12 +559,7 @@ router.post(
               ),
             );
         }
-        const [resident] = await tx
-          .select({ email: usersTable.email })
-          .from(usersTable)
-          .where(eq(usersTable.id, job.residentId))
-          .limit(1);
-        return { kind: "withdrawn" as const, job, application: updated, resident, wasChosen };
+        return { kind: "withdrawn" as const, job, application: updated, wasChosen };
       });
       if (result.kind === "not_found") {
         res.status(404).json({ error: "Application not found." });
@@ -520,9 +570,11 @@ router.post(
         return;
       }
 
-      if (result.wasChosen && result.resident) {
+      const poster = result.wasChosen ? await getPosterContact(result.job.residentId) : null;
+      if (result.wasChosen && poster) {
         await sendEmail({
-          to: [result.resident.email],
+          to: [poster.email],
+          cc: poster.cc,
           subject: `Application withdrawn: ${result.job.title}`,
           text: `${firstName(account.user.name)} withdrew their application for ${result.job.title}. The job is open for you to choose another applicant.`,
         });
@@ -533,6 +585,9 @@ router.post(
           jobId: result.application.jobId,
           jobTitle: result.job.title,
           category: result.job.category,
+          businessName: result.job.businessId
+            ? (await getResidentJob(result.job.id))?.businessName ?? null
+            : null,
           message: result.application.message,
           status: result.application.status,
           rejectionReason: result.application.rejectionReason,
@@ -549,7 +604,7 @@ router.post(
 
 router.post(
   "/jobs/:jobId/applications/:applicationId/choose",
-  ...residentAccess,
+  ...posterAccess,
   async (req, res): Promise<void> => {
     const account = getAccount(res);
     const params = ChooseJobApplicantParams.safeParse(req.params);
@@ -698,7 +753,9 @@ router.post(
         text: [
           `Hello ${result.student.guardianName},`,
           "",
-          `${account.user.name} chose ${firstName(result.student.name)} for ${result.job.title} in Mercer Crossing.`,
+          result.job.businessId
+            ? `${account.user.name} chose ${firstName(result.student.name)} for a role at their Launch Lane business: ${result.job.title}.`
+            : `${account.user.name} chose ${firstName(result.student.name)} for ${result.job.title} in Mercer Crossing.`,
           "Please approve or decline this one-time request here:",
           "",
           approvalUrl,
@@ -717,7 +774,7 @@ router.post(
 
 router.post(
   "/jobs/:jobId/close",
-  ...residentAccess,
+  ...posterAccess,
   async (req, res): Promise<void> => {
     const account = getAccount(res);
     const params = CloseMyJobParams.safeParse(req.params);
@@ -764,7 +821,9 @@ router.post(
           to: [row.studentEmail],
           cc: [row.guardianEmail],
           subject: `Job closed: ${result.job.title}`,
-          text: `The resident closed ${result.job.title}. Your application is now declined.`,
+          text: result.job.businessId
+            ? `The business closed the opening ${result.job.title}. Your application is now declined.`
+            : `The resident closed ${result.job.title}. Your application is now declined.`,
         });
       }
       const response = await getResidentJob(result.job.id);
@@ -772,6 +831,99 @@ router.post(
     } catch (error) {
       req.log.error({ err: error }, "Could not close resident job");
       res.status(500).json({ error: "We couldn't close your job." });
+    }
+  },
+);
+
+router.get(
+  "/businesses/openings/mine",
+  ...studentAccess,
+  async (req, res): Promise<void> => {
+    const account = getAccount(res);
+    try {
+      const jobs = (await listResidentJobs(account.user.id)).filter((job) => job.businessId);
+      res.json(GetMyBusinessOpeningsResponse.parse({ jobs }));
+    } catch (error) {
+      req.log.error({ err: error }, "Could not load business openings");
+      res.status(500).json({ error: "We couldn't load your openings." });
+    }
+  },
+);
+
+router.post(
+  "/businesses/:businessId/openings",
+  jobCreationLimiter,
+  ...studentAccess,
+  async (req, res): Promise<void> => {
+    const account = getAccount(res);
+    const params = CreateBusinessOpeningParams.safeParse(req.params);
+    const parsed = CreateBusinessOpeningBody.safeParse(req.body);
+    if (!params.success || !parsed.success) {
+      res.status(400).json({ error: "Check the role title, category, description, schedule, and pay details." });
+      return;
+    }
+    try {
+      const [business] = await db
+        .select()
+        .from(businessesTable)
+        .where(
+          and(
+            eq(businessesTable.id, params.data.businessId),
+            eq(businessesTable.ownerId, account.user.id),
+          ),
+        )
+        .limit(1);
+      if (!business) {
+        res.status(404).json({ error: "Business not found." });
+        return;
+      }
+      if (business.status !== "live") {
+        res.status(409).json({ error: "Your business must be approved and live before you can post an opening." });
+        return;
+      }
+      const [profile] = await db
+        .select()
+        .from(studentProfilesTable)
+        .where(eq(studentProfilesTable.userId, account.user.id))
+        .limit(1);
+      if (!profile) {
+        res.status(403).json({ error: "Complete your student profile first." });
+        return;
+      }
+
+      const [job] = await db
+        .insert(jobsTable)
+        .values({
+          residentId: account.user.id,
+          businessId: business.id,
+          title: parsed.data.title.trim(),
+          category: parsed.data.category,
+          description: parsed.data.description.trim(),
+          timing: parsed.data.timing.trim(),
+          payText: parsed.data.payText.trim(),
+          status: "pending_review",
+        })
+        .returning();
+      await sendNotification({
+        subject: `Opening review needed: ${job.title} at ${business.name}`,
+        intro: "A student business posted an opening and it's ready for administrator review.",
+        replyTo: account.user.email,
+        rows: [
+          ["Business", business.name],
+          ["Owner", `${account.user.name} (${account.user.email}), age ${profile.age}`],
+          ["Owner's guardian", `${profile.guardianName} (${profile.guardianEmail})`],
+          ["Role", job.title],
+          ["Category", job.category],
+          ["Description", job.description],
+          ["Schedule", job.timing],
+          ["Pay", job.payText],
+        ],
+      });
+      const response = await getResidentJob(job.id);
+      res.status(201).json(CreateBusinessOpeningResponse.parse(response));
+    } catch (error) {
+      req.log.error({ err: error }, "Could not create business opening");
+      res.status(500).json({ error: "We couldn't post your opening. Please try again." });
     }
   },
 );

@@ -80,9 +80,11 @@ router.get("/guardian/approvals/:token", async (req, res) => {
           jobTitle: jobsTable.title,
           residentId: jobsTable.residentId,
           studentId: jobApplicationsTable.studentId,
+          businessName: businessesTable.name,
         })
         .from(jobApplicationsTable)
         .innerJoin(jobsTable, eq(jobsTable.id, jobApplicationsTable.jobId))
+        .leftJoin(businessesTable, eq(businessesTable.id, jobsTable.businessId))
         .where(eq(jobApplicationsTable.id, approval.targetId))
         .limit(1);
       if (!row) {
@@ -105,7 +107,7 @@ router.get("/guardian/approvals/:token", async (req, res) => {
       }
       details = {
         targetType: approval.targetType,
-        businessName: null,
+        businessName: row.businessName ?? null,
         category: null,
         jobTitle: row.jobTitle,
         residentFirstName: firstName(resident.name),
@@ -325,6 +327,11 @@ router.post("/guardian/approvals/:token", async (req, res) => {
       if (!profile || !student || !resident) {
         throw new Error("A job application participant profile is unavailable.");
       }
+      const [posterProfile] = await tx
+        .select({ guardianEmail: studentProfilesTable.guardianEmail })
+        .from(studentProfilesTable)
+        .where(eq(studentProfilesTable.userId, resident.id))
+        .limit(1);
       if (parsed.data.decision === "approved") {
         await createChatThread(tx, {
           jobApplicationId: application.id,
@@ -333,6 +340,8 @@ router.post("/guardian/approvals/:token", async (req, res) => {
           residentId: resident.id,
           residentEmail: resident.email,
           guardianEmail: profile.guardianEmail,
+          residentRole: job.businessId ? "student" : "resident",
+          posterGuardianEmail: job.businessId ? posterProfile?.guardianEmail ?? null : null,
           now,
         });
       }
@@ -343,6 +352,7 @@ router.post("/guardian/approvals/:token", async (req, res) => {
         profile,
         student,
         resident,
+        posterCc: posterProfile?.guardianEmail ? [posterProfile.guardianEmail] : [],
       };
     });
 
@@ -366,6 +376,7 @@ router.post("/guardian/approvals/:token", async (req, res) => {
     } else if (approved) {
       await sendEmail({
         to: [result.resident.email],
+        cc: result.posterCc,
         subject: `Your job is filled: ${result.job.title}`,
         text: [
           `The guardian approved ${firstName(result.student.name)} for ${result.job.title}. The job is now filled.`,
@@ -379,15 +390,16 @@ router.post("/guardian/approvals/:token", async (req, res) => {
         cc: [result.profile.guardianEmail],
         subject: `Guardian approved your job application: ${result.job.title}`,
         text: [
-          `Your guardian approved your application for ${result.job.title}. The resident selected you.`,
+          `Your guardian approved your application for ${result.job.title}. ${result.job.businessId ? "The business owner" : "The resident"} selected you.`,
           "",
-          `Resident email: ${result.resident.email}`,
+          `${result.job.businessId ? "Business owner" : "Resident"} email: ${result.resident.email}`,
           "Reply directly to arrange the job details and payment.",
         ].join("\n"),
       });
     } else {
       await sendEmail({
         to: [result.resident.email],
+        cc: result.posterCc,
         subject: `Guardian declined an applicant: ${result.job.title}`,
         text: `The guardian declined ${firstName(result.student.name)} for ${result.job.title}. The job remains open; you can choose another applicant from your dashboard.`,
       });

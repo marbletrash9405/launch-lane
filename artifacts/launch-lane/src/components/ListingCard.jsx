@@ -6,7 +6,7 @@ export default function ListingCard({ listing }) {
   return (
     <article className={`listing ${isOffer ? "offering" : "job"}`} data-testid={`card-listing-${listing.id}`}>
       <span className={`pill ${isOffer ? "pill-offer" : "pill-job"}`}>
-        {isOffer ? "Student service" : "Job"}
+        {isOffer ? "Student service" : listing.businessName ? "Opening" : "Job"}
       </span>
       <div>
         <h3 data-testid={`text-listing-title-${listing.id}`}>{listing.title}</h3>
@@ -32,7 +32,7 @@ export default function ListingCard({ listing }) {
       <div className="listing-foot">
         <div className="who">
           <strong>{listing.name}</strong>
-          {isOffer ? "Student" : listing.street ? `${listing.street}, Mercer Crossing` : "Mercer Crossing"}
+          {isOffer ? "Student" : listing.businessName ? "Student business · hiring" : listing.street ? `${listing.street}, Mercer Crossing` : "Mercer Crossing"}
         </div>
         <RequestButton listing={listing} />
       </div>

@@ -19,6 +19,9 @@ export default function RequestButton({ listing }) {
   const [accountError, setAccountError] = useState("");
   const [accountRefresh, setAccountRefresh] = useState(0);
   const [message, setMessage] = useState("");
+  const [hasOtherJob, setHasOtherJob] = useState(null);
+  const [otherJobDetails, setOtherJobDetails] = useState("");
+  const [availability, setAvailability] = useState("");
   const [preferredTiming, setPreferredTiming] = useState("");
   const [bookingError, setBookingError] = useState("");
   const [bookingSent, setBookingSent] = useState(false);
@@ -93,7 +96,13 @@ export default function RequestButton({ listing }) {
     event.preventDefault();
     setBookingError("");
     try {
-      await createApplication.mutateAsync({ jobId: String(listing.id), data: { message: message.trim() } });
+      if (hasOtherJob === null) { setBookingError("Let us know whether you have another job."); return; }
+      await createApplication.mutateAsync({ jobId: String(listing.id), data: {
+        message: message.trim(),
+        hasOtherJob,
+        ...(hasOtherJob ? { otherJobDetails: otherJobDetails.trim() } : {}),
+        availability: availability.trim(),
+      } });
       setBookingSent(true);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: getGetMyJobApplicationsQueryKey() }),
@@ -155,9 +164,11 @@ export default function RequestButton({ listing }) {
             </>
           ) : (
             <>
-              <p className="eyebrow">Apply for a job</p>
+              <p className="eyebrow">{listing.businessName ? `Apply to join ${listing.businessName}` : "Apply for a job"}</p>
               <h2 id={`${uid}-title`}>{listing.title}</h2>
-              <p className="modal-note">Tell the resident why you&apos;re a good fit. Your guardian will be asked to approve before you take the job.</p>
+              <p className="modal-note">{listing.businessName
+                ? `Launch Lane reviews your application first, then sends it to the owner of ${listing.businessName}. Your guardian will be asked to approve before you join.`
+                : "Launch Lane reviews your application first, then sends it to the resident. Your guardian will be asked to approve before you take the job."}</p>
               {!isLoaded ? <p className="modal-note">Checking your sign-in…</p> : !isSignedIn ? (
                 <div className="booking-signin"><p>Log in or sign up as a student to apply for this neighborhood job.</p><div className="phase-actions"><Link href="/login" className="btn btn-teal">Log in</Link><Link href="/signup?role=student" className="btn btn-outline">Sign up as a student</Link></div></div>
               ) : accountMissing ? (
@@ -173,6 +184,15 @@ export default function RequestButton({ listing }) {
               ) : (
                 <form className="form" onSubmit={submitApplication} data-testid={`form-application-${uid}`}>
                   <div className="field"><label htmlFor={`${uid}-message`}>Why you&apos;re a good fit</label><textarea className="textarea" id={`${uid}-message`} required minLength="3" maxLength="2000" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Mention work you've done that relates to this job." /></div>
+                  <fieldset className="field" data-testid={`field-other-job-${uid}`}><legend>Do you have another job right now?</legend>
+                    <div className="phase-actions">
+                      <label><input type="radio" name={`${uid}-other-job`} checked={hasOtherJob === false} onChange={() => setHasOtherJob(false)} required /> No</label>
+                      <label><input type="radio" name={`${uid}-other-job`} checked={hasOtherJob === true} onChange={() => setHasOtherJob(true)} /> Yes</label>
+                    </div>
+                  </fieldset>
+                  {hasOtherJob && <div className="field"><label htmlFor={`${uid}-other-job-details`}>What is it, and when do you work?</label><input className="input" id={`${uid}-other-job-details`} required minLength="2" maxLength="500" value={otherJobDetails} onChange={(event) => setOtherJobDetails(event.target.value)} placeholder="e.g. Lifeguard, Sat–Sun 9am–2pm" /></div>}
+                  <div className="field"><label htmlFor={`${uid}-availability`}>When are you available?</label><input className="input" id={`${uid}-availability`} required minLength="2" maxLength="500" value={availability} onChange={(event) => setAvailability(event.target.value)} placeholder="e.g. Weekdays after 4pm, Saturday mornings" /></div>
+                  <p className="phase-help">Your age comes from your profile. Launch Lane and the poster see it with your application.</p>
                   {bookingError && <p className="form-error" role="alert">{bookingError}</p>}
                   <button type="submit" className="btn btn-blue" disabled={createApplication.isPending}>{createApplication.isPending ? "Sending…" : "Send application"}</button>
                 </form>

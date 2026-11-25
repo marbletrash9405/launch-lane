@@ -13,6 +13,7 @@ import {
   ReviewJobResponse,
 } from "@workspace/api-zod";
 import {
+  businessesTable,
   db,
   guardianApprovalsTable,
   jobApplicationsTable,
@@ -26,7 +27,7 @@ import {
   requireRole,
   requireSignedIn,
 } from "../lib/authorization";
-import { getAdminJob, listAdminJobs } from "../lib/job-helpers";
+import { getAdminJob, getPosterContact, listAdminJobs } from "../lib/job-helpers";
 // @ts-ignore - the shared mail helper is maintained in JavaScript.
 import { sendEmail } from "../lib/notify.js";
 
@@ -45,6 +46,7 @@ router.get("/admin/jobs", ...adminAccess, async (req, res): Promise<void> => {
 function adminApplicationShape(row: {
   application: typeof jobApplicationsTable.$inferSelect;
   jobTitle: string;
+  businessName: string | null;
   studentName: string;
   studentEmail: string;
   age: number;
@@ -60,6 +62,10 @@ function adminApplicationShape(row: {
     studentEmail: row.studentEmail,
     age: row.age,
     message: row.application.message,
+    hasOtherJob: row.application.hasOtherJob,
+    otherJobDetails: row.application.otherJobDetails,
+    availability: row.application.availability,
+    businessName: row.businessName ?? null,
     status: row.application.status,
     rejectionReason: row.application.rejectionReason,
     privateAddress: row.privateAddress,
@@ -74,6 +80,7 @@ async function getAdminApplication(applicationId: string) {
     .select({
       application: jobApplicationsTable,
       jobTitle: jobsTable.title,
+      businessName: businessesTable.name,
       studentName: usersTable.name,
       studentEmail: usersTable.email,
       age: studentProfilesTable.age,
@@ -83,6 +90,7 @@ async function getAdminApplication(applicationId: string) {
     })
     .from(jobApplicationsTable)
     .innerJoin(jobsTable, eq(jobsTable.id, jobApplicationsTable.jobId))
+    .leftJoin(businessesTable, eq(businessesTable.id, jobsTable.businessId))
     .innerJoin(usersTable, eq(usersTable.id, jobApplicationsTable.studentId))
     .innerJoin(
       studentProfilesTable,
@@ -102,6 +110,7 @@ router.get(
         .select({
           application: jobApplicationsTable,
           jobTitle: jobsTable.title,
+          businessName: businessesTable.name,
           studentName: usersTable.name,
           studentEmail: usersTable.email,
           age: studentProfilesTable.age,
@@ -111,6 +120,7 @@ router.get(
         })
         .from(jobApplicationsTable)
         .innerJoin(jobsTable, eq(jobsTable.id, jobApplicationsTable.jobId))
+        .leftJoin(businessesTable, eq(businessesTable.id, jobsTable.businessId))
         .innerJoin(usersTable, eq(usersTable.id, jobApplicationsTable.studentId))
         .innerJoin(
           studentProfilesTable,
@@ -185,13 +195,7 @@ router.post(
           )
           .returning();
         if (!application) return { kind: "conflict" as const };
-        const [resident] = await tx
-          .select({ email: usersTable.email })
-          .from(usersTable)
-          .where(eq(usersTable.id, row.job.residentId))
-          .limit(1);
-        if (!resident) throw new Error("The resident account is unavailable.");
-        return { kind: "updated" as const, row, application, resident };
+        return { kind: "updated" as const, row, application };
       });
 
       if (result.kind === "not_found") {
@@ -204,12 +208,17 @@ router.post(
       }
 
       if (parsed.data.action === "approve") {
+        const poster = await getPosterContact(result.row.job.residentId);
+        if (!poster) throw new Error("The poster account is unavailable.");
         await sendEmail({
-          to: [result.resident.email],
+          to: [poster.email],
+          cc: poster.cc,
           subject: `New application: ${result.row.job.title}`,
           text: [
-            `${result.row.student.name.trim().split(/\s+/)[0] || "A student"} applied for your job, ${result.row.job.title}.`,
+            `${result.row.student.name.trim().split(/\s+/)[0] || "A student"} applied for ${result.row.job.businessId ? "your opening" : "your job"}, ${result.row.job.title}.`,
             `Student age: ${result.row.profile.age}`,
+            `Other job: ${result.application.hasOtherJob ? `Yes: ${result.application.otherJobDetails}` : "No"}`,
+            `Availability: ${result.application.availability ?? "Not given"}`,
             "",
             `Experience: ${result.application.message}`,
             "",
@@ -286,8 +295,10 @@ router.post(
         return;
       }
 
+      const poster = await getPosterContact(updated.residentId);
       await sendEmail({
         to: [current.residentEmail],
+        cc: poster?.cc ?? [],
         subject:
           parsed.data.action === "approve"
             ? `Your job is open: ${current.title}`

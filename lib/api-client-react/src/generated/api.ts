@@ -48,6 +48,7 @@ import type {
   GetChatUnreadCount200,
   GetIncomingBookings200,
   GetMyBookings200,
+  GetMyBusinessOpenings200,
   GetMyBusinesses200,
   GetMyJobApplications200,
   GetMyJobs200,
@@ -669,6 +670,196 @@ export const useSetBusinessPause = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getSetBusinessPauseMutationOptions(options), queryClient);
+    }
+
+export const getGetMyBusinessOpeningsUrl = () => {
+
+
+
+
+  return `/api/businesses/openings/mine`
+}
+
+/**
+ * @summary List openings posted for the signed-in student's businesses
+ */
+export const getMyBusinessOpenings = async ( options?: Parameters<typeof customFetch>[1]): Promise<GetMyBusinessOpenings200> => {
+
+  return customFetch<GetMyBusinessOpenings200>(getGetMyBusinessOpeningsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyBusinessOpeningsQueryKey = () => {
+    return [
+    `/api/businesses/openings/mine`
+    ] as const;
+    }
+
+
+export const getGetMyBusinessOpeningsQueryOptions = <TData = Awaited<ReturnType<typeof getMyBusinessOpenings>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyBusinessOpenings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyBusinessOpeningsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyBusinessOpenings>>> = ({ signal }) => getMyBusinessOpenings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyBusinessOpenings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMyBusinessOpeningsQueryResult = NonNullable<Awaited<ReturnType<typeof getMyBusinessOpenings>>>
+export type GetMyBusinessOpeningsQueryError = ErrorType<void>
+
+
+export function useGetMyBusinessOpenings<TData = Awaited<ReturnType<typeof getMyBusinessOpenings>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyBusinessOpenings>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyBusinessOpenings>>,
+          TError,
+          Awaited<ReturnType<typeof getMyBusinessOpenings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyBusinessOpenings<TData = Awaited<ReturnType<typeof getMyBusinessOpenings>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyBusinessOpenings>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyBusinessOpenings>>,
+          TError,
+          Awaited<ReturnType<typeof getMyBusinessOpenings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyBusinessOpenings<TData = Awaited<ReturnType<typeof getMyBusinessOpenings>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyBusinessOpenings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List openings posted for the signed-in student's businesses
+ */
+
+export function useGetMyBusinessOpenings<TData = Awaited<ReturnType<typeof getMyBusinessOpenings>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyBusinessOpenings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMyBusinessOpeningsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateBusinessOpeningUrl = (businessId: string,) => {
+
+
+
+
+  return `/api/businesses/${businessId}/openings`
+}
+
+/**
+ * @summary Post an opening (a role) at the signed-in student's live business
+ */
+export const createBusinessOpening = async (businessId: string,
+    jobInput: JobInput, options?: Parameters<typeof customFetch>[1]): Promise<ResidentJob> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ResidentJob>(getCreateBusinessOpeningUrl(businessId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(jobInput)
+  }
+);}
+
+
+
+
+
+export const getCreateBusinessOpeningMutationKey = () => ['createBusinessOpening'] as const;
+
+export const getCreateBusinessOpeningMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBusinessOpening>>, TError,CreateBusinessOpeningMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createBusinessOpening>>, TError,CreateBusinessOpeningMutationVariables, TContext> => {
+
+const mutationKey = getCreateBusinessOpeningMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBusinessOpening>>, CreateBusinessOpeningMutationVariables> = (props) => {
+          const {businessId,data} = props ?? {};
+
+          return  createBusinessOpening(businessId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateBusinessOpeningMutationResult = NonNullable<Awaited<ReturnType<typeof createBusinessOpening>>>
+    export type CreateBusinessOpeningMutationBody = BodyType<JobInput>
+    export type CreateBusinessOpeningMutationError = ErrorType<void>
+    export type CreateBusinessOpeningMutationVariables = {businessId: string;data: BodyType<JobInput>}
+
+    /**
+ * @summary Post an opening (a role) at the signed-in student's live business
+ */
+export const useCreateBusinessOpening = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBusinessOpening>>, TError,CreateBusinessOpeningMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createBusinessOpening>>,
+        TError,
+        CreateBusinessOpeningMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateBusinessOpeningMutationOptions(options), queryClient);
     }
 
 export const getGetIncomingBookingsUrl = () => {

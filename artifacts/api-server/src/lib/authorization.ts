@@ -145,6 +145,17 @@ export const requireAccount: RequestHandler = async (req, res, next) => {
   }
 };
 
+export function requireAnyRole(roles: User["role"][]): RequestHandler {
+  return (_req, res, next) => {
+    const account = getAccount(res);
+    if (!roles.includes(account.user.role)) {
+      res.status(403).json({ error: "You don't have access to this." });
+      return;
+    }
+    next();
+  };
+}
+
 export function requireRole(role: User["role"]): RequestHandler {
   return (_req, res, next) => {
     const account = getAccount(res);

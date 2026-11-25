@@ -1,6 +1,6 @@
 # Launch Lane
 
-A neighborhood marketplace for Mercer Crossing (Farmers Branch, TX). Students ages 13–18 list services and apply for jobs; residents book services and post jobs. The admin approves every business, job post and job application, a guardian approves each student business and job by emailed link, and families chat in the app. No payments and no cut.
+A neighborhood marketplace for Mercer Crossing (Farmers Branch, TX). Students ages 13–18 list services, post openings at their business, and apply for jobs and openings; residents book services and post jobs. The admin approves every business, job post and job application, a guardian approves each student business and job by emailed link, and families chat in the app. No payments and no cut.
 
 Runs entirely on free tiers: **Vercel** (site + API), **Neon** (Postgres), **Vercel Blob** (photos), **Clerk** (sign-in), **Resend** (email).
 
@@ -43,4 +43,4 @@ pnpm dev                  # site at http://localhost:5173
 
 Without `BLOB_READ_WRITE_TOKEN`, photos are saved in `./.local-uploads`. Without `RESEND_API_KEY`, emails go only to the admin email log.
 
-Checks: `pnpm run typecheck`, `pnpm test`, `pnpm run vercel-build`.
+Checks: `pnpm run typecheck`, `pnpm test`, `pnpm run vercel-build`, and the end-to-end test `E2E_DATABASE_URL=<throwaway local db> tests/e2e/run.sh`.

@@ -1,4 +1,5 @@
 import { index, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { businessesTable } from "./businesses";
 import { usersTable } from "./users";
 
 export const jobStatusEnum = pgEnum("job_status", [
@@ -13,9 +14,14 @@ export const jobsTable = pgTable(
   "jobs",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    // The account that posted the job: a resident for neighborhood jobs, or
+    // the student owner for an opening at their business (businessId set).
     residentId: uuid("resident_id")
       .notNull()
       .references(() => usersTable.id, { onDelete: "cascade" }),
+    businessId: uuid("business_id").references(() => businessesTable.id, {
+      onDelete: "cascade",
+    }),
     title: text("title").notNull(),
     category: text("category").notNull(),
     description: text("description").notNull(),
@@ -32,6 +38,7 @@ export const jobsTable = pgTable(
   },
   (table) => [
     index("jobs_resident_id_idx").on(table.residentId),
+    index("jobs_business_id_idx").on(table.businessId),
     index("jobs_status_created_at_idx").on(table.status, table.createdAt),
   ],
 );

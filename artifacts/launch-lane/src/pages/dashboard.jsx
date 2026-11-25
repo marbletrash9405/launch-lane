@@ -10,7 +10,7 @@ import {
 } from "@workspace/api-client-react";
 import { categories } from "@/data/categories";
 import { IncomingBookings, ResidentBookings } from "@/components/BookingPanels";
-import { ResidentJobs, StudentJobApplications } from "@/components/JobDashboardPanels";
+import { ResidentJobs, StudentJobApplications, BusinessOpenings } from "@/components/JobDashboardPanels";
 
 const blankBusiness = { name: "", category: categories[0], description: "", pricingText: "", photoPaths: [] };
 const labels = {
@@ -204,6 +204,7 @@ export default function DashboardPage() {
               {editor !== undefined && <BusinessEditor key={editor?.id ?? "new"} existing={editor} onClose={() => setEditor(undefined)} onSaved={refreshAfterSave} />}
               <div className="phase-section-title"><div><p className="eyebrow">Your services</p><h2>Business listings</h2></div><span className="phase-count" data-testid="count-my-businesses">{businesses.length} {businesses.length === 1 ? "listing" : "listings"}</span></div>
               <IncomingBookings account={account} />
+              <BusinessOpenings businesses={businesses} />
               <StudentJobApplications />
               {myBusinessesQuery.isLoading ? <div className="phase-panel skeleton-panel" data-testid="loading-my-businesses"><span /><span /><span /></div> :
                 myBusinessesQuery.isError ? <div className="phase-empty" role="alert" data-testid="error-my-businesses"><p>We couldn&apos;t load your businesses.</p><button className="text-button" type="button" onClick={() => myBusinessesQuery.refetch()} data-testid="button-retry-my-businesses">Try again</button></div> :

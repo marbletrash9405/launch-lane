@@ -162,6 +162,63 @@ paths:
                 $ref: "#/components/schemas/StudentBusiness"
         "403":
           description: Student role or ownership required
+  /businesses/openings/mine:
+    get:
+      operationId: getMyBusinessOpenings
+      tags: [businesses]
+      summary: List openings posted for the signed-in student's businesses
+      responses:
+        "200":
+          description: The owner's openings with approved applicant summaries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobs:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ResidentJob"
+                required: [jobs]
+        "401":
+          description: Sign in required
+        "403":
+          description: Student role required
+  /businesses/{businessId}/openings:
+    post:
+      operationId: createBusinessOpening
+      tags: [businesses]
+      summary: Post an opening (a role) at the signed-in student's live business
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobInput"
+      responses:
+        "201":
+          description: Opening created and queued for administrator review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResidentJob"
+        "400":
+          description: Invalid opening details
+        "401":
+          description: Sign in required
+        "403":
+          description: Business ownership required
+        "404":
+          description: Business not found or not live
+        "429":
+          description: Too many posts
   /bookings/incoming:
     get:
       operationId: getIncomingBookings
@@ -1191,7 +1248,16 @@ components:
           type: string
           minLength: 3
           maxLength: 2000
-      required: [message]
+        hasOtherJob:
+          type: boolean
+        otherJobDetails:
+          type: string
+          maxLength: 500
+        availability:
+          type: string
+          minLength: 2
+          maxLength: 500
+      required: [message, hasOtherJob, availability]
     JobReviewInput:
       type: object
       properties:
@@ -1230,7 +1296,12 @@ components:
           type: string
         residentStreetName:
           type: [string, "null"]
-      required: [id, title, category, description, timing, payText, residentStreetName]
+        businessId:
+          type: [string, "null"]
+          format: uuid
+        businessName:
+          type: [string, "null"]
+      required: [id, title, category, description, timing, payText, residentStreetName, businessId, businessName]
     ResidentJobApplication:
       type: object
       properties:
@@ -1243,11 +1314,17 @@ components:
           type: integer
         message:
           type: string
+        hasOtherJob:
+          type: boolean
+        otherJobDetails:
+          type: [string, "null"]
+        availability:
+          type: [string, "null"]
         status:
           $ref: "#/components/schemas/JobApplicationStatus"
         createdAt:
           type: string
-      required: [id, studentFirstName, age, message, status, createdAt]
+      required: [id, studentFirstName, age, message, hasOtherJob, otherJobDetails, availability, status, createdAt]
     ResidentJob:
       type: object
       properties:
@@ -1272,11 +1349,16 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ResidentJobApplication"
+        businessId:
+          type: [string, "null"]
+          format: uuid
+        businessName:
+          type: [string, "null"]
         createdAt:
           type: string
         updatedAt:
           type: string
-      required: [id, title, category, description, timing, payText, status, rejectionReason, applications, createdAt, updatedAt]
+      required: [id, title, category, description, timing, payText, status, rejectionReason, applications, businessId, businessName, createdAt, updatedAt]
     StudentJobApplication:
       type: object
       properties:
@@ -1290,6 +1372,8 @@ components:
           type: string
         category:
           $ref: "#/components/schemas/BusinessCategory"
+        businessName:
+          type: [string, "null"]
         message:
           type: string
         status:
@@ -1300,7 +1384,7 @@ components:
           type: string
         updatedAt:
           type: string
-      required: [id, jobId, jobTitle, category, message, status, rejectionReason, createdAt, updatedAt]
+      required: [id, jobId, jobTitle, category, businessName, message, status, rejectionReason, createdAt, updatedAt]
     AdminJob:
       allOf:
         - $ref: "#/components/schemas/ResidentJob"
@@ -1337,6 +1421,14 @@ components:
           maximum: 18
         message:
           type: string
+        hasOtherJob:
+          type: boolean
+        otherJobDetails:
+          type: [string, "null"]
+        availability:
+          type: [string, "null"]
+        businessName:
+          type: [string, "null"]
         status:
           $ref: "#/components/schemas/JobApplicationStatus"
         rejectionReason:
@@ -1351,7 +1443,7 @@ components:
         createdAt:
           type: string
           format: date-time
-      required: [id, jobId, jobTitle, studentFirstName, studentEmail, age, message, status, rejectionReason, privateAddress, guardianName, guardianEmail, createdAt]
+      required: [id, jobId, jobTitle, studentFirstName, studentEmail, age, message, hasOtherJob, otherJobDetails, availability, businessName, status, rejectionReason, privateAddress, guardianName, guardianEmail, createdAt]
     ChatThreadSummary:
       type: object
       properties:

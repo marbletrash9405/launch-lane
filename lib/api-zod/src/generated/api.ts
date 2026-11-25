@@ -174,6 +174,92 @@ export const SetBusinessPauseResponse = zod.object({
 
 
 /**
+ * @summary List openings posted for the signed-in student's businesses
+ */
+export const GetMyBusinessOpeningsResponse = zod.object({
+  "jobs": zod.array(zod.object({
+  "id": zod.uuid(),
+  "title": zod.string(),
+  "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "description": zod.string(),
+  "timing": zod.string(),
+  "payText": zod.string(),
+  "status": zod.enum(['pending_review', 'open', 'filled', 'closed', 'rejected']),
+  "rejectionReason": zod.string().nullable(),
+  "applications": zod.array(zod.object({
+  "id": zod.uuid(),
+  "studentFirstName": zod.string(),
+  "age": zod.int(),
+  "message": zod.string(),
+  "hasOtherJob": zod.boolean(),
+  "otherJobDetails": zod.string().nullable(),
+  "availability": zod.string().nullable(),
+  "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
+  "createdAt": zod.string()
+})),
+  "businessId": zod.uuid().nullable(),
+  "businessName": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}))
+})
+
+
+/**
+ * @summary Post an opening (a role) at the signed-in student's live business
+ */
+export const CreateBusinessOpeningParams = zod.object({
+  "businessId": zod.uuid()
+})
+
+export const createBusinessOpeningBodyTitleMin = 2;
+export const createBusinessOpeningBodyTitleMax = 120;
+
+export const createBusinessOpeningBodyDescriptionMin = 10;
+export const createBusinessOpeningBodyDescriptionMax = 2000;
+
+export const createBusinessOpeningBodyTimingMax = 300;
+
+export const createBusinessOpeningBodyPayTextMax = 300;
+
+
+
+export const CreateBusinessOpeningBody = zod.object({
+  "title": zod.string().min(createBusinessOpeningBodyTitleMin).max(createBusinessOpeningBodyTitleMax),
+  "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "description": zod.string().min(createBusinessOpeningBodyDescriptionMin).max(createBusinessOpeningBodyDescriptionMax),
+  "timing": zod.string().min(1).max(createBusinessOpeningBodyTimingMax),
+  "payText": zod.string().min(1).max(createBusinessOpeningBodyPayTextMax)
+})
+
+export const CreateBusinessOpeningResponse = zod.object({
+  "id": zod.uuid(),
+  "title": zod.string(),
+  "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "description": zod.string(),
+  "timing": zod.string(),
+  "payText": zod.string(),
+  "status": zod.enum(['pending_review', 'open', 'filled', 'closed', 'rejected']),
+  "rejectionReason": zod.string().nullable(),
+  "applications": zod.array(zod.object({
+  "id": zod.uuid(),
+  "studentFirstName": zod.string(),
+  "age": zod.int(),
+  "message": zod.string(),
+  "hasOtherJob": zod.boolean(),
+  "otherJobDetails": zod.string().nullable(),
+  "availability": zod.string().nullable(),
+  "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
+  "createdAt": zod.string()
+})),
+  "businessId": zod.uuid().nullable(),
+  "businessName": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
  * @summary List requests for the signed-in student's businesses
  */
 export const GetIncomingBookingsResponse = zod.object({
@@ -293,7 +379,9 @@ export const GetPublicJobsResponse = zod.object({
   "description": zod.string(),
   "timing": zod.string(),
   "payText": zod.string(),
-  "residentStreetName": zod.string().nullable()
+  "residentStreetName": zod.string().nullable(),
+  "businessId": zod.uuid().nullable(),
+  "businessName": zod.string().nullable()
 }))
 })
 
@@ -316,9 +404,14 @@ export const GetMyJobsResponse = zod.object({
   "studentFirstName": zod.string(),
   "age": zod.int(),
   "message": zod.string(),
+  "hasOtherJob": zod.boolean(),
+  "otherJobDetails": zod.string().nullable(),
+  "availability": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
   "createdAt": zod.string()
 })),
+  "businessId": zod.uuid().nullable(),
+  "businessName": zod.string().nullable(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 }))
@@ -362,9 +455,14 @@ export const CreateJobResponse = zod.object({
   "studentFirstName": zod.string(),
   "age": zod.int(),
   "message": zod.string(),
+  "hasOtherJob": zod.boolean(),
+  "otherJobDetails": zod.string().nullable(),
+  "availability": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
   "createdAt": zod.string()
 })),
+  "businessId": zod.uuid().nullable(),
+  "businessName": zod.string().nullable(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -380,10 +478,18 @@ export const CreateJobApplicationParams = zod.object({
 export const createJobApplicationBodyMessageMin = 3;
 export const createJobApplicationBodyMessageMax = 2000;
 
+export const createJobApplicationBodyOtherJobDetailsMax = 500;
+
+export const createJobApplicationBodyAvailabilityMin = 2;
+export const createJobApplicationBodyAvailabilityMax = 500;
+
 
 
 export const CreateJobApplicationBody = zod.object({
-  "message": zod.string().min(createJobApplicationBodyMessageMin).max(createJobApplicationBodyMessageMax)
+  "message": zod.string().min(createJobApplicationBodyMessageMin).max(createJobApplicationBodyMessageMax),
+  "hasOtherJob": zod.boolean(),
+  "otherJobDetails": zod.string().max(createJobApplicationBodyOtherJobDetailsMax).optional(),
+  "availability": zod.string().min(createJobApplicationBodyAvailabilityMin).max(createJobApplicationBodyAvailabilityMax)
 })
 
 export const CreateJobApplicationResponse = zod.object({
@@ -391,6 +497,7 @@ export const CreateJobApplicationResponse = zod.object({
   "jobId": zod.uuid(),
   "jobTitle": zod.string(),
   "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "businessName": zod.string().nullable(),
   "message": zod.string(),
   "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
   "rejectionReason": zod.string().nullable(),
@@ -408,6 +515,7 @@ export const GetMyJobApplicationsResponse = zod.object({
   "jobId": zod.uuid(),
   "jobTitle": zod.string(),
   "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "businessName": zod.string().nullable(),
   "message": zod.string(),
   "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
   "rejectionReason": zod.string().nullable(),
@@ -429,6 +537,7 @@ export const WithdrawJobApplicationResponse = zod.object({
   "jobId": zod.uuid(),
   "jobTitle": zod.string(),
   "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "businessName": zod.string().nullable(),
   "message": zod.string(),
   "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
   "rejectionReason": zod.string().nullable(),
@@ -459,9 +568,14 @@ export const ChooseJobApplicantResponse = zod.object({
   "studentFirstName": zod.string(),
   "age": zod.int(),
   "message": zod.string(),
+  "hasOtherJob": zod.boolean(),
+  "otherJobDetails": zod.string().nullable(),
+  "availability": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
   "createdAt": zod.string()
 })),
+  "businessId": zod.uuid().nullable(),
+  "businessName": zod.string().nullable(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -488,9 +602,14 @@ export const CloseMyJobResponse = zod.object({
   "studentFirstName": zod.string(),
   "age": zod.int(),
   "message": zod.string(),
+  "hasOtherJob": zod.boolean(),
+  "otherJobDetails": zod.string().nullable(),
+  "availability": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
   "createdAt": zod.string()
 })),
+  "businessId": zod.uuid().nullable(),
+  "businessName": zod.string().nullable(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -514,9 +633,14 @@ export const GetAdminJobsResponse = zod.object({
   "studentFirstName": zod.string(),
   "age": zod.int(),
   "message": zod.string(),
+  "hasOtherJob": zod.boolean(),
+  "otherJobDetails": zod.string().nullable(),
+  "availability": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
   "createdAt": zod.string()
 })),
+  "businessId": zod.uuid().nullable(),
+  "businessName": zod.string().nullable(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 }).and(zod.object({
@@ -558,9 +682,14 @@ export const ReviewJobResponse = zod.object({
   "studentFirstName": zod.string(),
   "age": zod.int(),
   "message": zod.string(),
+  "hasOtherJob": zod.boolean(),
+  "otherJobDetails": zod.string().nullable(),
+  "availability": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
   "createdAt": zod.string()
 })),
+  "businessId": zod.uuid().nullable(),
+  "businessName": zod.string().nullable(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 }).and(zod.object({
@@ -592,9 +721,14 @@ export const CloseAdminJobResponse = zod.object({
   "studentFirstName": zod.string(),
   "age": zod.int(),
   "message": zod.string(),
+  "hasOtherJob": zod.boolean(),
+  "otherJobDetails": zod.string().nullable(),
+  "availability": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
   "createdAt": zod.string()
 })),
+  "businessId": zod.uuid().nullable(),
+  "businessName": zod.string().nullable(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 }).and(zod.object({
@@ -622,6 +756,10 @@ export const GetAdminJobApplicationsResponse = zod.object({
   "studentEmail": zod.email(),
   "age": zod.int().min(getAdminJobApplicationsResponseApplicationsItemAgeMin).max(getAdminJobApplicationsResponseApplicationsItemAgeMax),
   "message": zod.string(),
+  "hasOtherJob": zod.boolean(),
+  "otherJobDetails": zod.string().nullable(),
+  "availability": zod.string().nullable(),
+  "businessName": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
   "rejectionReason": zod.string().nullable(),
   "privateAddress": zod.string(),
@@ -661,6 +799,10 @@ export const ReviewJobApplicationResponse = zod.object({
   "studentEmail": zod.email(),
   "age": zod.int().min(reviewJobApplicationResponseAgeMin).max(reviewJobApplicationResponseAgeMax),
   "message": zod.string(),
+  "hasOtherJob": zod.boolean(),
+  "otherJobDetails": zod.string().nullable(),
+  "availability": zod.string().nullable(),
+  "businessName": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
   "rejectionReason": zod.string().nullable(),
   "privateAddress": zod.string(),

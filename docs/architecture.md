@@ -6,6 +6,7 @@ A neighborhood marketplace connecting Mercer Crossing students with nearby resid
 
 - `pnpm dev` — run the API (port 3001) and the site (http://localhost:5173, forwards /api to the API)
 - `pnpm test` — authorization and photo-format tests
+- `E2E_DATABASE_URL=… tests/e2e/run.sh` — end-to-end API test (accounts, photos, businesses, guardian links, openings, resident jobs, chat) against a throwaway local Postgres
 - `pnpm run vercel-build` — build the Vercel output (`.vercel/output`) exactly as Vercel does
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
@@ -71,6 +72,13 @@ A neighborhood marketplace connecting Mercer Crossing students with nearby resid
 - Chat messages are plain text, limited to 1,000 characters, rate-limited, and email notifications contain a thread link but never message text.
 - Terms and Privacy pages are placeholders for founder review. The privacy page describes the collected profile, address, photo, and chat data and explains the deletion-request contact.
 - The administrator email log is database-backed and retains the latest 500 attempts.
+
+## Business openings
+
+- A student whose business is live can post an opening (a role at their business). It is a row in `jobs` with `business_id` set; `resident_id` is the poster (the student owner).
+- Openings follow the job rules: the administrator approves the opening before it is public, every application goes to the administrator first (`pending_review`), then to the owner, and the applicant's guardian approves by single-use link before the applicant joins. Only students can apply, and an owner cannot apply to their own opening. Openings disappear from Explore when the business is not live.
+- Every application asks whether the student has another job (and its details) and their availability; with the age from the profile, these go to the administrator and then to the poster. Applicant emails and addresses are never shown to posters.
+- Emails to a student owner copy the owner's guardian. The opening's group chat includes the applicant, the applicant's guardian, the owner and the owner's guardian; the administrator can read and moderate it.
 
 ## Rules
 

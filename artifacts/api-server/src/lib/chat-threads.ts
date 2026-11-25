@@ -15,6 +15,10 @@ type CreateThreadInput = {
   residentId: string;
   residentEmail: string;
   guardianEmail: string;
+  /** "student" when the poster is a student business owner (openings). */
+  residentRole?: "resident" | "student";
+  /** The business owner's guardian, for openings. */
+  posterGuardianEmail?: string | null;
   now?: Date;
 };
 
@@ -57,7 +61,7 @@ export async function createChatThread(
         )[0]);
   if (!thread) throw new Error("The chat thread could not be created.");
   if (created) {
-    await tx.insert(chatThreadParticipantsTable).values([
+    const rows: (typeof chatThreadParticipantsTable.$inferInsert)[] = [
       {
         threadId: thread.id,
         userId: input.studentId,
@@ -69,7 +73,7 @@ export async function createChatThread(
         threadId: thread.id,
         userId: input.residentId,
         email: input.residentEmail.trim().toLowerCase(),
-        role: "resident",
+        role: input.residentRole ?? "resident",
         lastReadAt: now,
       },
       {
@@ -79,7 +83,19 @@ export async function createChatThread(
         role: "guardian",
         lastReadAt: now,
       },
-    ]);
+    ];
+    const posterGuardian = input.posterGuardianEmail?.trim().toLowerCase();
+    // Siblings can share a guardian; each email joins a thread only once.
+    if (posterGuardian && !rows.some((row) => row.email === posterGuardian)) {
+      rows.push({
+        threadId: thread.id,
+        userId: null,
+        email: posterGuardian,
+        role: "guardian",
+        lastReadAt: now,
+      });
+    }
+    await tx.insert(chatThreadParticipantsTable).values(rows);
   }
   return thread.id;
 }
