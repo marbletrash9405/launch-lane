@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { SignInButton, SignUpButton, useAuth } from "@clerk/react";
 import { useLocation } from "wouter";
-import { firebaseConfigured } from "@/lib/firebase-config";
 
 function GoogleG() {
   // Google's standard multicolor "G" sign-in mark.
@@ -17,53 +17,81 @@ function GoogleG() {
 }
 
 /**
- * "Continue with Google" / "Sign up with Google" button backed by Firebase Authentication.
- * Pass `role` on the Sign up page so it's saved to the person's Firestore profile.
+ * Keeps the original Launch Lane button while using Clerk's branded Google flow.
  */
 export default function GoogleSignIn({ label, role, redirectTo = "/" }) {
   const [, setLocation] = useLocation();
+  const { isLoaded, isSignedIn } = useAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+  const signupDestination = `${basePath}/complete-profile?role=${encodeURIComponent(role || "")}`;
+  const loginDestination = `${basePath}${redirectTo}`;
 
-  // Finish a sign-in that fell back to a full-page redirect (popup blocked).
-  useEffect(() => {
-    if (!firebaseConfigured) return;
-    let alive = true;
-    import("@/lib/firebase").then(async (fb) => {
-      try {
-        const user = await fb.finishRedirectSignIn();
-        if (user && alive) setLocation(redirectTo);
-      } catch (e) {
-        if (alive) setError(fb.signInErrorMessage(e) || "");
-      }
-    });
-    return () => { alive = false; };
-  }, [setLocation, redirectTo]);
-
-  async function handleClick() {
+  async function registerExistingSession() {
     setBusy(true);
     setError("");
-    const fb = await import("@/lib/firebase");
     try {
-      const user = await fb.signInWithGoogle(role);
-      if (user) setLocation(redirectTo);
+      if (!role) {
+        setLocation(redirectTo);
+        return;
+      }
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "We couldn't finish setting up your account.");
+      setLocation(data.profileComplete ? "/dashboard" : "/complete-profile");
     } catch (e) {
-      setError(fb.signInErrorMessage(e) || "");
+      setError(e instanceof Error ? e.message : "We couldn't finish signing in.");
     } finally {
       setBusy(false);
     }
   }
 
+  const button = (
+    <button
+      type="button"
+      className="google-btn"
+      onClick={registerExistingSession}
+      disabled={!isLoaded || busy}
+    >
+      <GoogleG />
+      {busy ? "Setting up your account…" : label}
+    </button>
+  );
+
   return (
     <div className="form" style={{ gap: 12 }}>
-      <button type="button" className="google-btn" onClick={handleClick} disabled={!firebaseConfigured || busy}>
-        <GoogleG />
-        {busy ? "Opening Google…" : label}
-      </button>
-      {error && <p className="form-error" role="alert">{error}</p>}
-      {!firebaseConfigured && (
-        <p className="demo-note">Google sign-in is almost ready. Check back soon.</p>
+      {isLoaded && isSignedIn ? (
+        button
+      ) : role ? (
+        <SignUpButton
+          mode="modal"
+          forceRedirectUrl={signupDestination}
+          fallbackRedirectUrl={signupDestination}
+        >
+          <button type="button" className="google-btn" disabled={!isLoaded}>
+            <GoogleG />
+            {label}
+          </button>
+        </SignUpButton>
+      ) : (
+        <SignInButton
+          mode="modal"
+          forceRedirectUrl={loginDestination}
+          fallbackRedirectUrl={loginDestination}
+        >
+          <button type="button" className="google-btn" disabled={!isLoaded}>
+            <GoogleG />
+            {label}
+          </button>
+        </SignInButton>
       )}
+      {error && <p className="form-error" role="alert">{error}</p>}
     </div>
   );
 }

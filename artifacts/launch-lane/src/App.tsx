@@ -10,7 +10,12 @@ import About from '@/pages/about';
 import Faq from '@/pages/faq';
 import Login from '@/pages/login';
 import Signup from '@/pages/signup';
+import Dashboard from '@/pages/dashboard';
+import CompleteProfile from '@/pages/complete-profile';
+import ClerkSignInPage from '@/pages/clerk-sign-in';
+import ClerkSignUpPage from '@/pages/clerk-sign-up';
 import NotFound from '@/pages/not_found';
+import ClerkAppShell from '@/components/ClerkAppShell';
 
 import './globals.css';
 
@@ -26,6 +31,10 @@ function Router() {
         <Route path="/faq" component={Faq} />
         <Route path="/login" component={Login} />
         <Route path="/signup" component={Signup} />
+        <Route path="/dashboard" component={Dashboard} />
+        <Route path="/complete-profile" component={CompleteProfile} />
+        <Route path="/sign-in/*?" component={ClerkSignInPage} />
+        <Route path="/sign-up/*?" component={ClerkSignUpPage} />
         <Route path="/listings"><Redirect to="/explore" /></Route>
         <Route path="/apply"><Redirect to="/students#apply" /></Route>
         <Route path="/request"><Redirect to="/residents#post-a-job" /></Route>
@@ -39,9 +48,11 @@ function Router() {
 function App() {
   return (
     <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-      <Header />
-      <main><Router /></main>
-      <Footer />
+      <ClerkAppShell>
+        <Header />
+        <main><Router /></main>
+        <Footer />
+      </ClerkAppShell>
     </WouterRouter>
   );
 }

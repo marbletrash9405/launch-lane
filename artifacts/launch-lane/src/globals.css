@@ -482,3 +482,14 @@ p { margin: 0; }
   font: 500 .9rem var(--body); color: var(--ink); cursor: pointer;
 }
 @media (max-width: 1100px) { .nav .nav-user { padding: 14px 0; justify-content: space-between; } }
+
+.profile-card { width: 100%; }
+.profile-form { gap: 14px; }
+.profile-form label { display: grid; gap: 6px; font-weight: 600; }
+.profile-form input, .profile-form textarea {
+  width: 100%; border: 1.5px solid var(--line); border-radius: 10px; padding: 12px 14px;
+  color: var(--ink); background: var(--white); font: 400 1rem var(--body);
+}
+.profile-form textarea { resize: vertical; }
+.profile-form .btn { justify-self: start; }
+.dashboard-card { gap: 20px; }

@@ -2,34 +2,19 @@
 
 import { Link, useLocation } from "wouter";
 import { useEffect, useState } from "react";
+import { useClerk, useUser } from "@clerk/react";
 import { site, nav, navCta } from "@/lib/site";
 import { MenuIcon, CloseIcon } from "./Icons";
-import { firebaseConfigured } from "@/lib/firebase-config";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
   const [pathname] = useLocation();
-
-  const [user, setUser] = useState(null);
+  const { isLoaded, isSignedIn, user } = useUser();
+  const { signOut } = useClerk();
 
   useEffect(() => setOpen(false), [pathname]);
 
-  // Show who's signed in via Firebase (only loads Firebase once it's configured).
-  useEffect(() => {
-    if (!firebaseConfigured) return;
-    let unsub = () => {};
-    let alive = true;
-    import("@/lib/firebase").then((fb) => {
-      if (!alive) return;
-      unsub = fb.watchUser((u) => setUser(u ? { name: u.displayName, email: u.email } : null));
-    });
-    return () => { alive = false; unsub(); };
-  }, []);
-
-  async function handleSignOut() {
-    const fb = await import("@/lib/firebase");
-    await fb.signOutUser();
-  }
+  const firstName = user?.firstName || user?.primaryEmailAddress?.emailAddress?.split("@")[0] || "";
 
   return (
     <header className="site-header">
@@ -58,10 +43,16 @@ export default function Header() {
               {item.label}
             </Link>
           ))}
-          {user ? (
+          {isLoaded && isSignedIn ? (
             <div className="nav-user">
-              <span>Hi, {(user.name || user.email || "there").split(" ")[0]}</span>
-              <button type="button" onClick={handleSignOut}>Sign out</button>
+              <span>{firstName}</span>
+              <Link href="/dashboard">Dashboard</Link>
+              <button
+                type="button"
+                onClick={() => signOut({ redirectUrl: import.meta.env.BASE_URL })}
+              >
+                Sign out
+              </button>
             </div>
           ) : (
             <Link href={navCta.href} className="btn btn-teal btn-sm nav-cta">
