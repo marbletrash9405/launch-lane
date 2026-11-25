@@ -15,7 +15,7 @@ import { logger } from "./logger";
 import { site } from "./site";
 
 const RESEND_URL = process.env.RESEND_API_URL || "https://api.resend.com/emails";
-const notifyTo = () => process.env.NOTIFY_EMAIL || site.contactEmail;
+const notifyTo = () => process.env.NOTIFY_EMAIL || process.env.ADMIN_EMAIL || site.contactEmail;
 const EMAIL_LOG_LIMIT = 500;
 
 export function emailConfigured() {
@@ -105,6 +105,12 @@ export async function sendEmail({
     status: "logged",
     detail: null,
   };
+
+  if ([...entry.to, ...entry.cc].some((email) => /\.invalid$/i.test(email))) {
+    entry.detail = "Synthetic test recipient; logged only to avoid sending to a nonexistent inbox.";
+    await recordEmail(entry);
+    return { status: entry.status, id: entry.id };
+  }
 
   if (!process.env.RESEND_API_KEY) {
     entry.detail = "RESEND_API_KEY is not set; this email was logged but not sent.";
