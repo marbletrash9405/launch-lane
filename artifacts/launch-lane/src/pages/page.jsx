@@ -2,13 +2,24 @@ import { Link } from "wouter";
 import ListingCard from "@/components/ListingCard";
 import CategoryIcon from "@/components/CategoryIcon";
 import Faq from "@/components/Faq";
-import { publicListings as listings, categories } from "@/data/listings";
+import { categories } from "@/data/listings";
 import { site } from "@/lib/site";
 import { IconRing, ShieldCheckIcon, GuardianIcon, MailIcon, ArrowIcon } from "@/components/Icons";
+import { useGetPublicBusinesses, getGetPublicBusinessesQueryKey } from "@workspace/api-client-react";
+import { useMemo } from "react";
 
 export default function Home() {
-  // Newest first: put the most recent listings at the top of data/listings.js.
-  const recent = listings.slice(0, 6);
+  const { data, isLoading, isError, refetch } = useGetPublicBusinesses({
+    query: { queryKey: getGetPublicBusinessesQueryKey() },
+  });
+  const recent = useMemo(() => (data?.businesses ?? []).slice(0, 6).map((business) => ({
+    ...business,
+    type: "offering",
+    title: business.name,
+    name: business.studentName,
+    description: business.description,
+    pricingText: business.pricingText,
+  })), [data?.businesses]);
 
   return (
     <>
@@ -101,7 +112,10 @@ export default function Home() {
             <Link href="/explore" className="text-link">See all <ArrowIcon /></Link>
           </div>
           <div className="grid-3">
-            {recent.map((l) => <ListingCard key={l.id} listing={l} />)}
+            {isLoading ? <div className="listing-skeleton" data-testid="loading-public-listings">Loading local services…</div> :
+              isError ? <div className="empty" role="alert" data-testid="error-public-listings">We couldn&apos;t load listings. <button type="button" className="text-button" onClick={() => refetch()} data-testid="button-retry-public-listings">Try again</button></div> :
+              recent.length ? recent.map((l) => <ListingCard key={l.id} listing={l} />) :
+                <div className="empty" data-testid="empty-public-listings">There are no live services to show just yet.</div>}
           </div>
         </div>
       </section>

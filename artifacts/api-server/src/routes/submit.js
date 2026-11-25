@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { forms, validate } from "../lib/forms.js";
-import { emailConfigured, sendNotification } from "../lib/notify.js";
+import { sendNotification } from "../lib/notify.js";
 import { listings } from "../lib/listings.js";
+// @ts-ignore - this route preserves the original JavaScript form validation.
+import { and, db, eq, businessesTable, usersTable } from "@workspace/db";
 
 const router = Router();
 
@@ -23,9 +25,30 @@ router.post("/submit", async (req, res) => {
   const form = forms[kind];
   let listing = null;
   if (form.listing) {
-    listing = listings.find(
-      (item) => item.id === String(listingId) && item.type === form.listing,
-    );
+    if (form.listing === "offering") {
+      const [business] = await db
+        .select({
+          id: businessesTable.id,
+          title: businessesTable.name,
+          category: businessesTable.category,
+          name: usersTable.name,
+          email: usersTable.email,
+        })
+        .from(businessesTable)
+        .innerJoin(usersTable, eq(usersTable.id, businessesTable.ownerId))
+        .where(
+          and(
+            eq(businessesTable.id, String(listingId)),
+            eq(businessesTable.status, "live"),
+          ),
+        )
+        .limit(1);
+      listing = business ? { ...business, type: "offering" } : null;
+    } else {
+      listing = listings.find(
+        (item) => item.id === String(listingId) && item.type === form.listing,
+      );
+    }
     if (!listing) {
       res.status(400).json({ error: "That listing is no longer available." });
       return;
@@ -35,14 +58,6 @@ router.post("/submit", async (req, res) => {
   const { values, error } = validate(kind, data);
   if (error) {
     res.status(400).json({ error });
-    return;
-  }
-
-  if (!emailConfigured()) {
-    res.status(503).json({
-      error: "not_configured",
-      message: "Submissions aren't switched on yet.",
-    });
     return;
   }
 

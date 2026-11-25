@@ -10,6 +10,14 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: businesses
+    description: Student-owned businesses and public listings
+  - name: moderation
+    description: Administrator business review and email log
+  - name: guardian
+    description: Guardian approval links
+  - name: storage
+    description: Private business photo uploads
 paths:
   /healthz:
     get:
@@ -24,6 +32,347 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /businesses/public:
+    get:
+      operationId: getPublicBusinesses
+      tags: [businesses]
+      summary: List live businesses
+      responses:
+        "200":
+          description: Public business listings without private contact or address fields
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  businesses:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PublicBusiness"
+                required: [businesses]
+  /businesses/mine:
+    get:
+      operationId: getMyBusinesses
+      tags: [businesses]
+      summary: List the signed-in student's businesses
+      responses:
+        "200":
+          description: Businesses owned by the signed-in student
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  businesses:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/StudentBusiness"
+                required: [businesses]
+        "401":
+          description: Sign in required
+        "403":
+          description: Student role required
+  /businesses:
+    post:
+      operationId: createBusiness
+      tags: [businesses]
+      summary: Create a business for the signed-in student
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BusinessInput"
+      responses:
+        "201":
+          description: Business created and queued for administrator review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentBusiness"
+        "400":
+          description: Invalid business details
+        "401":
+          description: Sign in required
+        "403":
+          description: Student role and completed profile required
+  /businesses/{businessId}:
+    patch:
+      operationId: updateBusiness
+      tags: [businesses]
+      summary: Update a business owned by the signed-in student
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BusinessUpdateInput"
+      responses:
+        "200":
+          description: Updated business
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentBusiness"
+        "403":
+          description: Student role or ownership required
+        "404":
+          description: Business not found
+  /businesses/{businessId}/pause:
+    post:
+      operationId: setBusinessPause
+      tags: [businesses]
+      summary: Pause or unpause an owned business
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                paused:
+                  type: boolean
+              required: [paused]
+      responses:
+        "200":
+          description: Updated business status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentBusiness"
+        "403":
+          description: Student role or ownership required
+  /admin/businesses:
+    get:
+      operationId: getAdminBusinesses
+      tags: [moderation]
+      summary: List businesses for administrator review and management
+      responses:
+        "200":
+          description: Full moderation details including private student and guardian information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  businesses:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AdminBusiness"
+                required: [businesses]
+        "403":
+          description: Administrator role required
+  /admin/businesses/{businessId}/review:
+    post:
+      operationId: reviewBusiness
+      tags: [moderation]
+      summary: Approve or reject a business
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [approve, reject]
+                reason:
+                  type: string
+                  maxLength: 1000
+              required: [action]
+      responses:
+        "200":
+          description: Moderation action recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminBusiness"
+        "400":
+          description: Invalid action or missing rejection reason
+        "403":
+          description: Administrator role required
+        "404":
+          description: Business not found
+  /admin/businesses/{businessId}/pause:
+    post:
+      operationId: setAdminBusinessPause
+      tags: [moderation]
+      summary: Pause or restore a business as administrator
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                paused:
+                  type: boolean
+              required: [paused]
+      responses:
+        "200":
+          description: Updated business moderation status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminBusiness"
+        "403":
+          description: Administrator role required
+  /admin/email-log:
+    get:
+      operationId: getAdminEmailLog
+      tags: [moderation]
+      summary: Read the in-memory email log
+      responses:
+        "200":
+          description: Recent email attempts for testing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  emails:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/EmailLogEntry"
+                  notice:
+                    type: string
+                required: [emails, notice]
+        "403":
+          description: Administrator role required
+  /guardian/approvals/{token}:
+    get:
+      operationId: getGuardianApproval
+      tags: [guardian]
+      summary: View a single-use guardian approval
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Approval request details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuardianApproval"
+        "404":
+          description: Link is invalid, expired, or already used
+    post:
+      operationId: submitGuardianApproval
+      tags: [guardian]
+      summary: Approve or decline a business for a student
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                decision:
+                  type: string
+                  enum: [approved, declined]
+              required: [decision]
+      responses:
+        "200":
+          description: Guardian decision recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  decision:
+                    type: string
+                    enum: [approved, declined]
+                required: [ok, decision]
+        "404":
+          description: Link is invalid, expired, or already used
+  /storage/uploads/request-url:
+    post:
+      operationId: requestBusinessPhotoUpload
+      tags: [storage]
+      summary: Request a signed photo upload URL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                size:
+                  type: integer
+                  minimum: 1
+                  maximum: 215040
+                contentType:
+                  type: string
+                  enum: [image/webp]
+              required: [name, size, contentType]
+      responses:
+        "200":
+          description: Signed upload URL and private object path
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uploadURL:
+                    type: string
+                    format: uri
+                  objectPath:
+                    type: string
+                  metadata:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      size:
+                        type: integer
+                      contentType:
+                        type: string
+                    required: [name, size, contentType]
+                required: [uploadURL, objectPath, metadata]
+        "403":
+          description: Student role required
 components:
   schemas:
     HealthStatus:
@@ -33,4 +382,165 @@ components:
           type: string
       required:
         - status
+    BusinessCategory:
+      type: string
+      enum:
+        - Bin cleaning
+        - Lawn care
+        - Babysitting
+        - Pet care
+        - Digital support
+        - Hauling
+        - Tutoring
+        - Others
+    BusinessStatus:
+      type: string
+      enum: [pending_review, pending_guardian, live, paused, rejected]
+    BusinessInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+        category:
+          $ref: "#/components/schemas/BusinessCategory"
+        description:
+          type: string
+          minLength: 10
+          maxLength: 2000
+        pricingText:
+          type: string
+          minLength: 1
+          maxLength: 300
+        photoPaths:
+          type: array
+          maxItems: 3
+          items:
+            type: string
+            minLength: 1
+      required: [name, category, description, pricingText, photoPaths]
+    BusinessUpdateInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+        category:
+          $ref: "#/components/schemas/BusinessCategory"
+        description:
+          type: string
+          minLength: 10
+          maxLength: 2000
+        pricingText:
+          type: string
+          minLength: 1
+          maxLength: 300
+        photoPaths:
+          type: array
+          maxItems: 3
+          items:
+            type: string
+            minLength: 1
+    PublicBusiness:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          $ref: "#/components/schemas/BusinessCategory"
+        description:
+          type: string
+        pricingText:
+          type: string
+        studentName:
+          type: string
+        photoUrls:
+          type: array
+          items:
+            type: string
+      required: [id, name, category, description, pricingText, studentName, photoUrls]
+    StudentBusiness:
+      allOf:
+        - $ref: "#/components/schemas/PublicBusiness"
+        - type: object
+          properties:
+            photoPaths:
+              type: array
+              items:
+                type: string
+            status:
+              $ref: "#/components/schemas/BusinessStatus"
+            rejectionReason:
+              type: [string, "null"]
+            pausedBy:
+              type: [string, "null"]
+            createdAt:
+              type: string
+            updatedAt:
+              type: string
+          required: [photoPaths, status, rejectionReason, pausedBy, createdAt, updatedAt]
+    AdminBusiness:
+      allOf:
+        - $ref: "#/components/schemas/StudentBusiness"
+        - type: object
+          properties:
+            ownerName:
+              type: string
+            ownerEmail:
+              type: string
+            age:
+              type: integer
+            privateAddress:
+              type: string
+            guardianName:
+              type: string
+            guardianEmail:
+              type: string
+          required: [ownerName, ownerEmail, age, privateAddress, guardianName, guardianEmail]
+    EmailLogEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        createdAt:
+          type: string
+        to:
+          type: array
+          items:
+            type: string
+        cc:
+          type: array
+          items:
+            type: string
+        subject:
+          type: string
+        text:
+          type: string
+        status:
+          type: string
+          enum: [logged, sent, failed]
+        detail:
+          type: [string, "null"]
+      required: [id, createdAt, to, cc, subject, text, status, detail]
+    GuardianApproval:
+      type: object
+      properties:
+        businessName:
+          type: string
+        category:
+          $ref: "#/components/schemas/BusinessCategory"
+        studentName:
+          type: string
+        expired:
+          type: boolean
+        used:
+          type: boolean
+        decision:
+          type: [string, "null"]
+      required: [businessName, category, studentName, expired, used, decision]
 

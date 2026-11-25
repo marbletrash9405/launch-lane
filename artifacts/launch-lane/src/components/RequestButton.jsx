@@ -20,7 +20,7 @@ export default function RequestButton({ listing }) {
 
   return (
     <>
-      <button type="button" className={`btn btn-sm ${isOffer ? "btn-teal" : "btn-blue"}`} onClick={open}>
+      <button type="button" className={`btn btn-sm ${isOffer ? "btn-teal" : "btn-blue"}`} onClick={open} data-testid={`button-request-${uid}`}>
         {isOffer ? "Book" : "Apply"}
       </button>
 

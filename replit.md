@@ -9,7 +9,8 @@ A neighborhood marketplace connecting Mercer Crossing students with nearby resid
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Required env: `DATABASE_URL` — Postgres connection string; `ADMIN_EMAIL` — the founder account used for administrator access
+- Optional email env: `RESEND_API_KEY` and `NOTIFY_FROM`; without a Resend key, email attempts are logged for administrator testing
 
 ## Stack
 
@@ -35,7 +36,10 @@ A neighborhood marketplace connecting Mercer Crossing students with nearby resid
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Clerk handles Google sign-in so students and residents do not need Replit accounts; the verified Clerk session is the identity source.
+- The only administrator is the database account whose verified Clerk email matches the `ADMIN_EMAIL` secret. Registration accepts only `student` or `resident`; the server derives admin status from the secret.
+- Every protected API request resolves the account from the verified Clerk session and checks role and ownership on the server. Browser-provided roles and owner IDs are not authorization inputs.
+- Public listing and photo routes expose only businesses that have passed administrator and guardian approval; private addresses and guardian details are restricted to the owner and administrator.
 
 ## Product
 

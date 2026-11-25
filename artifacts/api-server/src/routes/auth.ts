@@ -1,5 +1,4 @@
-import { getAuth } from "@clerk/express";
-import { Router, type RequestHandler } from "express";
+import { Router } from "express";
 import {
   AuthUserResponse,
   RegisterAccountInput,
@@ -10,105 +9,22 @@ import {
   db,
   and,
   eq,
-  ne,
   residentProfilesTable,
   studentProfilesTable,
   usersTable,
   type User,
 } from "@workspace/db";
-
-type Identity = {
-  authId: string;
-  email: string;
-  firstName: string;
-  name: string;
-};
+import {
+  findUser,
+  getIdentity,
+  requireSignedIn,
+  resolveUserRole,
+} from "../lib/authorization";
 
 const router = Router();
 
-function configuredAdminEmail() {
-  return process.env.ADMIN_EMAIL?.trim().toLowerCase() || null;
-}
-
-const requireSignedIn: RequestHandler = (req, res, next) => {
-  const auth = getAuth(req);
-  if (!auth.userId) {
-    res.status(401).json({ error: "Sign in is required." });
-    return;
-  }
-
-  const claims = auth.sessionClaims as Record<string, unknown>;
-  const email =
-    typeof claims.email === "string" ? claims.email.trim().toLowerCase() : "";
-  if (!email) {
-    res.status(403).json({ error: "A verified account email is required." });
-    return;
-  }
-
-  const firstName =
-    typeof claims.firstName === "string" ? claims.firstName.trim() : "";
-  const lastName =
-    typeof claims.lastName === "string" ? claims.lastName.trim() : "";
-  const name = [firstName, lastName].filter(Boolean).join(" ") || email.split("@")[0];
-  res.locals.identity = {
-    authId: auth.userId,
-    email,
-    firstName: firstName || name.split(" ")[0],
-    name,
-  } satisfies Identity;
-  next();
-};
-
-function getIdentity(res: Parameters<RequestHandler>[1]): Identity {
-  return res.locals.identity as Identity;
-}
-
-async function findUser(authId: string) {
-  const [user] = await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.authId, authId))
-    .limit(1);
-  return user;
-}
-
-async function resolveRole(user: User, identity: Identity): Promise<User> {
-  const isConfiguredAdmin = configuredAdminEmail() === identity.email;
-  if (user.role === "admin" && !isConfiguredAdmin) {
-    const [studentProfile] = await db
-      .select({ userId: studentProfilesTable.userId })
-      .from(studentProfilesTable)
-      .where(eq(studentProfilesTable.userId, user.id))
-      .limit(1);
-    const role = studentProfile ? "student" : "resident";
-    const [updated] = await db
-      .update(usersTable)
-      .set({ role })
-      .where(eq(usersTable.id, user.id))
-      .returning();
-    return updated ?? { ...user, role };
-  }
-
-  if (isConfiguredAdmin && user.role !== "admin") {
-    return db.transaction(async (tx) => {
-      await tx
-        .update(usersTable)
-        .set({ role: "student" })
-        .where(and(eq(usersTable.role, "admin"), ne(usersTable.id, user.id)));
-      const [updated] = await tx
-        .update(usersTable)
-        .set({ role: "admin" })
-        .where(eq(usersTable.id, user.id))
-        .returning();
-      return updated ?? { ...user, role: "admin" };
-    });
-  }
-
-  return user;
-}
-
-async function accountResponse(user: User, identity: Identity) {
-  const resolvedUser = await resolveRole(user, identity);
+async function accountResponse(user: User, identity: ReturnType<typeof getIdentity>) {
+  const resolvedUser = await resolveUserRole(user, identity);
   let profileComplete = true;
 
   if (resolvedUser.role === "student") {
@@ -207,7 +123,7 @@ router.patch("/auth/profile", requireSignedIn, async (req, res) => {
       return;
     }
 
-    const user = await resolveRole(existingUser, identity);
+    const user = await resolveUserRole(existingUser, identity);
     if (user.role === "admin") {
       res.status(403).json({ error: "Admin accounts do not need a profile." });
       return;

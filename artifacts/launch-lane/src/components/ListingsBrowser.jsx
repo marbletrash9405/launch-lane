@@ -44,10 +44,11 @@ export default function ListingsBrowser({ listings }) {
           aria-label="Search listings"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          data-testid="input-search-listings"
         />
         <div className="tabs" role="group" aria-label="Listing type">
           {TABS.map((t) => (
-            <button key={t.id} aria-pressed={tab === t.id} onClick={() => setTab(t.id)}>
+            <button key={t.id} aria-pressed={tab === t.id} onClick={() => setTab(t.id)} data-testid={`button-listing-tab-${t.id}`}>
               {t.label}
             </button>
           ))}
@@ -57,6 +58,7 @@ export default function ListingsBrowser({ listings }) {
           aria-label="Filter by category"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
+          data-testid="select-listing-category"
         >
           <option value="">All categories</option>
           {categories.map((c) => (
@@ -65,7 +67,7 @@ export default function ListingsBrowser({ listings }) {
         </select>
       </div>
 
-      <p className="result-count">
+      <p className="result-count" data-testid="text-listing-result-count">
         {shown.length} {shown.length === 1 ? "listing" : "listings"}
       </p>
 

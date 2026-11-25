@@ -1,67 +1,219 @@
 import { useAuth } from "@clerk/react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  getGetMyBusinessesQueryKey, getGetPublicBusinessesQueryKey,
+  useGetMyBusinesses, useCreateBusiness, useUpdateBusiness, useSetBusinessPause,
+  useRequestBusinessPhotoUpload,
+} from "@workspace/api-client-react";
+import { categories } from "@/data/listings";
+
+const blankBusiness = { name: "", category: categories[0], description: "", pricingText: "", photoPaths: [] };
+const labels = {
+  pending_review: "In review", pending_guardian: "Guardian approval", live: "Live",
+  paused: "Paused", rejected: "Needs changes",
+};
+
+async function makeWebp(file) {
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) throw new Error("Choose a JPEG, PNG, or WebP image.");
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, 1600 / bitmap.width);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Your browser could not prepare this image.");
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  while (true) {
+    for (let quality = 0.86; quality >= 0.22; quality -= 0.08) {
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", quality));
+      if (blob && blob.size <= 215040) { bitmap.close(); return blob; }
+    }
+    if (canvas.width <= 320) break;
+    const nextWidth = Math.max(320, Math.round(canvas.width * 0.82));
+    const nextHeight = Math.max(1, Math.round(canvas.height * nextWidth / canvas.width));
+    canvas.width = nextWidth;
+    canvas.height = nextHeight;
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  }
+  bitmap.close();
+  throw new Error("This image could not be compressed below 210 KiB. Try a smaller image.");
+}
+
+function BusinessEditor({ existing, onClose, onSaved }) {
+  const [form, setForm] = useState(() => existing ? {
+    name: existing.name, category: existing.category, description: existing.description,
+    pricingText: existing.pricingText, photoPaths: [...existing.photoPaths],
+  } : { ...blankBusiness });
+  const [previews, setPreviews] = useState(() => (existing?.photoUrls ?? []).map((url, index) => ({
+    url, path: existing.photoPaths[index], existing: true,
+  })));
+  const [error, setError] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const createBusiness = useCreateBusiness();
+  const updateBusiness = useUpdateBusiness();
+  const requestUpload = useRequestBusinessPhotoUpload();
+  const busy = uploading || createBusiness.isPending || updateBusiness.isPending;
+
+  async function addPhotos(event) {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (!files.length) return;
+    if (previews.length + files.length > 3) {
+      setError("Choose up to three photos."); return;
+    }
+    setError("");
+    setUploading(true);
+    try {
+      const added = [];
+      for (const file of files) {
+        const blob = await makeWebp(file);
+        const result = await requestUpload.mutateAsync({
+          data: { name: file.name.replace(/\.[^.]+$/, "") + ".webp", size: blob.size, contentType: "image/webp" },
+        });
+        const response = await fetch(result.uploadURL, {
+          method: "PUT", headers: { "Content-Type": "image/webp" }, body: blob,
+        });
+        if (!response.ok) throw new Error("The photo upload did not finish. Please try again.");
+        added.push({ url: URL.createObjectURL(blob), path: result.objectPath, existing: false });
+      }
+      setPreviews((current) => [...current, ...added]);
+      setForm((current) => ({ ...current, photoPaths: [...current.photoPaths, ...added.map((photo) => photo.path)] }));
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "We couldn't upload that photo.");
+    } finally { setUploading(false); }
+  }
+
+  function removePhoto(index) {
+    const removed = previews[index];
+    if (!removed.existing) URL.revokeObjectURL(removed.url);
+    setPreviews((current) => current.filter((_, i) => i !== index));
+    setForm((current) => ({ ...current, photoPaths: current.photoPaths.filter((path) => path !== removed.path) }));
+  }
+
+  async function submit(event) {
+    event.preventDefault();
+    setError("");
+    try {
+      if (existing) await updateBusiness.mutateAsync({ businessId: existing.id, data: form });
+      else await createBusiness.mutateAsync({ data: form });
+      onSaved();
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "We couldn't save this business.");
+    }
+  }
+
+  return (
+    <section className="phase-panel editor-panel" aria-labelledby="business-editor-title" data-testid="panel-business-editor">
+      <div className="phase-panel-head">
+        <div><p className="eyebrow">Your service</p><h2 id="business-editor-title">{existing ? "Edit your business" : "Add a business"}</h2></div>
+        <button type="button" className="phase-icon-button" onClick={onClose} aria-label="Close editor" data-testid="button-close-business-editor">Close</button>
+      </div>
+      <form className="phase-form" onSubmit={submit} data-testid="form-business">
+        <label className="field"><span>Business name</span><input className="input" required minLength="2" maxLength="120" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} data-testid="input-business-name" /></label>
+        <label className="field"><span>Category</span><select className="select" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} data-testid="select-business-category">{categories.map((category) => <option key={category}>{category}</option>)}</select></label>
+        <label className="field"><span>What do you offer?</span><textarea className="textarea" required minLength="10" maxLength="2000" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} data-testid="input-business-description" /></label>
+        <label className="field"><span>Pricing</span><input className="input" required minLength="1" maxLength="300" placeholder="For example, $15 per visit" value={form.pricingText} onChange={(e) => setForm({ ...form, pricingText: e.target.value })} data-testid="input-business-pricing" /></label>
+        <div className="field">
+          <span>Photos <small className="optional">({previews.length}/3, optional)</small></span>
+          <p className="phase-help">JPEG, PNG, or WebP. Images are resized and compressed before upload.</p>
+          <div className="photo-strip">{previews.map((photo, index) => <div className="photo-thumb" key={`${photo.path}-${index}`} data-testid={`photo-preview-${index}`}><img src={photo.url} alt={`Business photo ${index + 1}`} /><button type="button" onClick={() => removePhoto(index)} aria-label={`Remove photo ${index + 1}`} data-testid={`button-remove-photo-${index}`}>Remove</button></div>)}</div>
+          {previews.length < 3 && <input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={busy} onChange={addPhotos} data-testid="input-business-photos" />}
+        </div>
+        {error && <p className="phase-error" role="alert" data-testid="error-business-form">{error}</p>}
+        <div className="phase-actions"><button type="submit" className="btn btn-teal" disabled={busy} data-testid="button-save-business">{busy ? "Saving…" : existing ? "Save changes" : "Submit for review"}</button><button type="button" className="btn btn-outline" onClick={onClose} disabled={busy} data-testid="button-cancel-business">Cancel</button></div>
+      </form>
+    </section>
+  );
+}
+
+function StatusPill({ status }) {
+  return <span className={`status-pill status-${status}`} data-testid={`status-business-${status}`}>{labels[status] ?? status}</span>;
+}
 
 export default function DashboardPage() {
   const { isLoaded, isSignedIn } = useAuth();
   const [, setLocation] = useLocation();
   const [account, setAccount] = useState(null);
   const [error, setError] = useState("");
+  const [editor, setEditor] = useState(undefined);
+  const queryClient = useQueryClient();
+  const myBusinessesQuery = useGetMyBusinesses({
+    query: { queryKey: getGetMyBusinessesQueryKey(), enabled: account?.role === "student" },
+  });
+  const pauseBusiness = useSetBusinessPause();
+  const [actionError, setActionError] = useState("");
+  const businesses = myBusinessesQuery.data?.businesses ?? [];
+  const sortedBusinesses = useMemo(() => businesses, [businesses]);
 
   useEffect(() => {
     if (!isLoaded) return;
-    if (!isSignedIn) {
-      setLocation("/login");
-      return;
-    }
-
+    if (!isSignedIn) { setLocation("/login"); return; }
     let active = true;
-    fetch("/api/auth/me", { credentials: "include" })
-      .then(async (response) => {
-        const data = await response.json();
-        if (!response.ok) {
-          if (response.status === 404) {
-            setLocation("/signup");
-            return null;
-          }
-          throw new Error(data?.error || "We couldn't load your Launch Lane account.");
-        }
-        return data;
-      })
-      .then((data) => {
-        if (!active || !data) return;
-        if (!data.profileComplete) {
-          setLocation("/complete-profile");
-          return;
-        }
-        setAccount(data);
-      })
-      .catch((loadError) => {
-        if (active) setError(loadError instanceof Error ? loadError.message : "We couldn't load your account.");
-      });
-
+    fetch("/api/auth/me", { credentials: "include" }).then(async (response) => {
+      const data = await response.json();
+      if (!response.ok) {
+        if (response.status === 404) { setLocation("/signup"); return null; }
+        throw new Error(data?.error || "We couldn't load your Launch Lane account.");
+      }
+      return data;
+    }).then((data) => {
+      if (!active || !data) return;
+      if (!data.profileComplete) { setLocation("/complete-profile"); return; }
+      setAccount(data);
+    }).catch((loadError) => { if (active) setError(loadError instanceof Error ? loadError.message : "We couldn't load your account."); });
     return () => { active = false; };
   }, [isLoaded, isSignedIn, setLocation]);
 
+  async function setPaused(business) {
+    setActionError("");
+    try {
+      await pauseBusiness.mutateAsync({ businessId: business.id, data: { paused: business.status !== "paused" } });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: getGetMyBusinessesQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getGetPublicBusinessesQueryKey() }),
+      ]);
+    } catch (pauseError) { setActionError(pauseError instanceof Error ? pauseError.message : "We couldn't update this listing."); }
+  }
+
+  async function refreshAfterSave() {
+    setEditor(undefined);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: getGetMyBusinessesQueryKey() }),
+      queryClient.invalidateQueries({ queryKey: getGetPublicBusinessesQueryKey() }),
+    ]);
+  }
+
   return (
-    <section className="section bg-cream login-section">
-      <div className="wrap">
-        <div className="login-card dashboard-card">
-          <h1>Dashboard</h1>
-          {error ? (
-            <p className="form-error" role="alert">{error}</p>
-          ) : account ? (
-            <p>
-              You are signed in as a <strong>{account.role}</strong>.
-            </p>
+    <section className="phase-dashboard">
+      <div className="phase-wrap">
+        <header className="phase-intro"><div><p className="eyebrow">Launch Lane / Dashboard</p><h1>Your corner of Mercer Crossing</h1><p>Keep your service details current. Your guardian stays in the loop at every step.</p></div><div className="phase-mark">LL<span>STUDENT SPACE</span></div></header>
+        {error && <div className="phase-error" role="alert" data-testid="error-account">{error}</div>}
+        {!isLoaded || (!account && !error) ? <div className="phase-panel skeleton-panel" data-testid="loading-account"><span /><span /><span /></div> : account && (
+          account.role === "student" ? (
+            <>
+              <div className="phase-welcome"><div><p className="eyebrow">Student workspace</p><h2>Hi, {account.firstName || account.name || "there"}.</h2><p>Make something good happen close to home.</p></div><button type="button" className="btn btn-teal" onClick={() => setEditor(null)} data-testid="button-add-business">Add a business <span aria-hidden="true">+</span></button></div>
+              {actionError && <p className="phase-error" role="alert" data-testid="error-business-action">{actionError}</p>}
+              {editor !== undefined && <BusinessEditor key={editor?.id ?? "new"} existing={editor} onClose={() => setEditor(undefined)} onSaved={refreshAfterSave} />}
+              <div className="phase-section-title"><div><p className="eyebrow">Your services</p><h2>Business listings</h2></div><span className="phase-count" data-testid="count-my-businesses">{businesses.length} {businesses.length === 1 ? "listing" : "listings"}</span></div>
+              {myBusinessesQuery.isLoading ? <div className="phase-panel skeleton-panel" data-testid="loading-my-businesses"><span /><span /><span /></div> :
+                myBusinessesQuery.isError ? <div className="phase-empty" role="alert" data-testid="error-my-businesses"><p>We couldn&apos;t load your businesses.</p><button className="text-button" type="button" onClick={() => myBusinessesQuery.refetch()} data-testid="button-retry-my-businesses">Try again</button></div> :
+                  sortedBusinesses.length ? <div className="phase-business-list">{sortedBusinesses.map((business) => <article className="phase-business" key={business.id} data-testid={`card-my-business-${business.id}`}>
+                    <div className="phase-business-photo">{business.photoUrls?.[0] ? <img src={business.photoUrls[0]} alt="" /> : <span>{business.category.slice(0, 1)}</span>}</div>
+                    <div className="phase-business-copy"><div className="business-title-line"><h3 data-testid={`text-business-name-${business.id}`}>{business.name}</h3><StatusPill status={business.status} /></div><p className="business-category">{business.category} <span>·</span> {business.pricingText}</p><p>{business.description}</p>
+                      {business.status === "rejected" && business.rejectionReason && <div className="rejection-note" data-testid={`text-rejection-reason-${business.id}`}><strong>Review note</strong>{business.rejectionReason}</div>}
+                       <div className="phase-business-actions"><button type="button" className="text-button" onClick={() => setEditor(business)} data-testid={`button-edit-business-${business.id}`}>Edit details</button>{business.status === "live" && <button type="button" className="text-button" disabled={pauseBusiness.isPending} onClick={() => setPaused(business)} data-testid={`button-toggle-pause-${business.id}`}>Pause listing</button>}{business.status === "paused" && business.pausedBy === "student" && <button type="button" className="text-button" disabled={pauseBusiness.isPending} onClick={() => setPaused(business)} data-testid={`button-toggle-pause-${business.id}`}>Resume listing</button>}{business.status === "paused" && business.pausedBy === "admin" && <span className="business-category" data-testid={`text-admin-paused-business-${business.id}`}>Paused by Launch Lane</span>}</div>
+                    </div>
+                  </article>)}</div> :
+                    <div className="phase-empty" data-testid="empty-my-businesses"><div className="empty-stamp">01</div><p className="eyebrow">A good place to start</p><h2>Your first service starts here.</h2><p>Add a clear description and fair pricing. We&apos;ll guide you and your guardian through the review.</p><button type="button" className="btn btn-teal" onClick={() => setEditor(null)} data-testid="button-create-first-business">Create your first listing</button></div>}
+            </>
+          ) : account.role === "admin" ? (
+            <div className="phase-panel role-panel" data-testid="admin-dashboard-placeholder"><p className="eyebrow">Administrator</p><h2>Review tools are ready.</h2><p>Open the admin workspace to review student services and check testing email delivery.</p><Link href="/admin" className="btn btn-teal" data-testid="link-admin-workspace">Open admin workspace</Link></div>
           ) : (
-            <p className="login-note">Loading your account…</p>
-          )}
-          {account?.role === "admin" && (
-            <p className="login-note">Admin access is limited to the account configured for Launch Lane.</p>
-          )}
-          <Link href="/" className="btn btn-outline">Back to Launch Lane</Link>
-        </div>
+            <div className="phase-panel role-panel" data-testid="resident-dashboard-placeholder"><p className="eyebrow">Neighbor workspace</p><h2>Your neighborhood, nearby.</h2><p>Browse student services or return to the public site to get started.</p><div className="phase-actions"><Link href="/explore" className="btn btn-teal" data-testid="link-explore-services">Explore services</Link><Link href="/" className="btn btn-outline" data-testid="link-home">Back to Launch Lane</Link></div></div>
+          )
+        )}
       </div>
     </section>
   );

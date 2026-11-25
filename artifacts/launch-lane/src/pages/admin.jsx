@@ -1,0 +1,137 @@
+import { useEffect, useState } from "react";
+import { Link, useLocation } from "wouter";
+import { useAuth } from "@clerk/react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  getGetAdminBusinessesQueryKey, getGetAdminEmailLogQueryKey, getGetMyBusinessesQueryKey,
+  getGetPublicBusinessesQueryKey, useGetAdminBusinesses, useGetAdminEmailLog,
+  useReviewBusiness, useSetAdminBusinessPause,
+} from "@workspace/api-client-react";
+
+const statusText = { pending_review: "In review", pending_guardian: "Guardian approval", live: "Live", paused: "Paused", rejected: "Needs changes" };
+
+function EmailBody({ text, emailId }) {
+  const matches = [...text.matchAll(/(?:https?:\/\/[^\s]+)?\/guardian\/approval\/([a-zA-Z0-9_-]+)/g)];
+  if (!matches.length) return <p className="email-body" data-testid={`text-email-body-${emailId}`}>{text}</p>;
+  const parts = [];
+  let cursor = 0;
+  matches.forEach((match, index) => {
+    const token = match[1];
+    const full = match[0];
+    const pathStart = full.lastIndexOf("/guardian/approval/");
+    const linkPath = full.slice(pathStart).replace(/[.,!?;:)]+$/, "");
+    const start = match.index;
+    if (start > cursor) parts.push(text.slice(cursor, start));
+    parts.push(<Link key={`${token}-${index}`} className="email-inline-link" href={linkPath} data-testid={`link-guardian-approval-${emailId}-${index}`}>{full}</Link>);
+    cursor = start + full.length;
+  });
+  if (cursor < text.length) parts.push(text.slice(cursor));
+  return <p className="email-body" data-testid={`text-email-body-${emailId}`}>{parts}</p>;
+}
+
+export default function AdminPage() {
+  const { isLoaded, isSignedIn } = useAuth();
+  const [, setLocation] = useLocation();
+  const [account, setAccount] = useState(null);
+  const [authError, setAuthError] = useState("");
+  const [expanded, setExpanded] = useState("");
+  const [rejecting, setRejecting] = useState("");
+  const [reason, setReason] = useState("");
+  const [actionError, setActionError] = useState("");
+  const queryClient = useQueryClient();
+  const adminBusinesses = useGetAdminBusinesses({ query: { queryKey: getGetAdminBusinessesQueryKey(), enabled: account?.role === "admin" } });
+  const emailLog = useGetAdminEmailLog({ query: { queryKey: getGetAdminEmailLogQueryKey(), enabled: account?.role === "admin" } });
+  const review = useReviewBusiness();
+  const pause = useSetAdminBusinessPause();
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn) { setLocation("/login"); return; }
+    let active = true;
+    fetch("/api/auth/me", { credentials: "include" }).then(async (response) => {
+      const body = await response.json();
+      if (!response.ok) throw new Error(body?.error || "We couldn't verify your account.");
+      return body;
+    }).then((body) => {
+      if (!active) return;
+      if (body.role !== "admin") { setAuthError("This workspace is available to Launch Lane administrators only."); return; }
+      setAccount(body);
+    }).catch((error) => { if (active) setAuthError(error instanceof Error ? error.message : "We couldn't verify your account."); });
+    return () => { active = false; };
+  }, [isLoaded, isSignedIn, setLocation]);
+
+  async function refreshAdmin() {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: getGetAdminBusinessesQueryKey() }),
+      queryClient.invalidateQueries({ queryKey: getGetPublicBusinessesQueryKey() }),
+      queryClient.invalidateQueries({ queryKey: getGetMyBusinessesQueryKey() }),
+      queryClient.invalidateQueries({ queryKey: getGetAdminEmailLogQueryKey() }),
+    ]);
+  }
+
+  async function decide(businessId, action, rejectReason) {
+    setActionError("");
+    try {
+      await review.mutateAsync({ businessId, data: { action, ...(rejectReason ? { reason: rejectReason } : {}) } });
+      setRejecting(""); setReason("");
+      await refreshAdmin();
+    } catch (error) { setActionError(error instanceof Error ? error.message : "The review could not be saved."); }
+  }
+
+  async function togglePause(business) {
+    setActionError("");
+    try {
+      await pause.mutateAsync({ businessId: business.id, data: { paused: business.status !== "paused" } });
+      await refreshAdmin();
+    } catch (error) { setActionError(error instanceof Error ? error.message : "The listing could not be updated."); }
+  }
+
+  if (!isLoaded || (isSignedIn && !account && !authError)) {
+    return <section className="phase-admin"><div className="phase-wrap"><div className="phase-panel skeleton-panel" data-testid="loading-admin-access"><span /><span /><span /></div></div></section>;
+  }
+  if (!account || account.role !== "admin") {
+    return <section className="phase-admin"><div className="phase-wrap"><div className="phase-access-denied" data-testid="admin-access-denied"><p className="eyebrow">Restricted workspace</p><h1>Administrator access only.</h1><p>{authError || "Please sign in with an administrator account."}</p><Link className="btn btn-outline" href="/dashboard" data-testid="link-admin-access-back">Back to dashboard</Link></div></div></section>;
+  }
+
+  const businesses = adminBusinesses.data?.businesses ?? [];
+  const emails = emailLog.data?.emails ?? [];
+  return (
+    <section className="phase-admin">
+      <div className="phase-wrap">
+        <header className="admin-heading"><div><p className="eyebrow">Mercer Crossing / Operations</p><h1>Review desk</h1><p>Keep every listing clear, safe, and ready for the neighborhood.</p></div><Link href="/dashboard" className="admin-back" data-testid="link-admin-dashboard">Dashboard <span aria-hidden="true">↗</span></Link></header>
+        {actionError && <p className="phase-error" role="alert" data-testid="error-admin-action">{actionError}</p>}
+        <section className="admin-section">
+          <div className="phase-section-title"><div><p className="eyebrow">01 / Moderation</p><h2>Student businesses</h2></div><span className="phase-count" data-testid="count-admin-businesses">{businesses.length} total</span></div>
+          {adminBusinesses.isLoading ? <div className="phase-panel skeleton-panel" data-testid="loading-admin-businesses"><span /><span /><span /></div> :
+            adminBusinesses.isError ? <div className="phase-empty" role="alert" data-testid="error-admin-businesses"><p>Business review data could not be loaded.</p><button type="button" className="text-button" onClick={() => adminBusinesses.refetch()} data-testid="button-retry-admin-businesses">Retry</button></div> :
+              businesses.length ? <div className="admin-business-list">{businesses.map((business) => (
+                <article className="admin-business" key={business.id} data-testid={`card-admin-business-${business.id}`}>
+                  <div className="admin-business-top">
+                    <div className="admin-business-identity"><div className="phase-business-photo">{business.photoUrls?.[0] ? <img src={business.photoUrls[0]} alt="" /> : <span>{business.category.slice(0, 1)}</span>}</div><div><p className="admin-owner" data-testid={`text-admin-owner-${business.id}`}>{business.ownerName} <span>· age {business.age}</span></p><h3 data-testid={`text-admin-business-name-${business.id}`}>{business.name}</h3><p className="business-category" data-testid={`text-admin-business-status-${business.id}`}>{business.category} <span>·</span> {statusText[business.status]}</p></div></div>
+                    <button type="button" className="admin-detail-toggle" onClick={() => setExpanded(expanded === business.id ? "" : business.id)} aria-expanded={expanded === business.id} data-testid={`button-admin-details-${business.id}`}>{expanded === business.id ? "Hide details" : "Review details"}</button>
+                  </div>
+                  <div className="admin-description"><p>{business.description}</p><strong>{business.pricingText}</strong></div>
+                  {expanded === business.id && <div className="admin-private-details" data-testid={`details-admin-private-${business.id}`}>
+                    <div><span>Student email</span><strong data-testid={`text-admin-owner-email-${business.id}`}>{business.ownerEmail}</strong></div><div><span>Private address</span><strong data-testid={`text-admin-private-address-${business.id}`}>{business.privateAddress}</strong></div><div><span>Guardian</span><strong data-testid={`text-admin-guardian-name-${business.id}`}>{business.guardianName}</strong></div><div><span>Guardian email</span><strong data-testid={`text-admin-guardian-email-${business.id}`}>{business.guardianEmail}</strong></div><div><span>Submitted</span><strong>{new Date(business.createdAt).toLocaleString()}</strong></div>
+                  </div>}
+                  {business.rejectionReason && <p className="admin-rejection" data-testid={`text-admin-rejection-${business.id}`}>Previous review: {business.rejectionReason}</p>}
+                  <div className="admin-actions">
+                    {business.status === "pending_review" && <><button type="button" className="btn btn-teal btn-sm" disabled={review.isPending} onClick={() => decide(business.id, "approve")} data-testid={`button-approve-business-${business.id}`}>Approve</button>{rejecting === business.id ? <div className="reject-form"><input className="input" maxLength="1000" placeholder="Reason for the student" value={reason} onChange={(e) => setReason(e.target.value)} data-testid={`input-reject-reason-${business.id}`} /><button type="button" className="btn btn-sm btn-danger" disabled={review.isPending || !reason.trim()} onClick={() => decide(business.id, "reject", reason.trim())} data-testid={`button-confirm-reject-${business.id}`}>Confirm rejection</button><button type="button" className="text-button" onClick={() => { setRejecting(""); setReason(""); }} data-testid={`button-cancel-reject-${business.id}`}>Cancel</button></div> : <button type="button" className="btn btn-sm btn-outline" onClick={() => setRejecting(business.id)} data-testid={`button-reject-business-${business.id}`}>Reject</button>}</>}
+                    {business.status === "pending_guardian" && <span className="admin-updated" data-testid={`text-guardian-pending-${business.id}`}>Waiting for guardian approval</span>}
+                    {["live", "paused"].includes(business.status) && <button type="button" className="btn btn-sm btn-outline" disabled={pause.isPending} onClick={() => togglePause(business)} data-testid={`button-admin-pause-${business.id}`}>{business.status === "paused" ? "Resume listing" : "Pause listing"}</button>}
+                    <span className="admin-updated">Updated {new Date(business.updatedAt).toLocaleDateString()}</span>
+                  </div>
+                </article>
+              ))}</div> : <div className="phase-empty" data-testid="empty-admin-businesses"><p className="eyebrow">All caught up</p><h2>No businesses to review.</h2><p>New student listings will appear here.</p></div>}
+        </section>
+        <section className="admin-section email-section">
+          <div className="phase-section-title"><div><p className="eyebrow">02 / Delivery checks</p><h2>Email log</h2><p className="phase-help">This in-memory log clears when the API restarts.</p></div><button type="button" className="admin-refresh" onClick={() => emailLog.refetch()} disabled={emailLog.isFetching} data-testid="button-refresh-email-log">{emailLog.isFetching ? "Refreshing…" : "Refresh log"}</button></div>
+          {emailLog.data?.notice && <p className="email-notice" data-testid="notice-email-log">{emailLog.data.notice}</p>}
+          {emailLog.isLoading ? <div className="phase-panel skeleton-panel" data-testid="loading-email-log"><span /><span /><span /></div> :
+            emailLog.isError ? <div className="phase-empty" role="alert" data-testid="error-email-log"><p>The email log could not be loaded.</p><button type="button" className="text-button" onClick={() => emailLog.refetch()} data-testid="button-retry-email-log">Try again</button></div> :
+              emails.length ? <div className="email-log">{emails.map((email) => <article className="email-entry" key={email.id} data-testid={`card-email-log-${email.id}`}><div className="email-entry-head"><div><p className="email-date" data-testid={`text-email-created-${email.id}`}>{new Date(email.createdAt).toLocaleString()}</p><h3 data-testid={`text-email-subject-${email.id}`}>{email.subject}</h3></div><span className={`email-status email-${email.status}`} data-testid={`status-email-${email.id}`}>{email.status}</span></div><dl className="email-addresses"><dt>To</dt><dd data-testid={`text-email-to-${email.id}`}>{email.to.join(", ") || "—"}</dd>{email.cc.length > 0 && <><dt>CC</dt><dd data-testid={`text-email-cc-${email.id}`}>{email.cc.join(", ")}</dd></>}</dl><EmailBody text={email.text} emailId={email.id} />{email.detail && <p className="email-detail" data-testid={`text-email-detail-${email.id}`}>{email.detail}</p>}</article>)}</div> : <div className="phase-empty" data-testid="empty-email-log"><p className="eyebrow">Nothing logged yet</p><h2>No test emails on record.</h2><p>Email events will show here when the API records them.</p></div>}
+        </section>
+      </div>
+    </section>
+  );
+}
