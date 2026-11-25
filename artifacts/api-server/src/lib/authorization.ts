@@ -1,4 +1,4 @@
-import { getAuth } from "@clerk/express";
+import { clerkClient, getAuth } from "@clerk/express";
 import type { RequestHandler } from "express";
 import {
   and,
@@ -34,33 +34,36 @@ export function getAccount(res: Parameters<RequestHandler>[1]): AccountContext {
   return res.locals.account as AccountContext;
 }
 
-export const requireSignedIn: RequestHandler = (req, res, next) => {
+export const requireSignedIn: RequestHandler = async (req, res, next) => {
   const auth = getAuth(req);
   if (!auth.userId) {
     res.status(401).json({ error: "Sign in is required." });
     return;
   }
 
-  const claims = auth.sessionClaims as Record<string, unknown> | null;
-  const email =
-    typeof claims?.email === "string" ? claims.email.trim().toLowerCase() : "";
-  if (!email) {
-    res.status(403).json({ error: "A verified account email is required." });
-    return;
+  try {
+    // Email is not a standard Clerk session claim. Resolve the authenticated
+    // subject on the server, and require verified ownership before granting roles.
+    const clerkUser = await clerkClient.users.getUser(auth.userId);
+    const primaryEmail = clerkUser.primaryEmailAddress;
+    if (!primaryEmail || primaryEmail.verification?.status !== "verified") {
+      res.status(403).json({ error: "A verified account email is required." });
+      return;
+    }
+    const email = primaryEmail.emailAddress.trim().toLowerCase();
+    const firstName = clerkUser.firstName?.trim() || "";
+    const name = [firstName, clerkUser.lastName?.trim()].filter(Boolean).join(" ") || email.split("@")[0];
+    res.locals.identity = {
+      authId: auth.userId,
+      email,
+      firstName: firstName || name.split(" ")[0],
+      name,
+    } satisfies Identity;
+    next();
+  } catch {
+    req.log.error("Could not verify the signed-in account with Clerk");
+    res.status(503).json({ error: "We couldn't verify your sign-in. Please try again." });
   }
-
-  const firstName =
-    typeof claims?.firstName === "string" ? claims.firstName.trim() : "";
-  const lastName =
-    typeof claims?.lastName === "string" ? claims.lastName.trim() : "";
-  const name = [firstName, lastName].filter(Boolean).join(" ") || email.split("@")[0];
-  res.locals.identity = {
-    authId: auth.userId,
-    email,
-    firstName: firstName || name.split(" ")[0],
-    name,
-  } satisfies Identity;
-  next();
 };
 
 export async function findUser(authId: string) {
@@ -70,6 +73,24 @@ export async function findUser(authId: string) {
     .where(eq(usersTable.authId, authId))
     .limit(1);
   return user;
+}
+
+export async function findOrProvisionAdmin(identity: Identity) {
+  const existing = await findUser(identity.authId);
+  if (existing || configuredAdminEmail() !== identity.email) return existing;
+
+  // A founder signing in directly need not choose a public signup role first.
+  // Never relink a different Clerk identity merely because its DB email matches.
+  await db
+    .insert(usersTable)
+    .values({
+      authId: identity.authId,
+      email: identity.email,
+      name: identity.name,
+      role: "admin",
+    })
+    .onConflictDoNothing();
+  return findUser(identity.authId);
 }
 
 export async function resolveUserRole(user: User, identity: Identity): Promise<User> {
@@ -110,7 +131,7 @@ export async function resolveUserRole(user: User, identity: Identity): Promise<U
 export const requireAccount: RequestHandler = async (req, res, next) => {
   const identity = getIdentity(res);
   try {
-    const existingUser = await findUser(identity.authId);
+    const existingUser = await findOrProvisionAdmin(identity);
     if (!existingUser) {
       res.status(403).json({ error: "Finish account setup before continuing." });
       return;

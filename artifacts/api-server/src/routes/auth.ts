@@ -16,6 +16,7 @@ import {
 } from "@workspace/db";
 import {
   findUser,
+  findOrProvisionAdmin,
   getIdentity,
   requireSignedIn,
   resolveUserRole,
@@ -103,7 +104,7 @@ router.post("/auth/register", requireSignedIn, async (req, res) => {
 router.get("/auth/me", requireSignedIn, async (req, res) => {
   const identity = getIdentity(res);
   try {
-    const user = await findUser(identity.authId);
+    const user = await findOrProvisionAdmin(identity);
     if (!user) {
       res.status(404).json({ error: "Choose a role to finish setting up your account." });
       return;
