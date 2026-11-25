@@ -1,10 +1,10 @@
 import { z } from "zod";
 
-export const UserRoleSchema = z.enum(["admin", "student", "resident"]);
+export const UserRoleSchema = z.enum(["admin", "student", "resident", "guardian"]);
 
 export const RegisterAccountInput = z
   .object({
-    role: z.enum(["student", "resident"]),
+    role: z.enum(["student", "resident", "guardian"]),
   })
   .strict();
 

@@ -589,13 +589,18 @@ router.post("/admin/businesses/:businessId/pause", ...adminAccess, async (req, r
   }
 });
 
-router.get("/admin/email-log", ...adminAccess, (_req, res) => {
-  res.json(
-    GetAdminEmailLogResponse.parse({
-      emails: getEmailLog(),
-      notice: "This in-memory testing log clears when the API server restarts.",
-    }),
-  );
+router.get("/admin/email-log", ...adminAccess, async (req, res) => {
+  try {
+    res.json(
+      GetAdminEmailLogResponse.parse({
+        emails: await getEmailLog(),
+        notice: "Showing the latest 500 email attempts stored in the database.",
+      }),
+    );
+  } catch (error) {
+    req.log.error({ err: error }, "Could not load administrator email log");
+    res.status(500).json({ error: "We couldn't load the email log." });
+  }
 });
 
 export default router;

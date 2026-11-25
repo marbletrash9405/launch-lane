@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import ListingCard from "@/components/ListingCard";
 import CategoryIcon from "@/components/CategoryIcon";
 import Faq from "@/components/Faq";
-import { categories } from "@/data/listings";
+import { categories } from "@/data/categories";
 import { site } from "@/lib/site";
 import { IconRing, ShieldCheckIcon, GuardianIcon, MailIcon, ArrowIcon } from "@/components/Icons";
 import { useGetPublicBusinesses, getGetPublicBusinessesQueryKey } from "@workspace/api-client-react";

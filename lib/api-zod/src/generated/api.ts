@@ -283,6 +283,394 @@ export const CancelBookingResponse = zod.object({
 
 
 /**
+ * @summary List open jobs accepting applications
+ */
+export const GetPublicJobsResponse = zod.object({
+  "jobs": zod.array(zod.object({
+  "id": zod.uuid(),
+  "title": zod.string(),
+  "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "description": zod.string(),
+  "timing": zod.string(),
+  "payText": zod.string(),
+  "residentStreetName": zod.string().nullable()
+}))
+})
+
+
+/**
+ * @summary List jobs posted by the signed-in resident
+ */
+export const GetMyJobsResponse = zod.object({
+  "jobs": zod.array(zod.object({
+  "id": zod.uuid(),
+  "title": zod.string(),
+  "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "description": zod.string(),
+  "timing": zod.string(),
+  "payText": zod.string(),
+  "status": zod.enum(['pending_review', 'open', 'filled', 'closed', 'rejected']),
+  "rejectionReason": zod.string().nullable(),
+  "applications": zod.array(zod.object({
+  "id": zod.uuid(),
+  "studentFirstName": zod.string(),
+  "age": zod.int(),
+  "message": zod.string(),
+  "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
+  "createdAt": zod.string()
+})),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}))
+})
+
+
+/**
+ * @summary Post a job as a resident
+ */
+export const createJobBodyTitleMin = 2;
+export const createJobBodyTitleMax = 120;
+
+export const createJobBodyDescriptionMin = 10;
+export const createJobBodyDescriptionMax = 2000;
+
+export const createJobBodyTimingMax = 300;
+
+export const createJobBodyPayTextMax = 300;
+
+
+
+export const CreateJobBody = zod.object({
+  "title": zod.string().min(createJobBodyTitleMin).max(createJobBodyTitleMax),
+  "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "description": zod.string().min(createJobBodyDescriptionMin).max(createJobBodyDescriptionMax),
+  "timing": zod.string().min(1).max(createJobBodyTimingMax),
+  "payText": zod.string().min(1).max(createJobBodyPayTextMax)
+})
+
+export const CreateJobResponse = zod.object({
+  "id": zod.uuid(),
+  "title": zod.string(),
+  "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "description": zod.string(),
+  "timing": zod.string(),
+  "payText": zod.string(),
+  "status": zod.enum(['pending_review', 'open', 'filled', 'closed', 'rejected']),
+  "rejectionReason": zod.string().nullable(),
+  "applications": zod.array(zod.object({
+  "id": zod.uuid(),
+  "studentFirstName": zod.string(),
+  "age": zod.int(),
+  "message": zod.string(),
+  "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
+  "createdAt": zod.string()
+})),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Submit an application for administrator review
+ */
+export const CreateJobApplicationParams = zod.object({
+  "jobId": zod.uuid()
+})
+
+export const createJobApplicationBodyMessageMin = 3;
+export const createJobApplicationBodyMessageMax = 2000;
+
+
+
+export const CreateJobApplicationBody = zod.object({
+  "message": zod.string().min(createJobApplicationBodyMessageMin).max(createJobApplicationBodyMessageMax)
+})
+
+export const CreateJobApplicationResponse = zod.object({
+  "id": zod.uuid(),
+  "jobId": zod.uuid(),
+  "jobTitle": zod.string(),
+  "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "message": zod.string(),
+  "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
+  "rejectionReason": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary List the signed-in student's job applications
+ */
+export const GetMyJobApplicationsResponse = zod.object({
+  "applications": zod.array(zod.object({
+  "id": zod.uuid(),
+  "jobId": zod.uuid(),
+  "jobTitle": zod.string(),
+  "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "message": zod.string(),
+  "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
+  "rejectionReason": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}))
+})
+
+
+/**
+ * @summary Withdraw the signed-in student's application
+ */
+export const WithdrawJobApplicationParams = zod.object({
+  "applicationId": zod.uuid()
+})
+
+export const WithdrawJobApplicationResponse = zod.object({
+  "id": zod.uuid(),
+  "jobId": zod.uuid(),
+  "jobTitle": zod.string(),
+  "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "message": zod.string(),
+  "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
+  "rejectionReason": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Choose an applicant and request guardian approval
+ */
+export const ChooseJobApplicantParams = zod.object({
+  "jobId": zod.uuid(),
+  "applicationId": zod.uuid()
+})
+
+export const ChooseJobApplicantResponse = zod.object({
+  "id": zod.uuid(),
+  "title": zod.string(),
+  "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "description": zod.string(),
+  "timing": zod.string(),
+  "payText": zod.string(),
+  "status": zod.enum(['pending_review', 'open', 'filled', 'closed', 'rejected']),
+  "rejectionReason": zod.string().nullable(),
+  "applications": zod.array(zod.object({
+  "id": zod.uuid(),
+  "studentFirstName": zod.string(),
+  "age": zod.int(),
+  "message": zod.string(),
+  "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
+  "createdAt": zod.string()
+})),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Close a job owned by the signed-in resident
+ */
+export const CloseMyJobParams = zod.object({
+  "jobId": zod.uuid()
+})
+
+export const CloseMyJobResponse = zod.object({
+  "id": zod.uuid(),
+  "title": zod.string(),
+  "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "description": zod.string(),
+  "timing": zod.string(),
+  "payText": zod.string(),
+  "status": zod.enum(['pending_review', 'open', 'filled', 'closed', 'rejected']),
+  "rejectionReason": zod.string().nullable(),
+  "applications": zod.array(zod.object({
+  "id": zod.uuid(),
+  "studentFirstName": zod.string(),
+  "age": zod.int(),
+  "message": zod.string(),
+  "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
+  "createdAt": zod.string()
+})),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary List jobs for administrator review and management
+ */
+export const GetAdminJobsResponse = zod.object({
+  "jobs": zod.array(zod.object({
+  "id": zod.uuid(),
+  "title": zod.string(),
+  "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "description": zod.string(),
+  "timing": zod.string(),
+  "payText": zod.string(),
+  "status": zod.enum(['pending_review', 'open', 'filled', 'closed', 'rejected']),
+  "rejectionReason": zod.string().nullable(),
+  "applications": zod.array(zod.object({
+  "id": zod.uuid(),
+  "studentFirstName": zod.string(),
+  "age": zod.int(),
+  "message": zod.string(),
+  "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
+  "createdAt": zod.string()
+})),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}).and(zod.object({
+  "residentName": zod.string(),
+  "residentEmail": zod.string(),
+  "privateAddress": zod.string(),
+  "residentStreetName": zod.string().nullable()
+})))
+})
+
+
+/**
+ * @summary Approve or reject a job post
+ */
+export const ReviewJobParams = zod.object({
+  "jobId": zod.uuid()
+})
+
+export const reviewJobBodyReasonMax = 1000;
+
+
+
+export const ReviewJobBody = zod.object({
+  "action": zod.enum(['approve', 'reject']),
+  "reason": zod.string().max(reviewJobBodyReasonMax).optional()
+})
+
+export const ReviewJobResponse = zod.object({
+  "id": zod.uuid(),
+  "title": zod.string(),
+  "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "description": zod.string(),
+  "timing": zod.string(),
+  "payText": zod.string(),
+  "status": zod.enum(['pending_review', 'open', 'filled', 'closed', 'rejected']),
+  "rejectionReason": zod.string().nullable(),
+  "applications": zod.array(zod.object({
+  "id": zod.uuid(),
+  "studentFirstName": zod.string(),
+  "age": zod.int(),
+  "message": zod.string(),
+  "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
+  "createdAt": zod.string()
+})),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}).and(zod.object({
+  "residentName": zod.string(),
+  "residentEmail": zod.string(),
+  "privateAddress": zod.string(),
+  "residentStreetName": zod.string().nullable()
+}))
+
+
+/**
+ * @summary Close or unpublish a job as administrator
+ */
+export const CloseAdminJobParams = zod.object({
+  "jobId": zod.uuid()
+})
+
+export const CloseAdminJobResponse = zod.object({
+  "id": zod.uuid(),
+  "title": zod.string(),
+  "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "description": zod.string(),
+  "timing": zod.string(),
+  "payText": zod.string(),
+  "status": zod.enum(['pending_review', 'open', 'filled', 'closed', 'rejected']),
+  "rejectionReason": zod.string().nullable(),
+  "applications": zod.array(zod.object({
+  "id": zod.uuid(),
+  "studentFirstName": zod.string(),
+  "age": zod.int(),
+  "message": zod.string(),
+  "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
+  "createdAt": zod.string()
+})),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}).and(zod.object({
+  "residentName": zod.string(),
+  "residentEmail": zod.string(),
+  "privateAddress": zod.string(),
+  "residentStreetName": zod.string().nullable()
+}))
+
+
+/**
+ * @summary List job applications waiting for administrator review
+ */
+export const getAdminJobApplicationsResponseApplicationsItemAgeMin = 13;
+export const getAdminJobApplicationsResponseApplicationsItemAgeMax = 18;
+
+
+
+export const GetAdminJobApplicationsResponse = zod.object({
+  "applications": zod.array(zod.object({
+  "id": zod.uuid(),
+  "jobId": zod.uuid(),
+  "jobTitle": zod.string(),
+  "studentFirstName": zod.string(),
+  "studentEmail": zod.email(),
+  "age": zod.int().min(getAdminJobApplicationsResponseApplicationsItemAgeMin).max(getAdminJobApplicationsResponseApplicationsItemAgeMax),
+  "message": zod.string(),
+  "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
+  "rejectionReason": zod.string().nullable(),
+  "privateAddress": zod.string(),
+  "guardianName": zod.string(),
+  "guardianEmail": zod.email(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Approve or reject a student job application
+ */
+export const ReviewJobApplicationParams = zod.object({
+  "applicationId": zod.uuid()
+})
+
+export const reviewJobApplicationBodyReasonMax = 1000;
+
+
+
+export const ReviewJobApplicationBody = zod.object({
+  "action": zod.enum(['approve', 'reject']),
+  "reason": zod.string().max(reviewJobApplicationBodyReasonMax).optional()
+})
+
+export const reviewJobApplicationResponseAgeMin = 13;
+export const reviewJobApplicationResponseAgeMax = 18;
+
+
+
+export const ReviewJobApplicationResponse = zod.object({
+  "id": zod.uuid(),
+  "jobId": zod.uuid(),
+  "jobTitle": zod.string(),
+  "studentFirstName": zod.string(),
+  "studentEmail": zod.email(),
+  "age": zod.int().min(reviewJobApplicationResponseAgeMin).max(reviewJobApplicationResponseAgeMax),
+  "message": zod.string(),
+  "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
+  "rejectionReason": zod.string().nullable(),
+  "privateAddress": zod.string(),
+  "guardianName": zod.string(),
+  "guardianEmail": zod.email(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
  * @summary List businesses for administrator review and management
  */
 export const GetAdminBusinessesResponse = zod.object({
@@ -390,7 +778,7 @@ export const SetAdminBusinessPauseResponse = zod.object({
 
 
 /**
- * @summary Read the in-memory email log
+ * @summary Read the administrator-only email log
  */
 export const GetAdminEmailLogResponse = zod.object({
   "emails": zod.array(zod.object({
@@ -408,6 +796,233 @@ export const GetAdminEmailLogResponse = zod.object({
 
 
 /**
+ * @summary List chat threads available to the signed-in account
+ */
+export const getChatThreadsResponseThreadsItemUnreadCountMin = 0;
+
+
+
+export const GetChatThreadsResponse = zod.object({
+  "threads": zod.array(zod.object({
+  "id": zod.uuid(),
+  "sourceType": zod.enum(['booking', 'job_application']),
+  "title": zod.string(),
+  "studentFirstName": zod.string(),
+  "residentFirstName": zod.string(),
+  "updatedAt": zod.coerce.date(),
+  "latestMessage": zod.string().nullable(),
+  "unreadCount": zod.int().min(getChatThreadsResponseThreadsItemUnreadCountMin),
+  "locked": zod.boolean()
+}))
+})
+
+
+/**
+ * @summary Count unread messages available to the signed-in account
+ */
+export const getChatUnreadCountResponseUnreadCountMin = 0;
+
+
+
+export const GetChatUnreadCountResponse = zod.object({
+  "unreadCount": zod.int().min(getChatUnreadCountResponseUnreadCountMin)
+})
+
+
+/**
+ * @summary Read a thread and its text messages
+ */
+export const GetChatThreadParams = zod.object({
+  "threadId": zod.uuid()
+})
+
+export const getChatThreadResponseThreadUnreadCountMin = 0;
+
+export const getChatThreadResponseMessagesItemTextMax = 1000;
+
+
+
+export const GetChatThreadResponse = zod.object({
+  "thread": zod.object({
+  "id": zod.uuid(),
+  "sourceType": zod.enum(['booking', 'job_application']),
+  "title": zod.string(),
+  "studentFirstName": zod.string(),
+  "residentFirstName": zod.string(),
+  "updatedAt": zod.coerce.date(),
+  "latestMessage": zod.string().nullable(),
+  "unreadCount": zod.int().min(getChatThreadResponseThreadUnreadCountMin),
+  "locked": zod.boolean()
+}),
+  "messages": zod.array(zod.object({
+  "id": zod.uuid(),
+  "senderFirstName": zod.string(),
+  "senderRole": zod.enum(['student', 'guardian', 'resident', 'admin']),
+  "text": zod.string().max(getChatThreadResponseMessagesItemTextMax),
+  "createdAt": zod.coerce.date(),
+  "deletedAt": zod.coerce.date().nullable()
+}))
+})
+
+
+/**
+ * @summary Send a text message to a thread
+ */
+export const CreateChatMessageParams = zod.object({
+  "threadId": zod.uuid()
+})
+
+export const createChatMessageBodyTextMax = 1000;
+
+
+
+export const CreateChatMessageBody = zod.object({
+  "text": zod.string().min(1).max(createChatMessageBodyTextMax)
+})
+
+export const createChatMessageResponseTextMax = 1000;
+
+
+
+export const CreateChatMessageResponse = zod.object({
+  "id": zod.uuid(),
+  "senderFirstName": zod.string(),
+  "senderRole": zod.enum(['student', 'guardian', 'resident', 'admin']),
+  "text": zod.string().max(createChatMessageResponseTextMax),
+  "createdAt": zod.coerce.date(),
+  "deletedAt": zod.coerce.date().nullable()
+})
+
+
+/**
+ * @summary Mark a thread as read
+ */
+export const MarkChatThreadReadParams = zod.object({
+  "threadId": zod.uuid()
+})
+
+export const MarkChatThreadReadResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Report a message to Launch Lane
+ */
+export const ReportChatMessageParams = zod.object({
+  "threadId": zod.uuid()
+})
+
+export const reportChatMessageBodyReasonMax = 1000;
+
+
+
+export const ReportChatMessageBody = zod.object({
+  "messageId": zod.uuid(),
+  "reason": zod.string().max(reportChatMessageBodyReasonMax).optional()
+})
+
+export const ReportChatMessageResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary List reported messages for administrator review
+ */
+export const GetAdminChatReportsResponse = zod.object({
+  "reports": zod.array(zod.object({
+  "id": zod.uuid(),
+  "threadId": zod.uuid(),
+  "messageId": zod.uuid(),
+  "messageText": zod.string(),
+  "senderFirstName": zod.string(),
+  "senderRole": zod.enum(['student', 'guardian', 'resident', 'admin']),
+  "reporterFirstName": zod.string(),
+  "reason": zod.string().nullable(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Remove a message from a thread
+ */
+export const DeleteAdminChatMessageParams = zod.object({
+  "messageId": zod.uuid()
+})
+
+export const DeleteAdminChatMessageResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Lock or unlock a chat thread
+ */
+export const SetAdminChatThreadLockParams = zod.object({
+  "threadId": zod.uuid()
+})
+
+export const SetAdminChatThreadLockBody = zod.object({
+  "locked": zod.boolean()
+})
+
+export const SetAdminChatThreadLockResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary List students linked to the verified guardian email
+ */
+export const getGuardianDashboardResponseStudentsItemChatsItemUnreadCountMin = 0;
+
+
+
+export const GetGuardianDashboardResponse = zod.object({
+  "students": zod.array(zod.object({
+  "studentId": zod.uuid(),
+  "firstName": zod.string(),
+  "age": zod.int(),
+  "businesses": zod.array(zod.object({
+  "id": zod.uuid(),
+  "name": zod.string(),
+  "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "description": zod.string(),
+  "pricingText": zod.string(),
+  "photoUrls": zod.array(zod.string()),
+  "status": zod.enum(['pending_review', 'pending_guardian', 'live', 'paused', 'rejected']),
+  "updatedAt": zod.coerce.date()
+})),
+  "bookings": zod.array(zod.object({
+  "id": zod.uuid(),
+  "businessName": zod.string(),
+  "status": zod.enum(['requested', 'accepted', 'declined', 'completed', 'cancelled']),
+  "createdAt": zod.coerce.date()
+})),
+  "jobApplications": zod.array(zod.object({
+  "id": zod.uuid(),
+  "jobTitle": zod.string(),
+  "status": zod.enum(['pending_review', 'applied', 'chosen', 'guardian_approved', 'rejected', 'declined', 'withdrawn']),
+  "createdAt": zod.coerce.date()
+})),
+  "chats": zod.array(zod.object({
+  "id": zod.uuid(),
+  "sourceType": zod.enum(['booking', 'job_application']),
+  "title": zod.string(),
+  "studentFirstName": zod.string(),
+  "residentFirstName": zod.string(),
+  "updatedAt": zod.coerce.date(),
+  "latestMessage": zod.string().nullable(),
+  "unreadCount": zod.int().min(getGuardianDashboardResponseStudentsItemChatsItemUnreadCountMin),
+  "locked": zod.boolean()
+}))
+}))
+})
+
+
+/**
  * @summary View a single-use guardian approval
  */
 export const GetGuardianApprovalParams = zod.object({
@@ -415,8 +1030,11 @@ export const GetGuardianApprovalParams = zod.object({
 })
 
 export const GetGuardianApprovalResponse = zod.object({
-  "businessName": zod.string(),
-  "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "targetType": zod.enum(['business', 'job_application']),
+  "businessName": zod.string().nullable(),
+  "category": zod.union([zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),zod.null()]),
+  "jobTitle": zod.string().nullable(),
+  "residentFirstName": zod.string().nullable(),
   "studentName": zod.string(),
   "expired": zod.boolean(),
   "used": zod.boolean(),

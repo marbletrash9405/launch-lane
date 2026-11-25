@@ -45,6 +45,284 @@ export const BookingStatus = {
   cancelled: 'cancelled',
 } as const;
 
+export type JobStatus = typeof JobStatus[keyof typeof JobStatus];
+
+
+export const JobStatus = {
+  pending_review: 'pending_review',
+  open: 'open',
+  filled: 'filled',
+  closed: 'closed',
+  rejected: 'rejected',
+} as const;
+
+export type JobApplicationStatus = typeof JobApplicationStatus[keyof typeof JobApplicationStatus];
+
+
+export const JobApplicationStatus = {
+  pending_review: 'pending_review',
+  applied: 'applied',
+  chosen: 'chosen',
+  guardian_approved: 'guardian_approved',
+  rejected: 'rejected',
+  declined: 'declined',
+  withdrawn: 'withdrawn',
+} as const;
+
+export type ChatRole = typeof ChatRole[keyof typeof ChatRole];
+
+
+export const ChatRole = {
+  student: 'student',
+  guardian: 'guardian',
+  resident: 'resident',
+  admin: 'admin',
+} as const;
+
+export type ChatSourceType = typeof ChatSourceType[keyof typeof ChatSourceType];
+
+
+export const ChatSourceType = {
+  booking: 'booking',
+  job_application: 'job_application',
+} as const;
+
+export interface ActionResponse {
+  ok: boolean;
+}
+
+export interface JobInput {
+  /**
+     * @minLength 2
+     * @maxLength 120
+     */
+  title: string;
+  category: BusinessCategory;
+  /**
+     * @minLength 10
+     * @maxLength 2000
+     */
+  description: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  timing: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  payText: string;
+}
+
+export interface JobApplicationInput {
+  /**
+     * @minLength 3
+     * @maxLength 2000
+     */
+  message: string;
+}
+
+export type JobReviewInputAction = typeof JobReviewInputAction[keyof typeof JobReviewInputAction];
+
+
+export const JobReviewInputAction = {
+  approve: 'approve',
+  reject: 'reject',
+} as const;
+
+export interface JobReviewInput {
+  action: JobReviewInputAction;
+  /** @maxLength 1000 */
+  reason?: string;
+}
+
+export type JobApplicationReviewInputAction = typeof JobApplicationReviewInputAction[keyof typeof JobApplicationReviewInputAction];
+
+
+export const JobApplicationReviewInputAction = {
+  approve: 'approve',
+  reject: 'reject',
+} as const;
+
+export interface JobApplicationReviewInput {
+  action: JobApplicationReviewInputAction;
+  /** @maxLength 1000 */
+  reason?: string;
+}
+
+export interface PublicJob {
+  id: string;
+  title: string;
+  category: BusinessCategory;
+  description: string;
+  timing: string;
+  payText: string;
+  /** @nullable */
+  residentStreetName: string | null;
+}
+
+export interface ResidentJobApplication {
+  id: string;
+  studentFirstName: string;
+  age: number;
+  message: string;
+  status: JobApplicationStatus;
+  createdAt: string;
+}
+
+export interface ResidentJob {
+  id: string;
+  title: string;
+  category: BusinessCategory;
+  description: string;
+  timing: string;
+  payText: string;
+  status: JobStatus;
+  /** @nullable */
+  rejectionReason: string | null;
+  applications: ResidentJobApplication[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StudentJobApplication {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  category: BusinessCategory;
+  message: string;
+  status: JobApplicationStatus;
+  /** @nullable */
+  rejectionReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AdminJob = ResidentJob & ({
+  residentName: string;
+  residentEmail: string;
+  privateAddress: string;
+  /** @nullable */
+  residentStreetName: string | null;
+});
+
+export interface AdminJobApplication {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  studentFirstName: string;
+  studentEmail: string;
+  /**
+     * @minimum 13
+     * @maximum 18
+     */
+  age: number;
+  message: string;
+  status: JobApplicationStatus;
+  /** @nullable */
+  rejectionReason: string | null;
+  privateAddress: string;
+  guardianName: string;
+  guardianEmail: string;
+  createdAt: string;
+}
+
+export interface ChatThreadSummary {
+  id: string;
+  sourceType: ChatSourceType;
+  title: string;
+  studentFirstName: string;
+  residentFirstName: string;
+  updatedAt: string;
+  /** @nullable */
+  latestMessage: string | null;
+  /** @minimum 0 */
+  unreadCount: number;
+  locked: boolean;
+}
+
+export interface ChatMessage {
+  id: string;
+  senderFirstName: string;
+  senderRole: ChatRole;
+  /** @maxLength 1000 */
+  text: string;
+  createdAt: string;
+  /** @nullable */
+  deletedAt: string | null;
+}
+
+export interface ChatMessageInput {
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  text: string;
+}
+
+export interface ChatReportInput {
+  messageId: string;
+  /** @maxLength 1000 */
+  reason?: string;
+}
+
+export interface ChatThreadLockInput {
+  locked: boolean;
+}
+
+export interface ChatReport {
+  id: string;
+  threadId: string;
+  messageId: string;
+  messageText: string;
+  senderFirstName: string;
+  senderRole: ChatRole;
+  reporterFirstName: string;
+  /** @nullable */
+  reason: string | null;
+  createdAt: string;
+}
+
+export interface GuardianBusinessSummary {
+  id: string;
+  name: string;
+  category: BusinessCategory;
+  description: string;
+  pricingText: string;
+  photoUrls: string[];
+  status: BusinessStatus;
+  updatedAt: string;
+}
+
+export interface GuardianBookingSummary {
+  id: string;
+  businessName: string;
+  status: BookingStatus;
+  createdAt: string;
+}
+
+export interface GuardianJobApplicationSummary {
+  id: string;
+  jobTitle: string;
+  status: JobApplicationStatus;
+  createdAt: string;
+}
+
+export interface GuardianDashboardStudent {
+  studentId: string;
+  firstName: string;
+  age: number;
+  businesses: GuardianBusinessSummary[];
+  bookings: GuardianBookingSummary[];
+  jobApplications: GuardianJobApplicationSummary[];
+  chats: ChatThreadSummary[];
+}
+
+export interface GuardianDashboard {
+  students: GuardianDashboardStudent[];
+}
+
 export interface BookingInput {
   businessId: string;
   /**
@@ -203,9 +481,23 @@ export interface EmailLogEntry {
   detail: string | null;
 }
 
+export type GuardianApprovalTargetType = typeof GuardianApprovalTargetType[keyof typeof GuardianApprovalTargetType];
+
+
+export const GuardianApprovalTargetType = {
+  business: 'business',
+  job_application: 'job_application',
+} as const;
+
 export interface GuardianApproval {
-  businessName: string;
-  category: BusinessCategory;
+  targetType: GuardianApprovalTargetType;
+  /** @nullable */
+  businessName: string | null;
+  category: BusinessCategory | null;
+  /** @nullable */
+  jobTitle: string | null;
+  /** @nullable */
+  residentFirstName: string | null;
   studentName: string;
   expired: boolean;
   used: boolean;
@@ -233,6 +525,26 @@ export type GetMyBookings200 = {
   bookings: ResidentBooking[];
 };
 
+export type GetPublicJobs200 = {
+  jobs: PublicJob[];
+};
+
+export type GetMyJobs200 = {
+  jobs: ResidentJob[];
+};
+
+export type GetMyJobApplications200 = {
+  applications: StudentJobApplication[];
+};
+
+export type GetAdminJobs200 = {
+  jobs: AdminJob[];
+};
+
+export type GetAdminJobApplications200 = {
+  applications: AdminJobApplication[];
+};
+
 export type GetAdminBusinesses200 = {
   businesses: AdminBusiness[];
 };
@@ -258,6 +570,24 @@ export type SetAdminBusinessPauseBody = {
 export type GetAdminEmailLog200 = {
   emails: EmailLogEntry[];
   notice: string;
+};
+
+export type GetChatThreads200 = {
+  threads: ChatThreadSummary[];
+};
+
+export type GetChatUnreadCount200 = {
+  /** @minimum 0 */
+  unreadCount: number;
+};
+
+export type GetChatThread200 = {
+  thread: ChatThreadSummary;
+  messages: ChatMessage[];
+};
+
+export type GetAdminChatReports200 = {
+  reports: ChatReport[];
 };
 
 export type SubmitGuardianApprovalBodyDecision = typeof SubmitGuardianApprovalBodyDecision[keyof typeof SubmitGuardianApprovalBodyDecision];

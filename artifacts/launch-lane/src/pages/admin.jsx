@@ -6,6 +6,7 @@ import {
   getGetAdminBusinessesQueryKey, getGetAdminEmailLogQueryKey, getGetMyBusinessesQueryKey,
   getGetPublicBusinessesQueryKey, useGetAdminBusinesses, useGetAdminEmailLog,
   useReviewBusiness, useSetAdminBusinessPause,
+  getGetAdminJobsQueryKey, getGetPublicJobsQueryKey, useGetAdminJobs, useReviewJob, useCloseAdminJob,
 } from "@workspace/api-client-react";
 
 const statusText = { pending_review: "In review", pending_guardian: "Guardian approval", live: "Live", paused: "Paused", rejected: "Needs changes" };
@@ -43,6 +44,9 @@ export default function AdminPage() {
   const emailLog = useGetAdminEmailLog({ query: { queryKey: getGetAdminEmailLogQueryKey(), enabled: account?.role === "admin" } });
   const review = useReviewBusiness();
   const pause = useSetAdminBusinessPause();
+  const adminJobs = useGetAdminJobs({ query: { queryKey: getGetAdminJobsQueryKey(), enabled: account?.role === "admin" } });
+  const reviewJob = useReviewJob();
+  const closeJob = useCloseAdminJob();
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -66,6 +70,8 @@ export default function AdminPage() {
       queryClient.invalidateQueries({ queryKey: getGetPublicBusinessesQueryKey() }),
       queryClient.invalidateQueries({ queryKey: getGetMyBusinessesQueryKey() }),
       queryClient.invalidateQueries({ queryKey: getGetAdminEmailLogQueryKey() }),
+      queryClient.invalidateQueries({ queryKey: getGetAdminJobsQueryKey() }),
+      queryClient.invalidateQueries({ queryKey: getGetPublicJobsQueryKey() }),
     ]);
   }
 
@@ -86,6 +92,21 @@ export default function AdminPage() {
     } catch (error) { setActionError(error instanceof Error ? error.message : "The listing could not be updated."); }
   }
 
+  async function decideJob(jobId, action, rejectReason) {
+    setActionError("");
+    try {
+      await reviewJob.mutateAsync({ jobId, data: { action, ...(rejectReason ? { reason: rejectReason } : {}) } });
+      setRejecting(""); setReason("");
+      await refreshAdmin();
+    } catch (error) { setActionError(error instanceof Error ? error.message : "The job review could not be saved."); }
+  }
+
+  async function closeAdminJob(jobId) {
+    setActionError("");
+    try { await closeJob.mutateAsync({ jobId }); await refreshAdmin(); }
+    catch (error) { setActionError(error instanceof Error ? error.message : "The job could not be closed."); }
+  }
+
   if (!isLoaded || (isSignedIn && !account && !authError)) {
     return <section className="phase-admin"><div className="phase-wrap"><div className="phase-panel skeleton-panel" data-testid="loading-admin-access"><span /><span /><span /></div></div></section>;
   }
@@ -94,6 +115,7 @@ export default function AdminPage() {
   }
 
   const businesses = adminBusinesses.data?.businesses ?? [];
+  const jobs = adminJobs.data?.jobs ?? [];
   const emails = emailLog.data?.emails ?? [];
   return (
     <section className="phase-admin">
@@ -124,8 +146,27 @@ export default function AdminPage() {
                 </article>
               ))}</div> : <div className="phase-empty" data-testid="empty-admin-businesses"><p className="eyebrow">All caught up</p><h2>No businesses to review.</h2><p>New student listings will appear here.</p></div>}
         </section>
+        <section className="admin-section">
+          <div className="phase-section-title"><div><p className="eyebrow">02 / Moderation</p><h2>Neighborhood jobs</h2></div><span className="phase-count">{jobs.length} total</span></div>
+          {adminJobs.isLoading ? <div className="phase-panel skeleton-panel"><span /><span /><span /></div> :
+            adminJobs.isError ? <div className="phase-empty" role="alert"><p>Job review data could not be loaded.</p><button type="button" className="text-button" onClick={() => adminJobs.refetch()}>Retry</button></div> :
+              jobs.length ? <div className="admin-business-list">{jobs.map((job) => (
+                <article className="admin-business admin-job" key={job.id} data-testid={`card-admin-job-${job.id}`}>
+                  <div className="admin-business-top"><div><p className="admin-owner">{job.residentName} <span>· {job.residentEmail}</span></p><h3>{job.title}</h3><p className="business-category">{job.category} <span>·</span> {job.status}</p></div><button type="button" className="admin-detail-toggle" aria-expanded={expanded === `job-${job.id}`} onClick={() => setExpanded(expanded === `job-${job.id}` ? "" : `job-${job.id}`)}>{expanded === `job-${job.id}` ? "Hide details" : "Review details"}</button></div>
+                  <div className="admin-description"><p>{job.description}</p><strong>{job.payText}</strong></div>
+                  <p className="booking-timing"><strong>When</strong>{job.timing}<strong>Street</strong>{job.residentStreetName || "Mercer Crossing"}</p>
+                  {expanded === `job-${job.id}` && <div className="admin-private-details"><div><span>Resident email</span><strong>{job.residentEmail}</strong></div><div><span>Private address</span><strong>{job.privateAddress}</strong></div><div><span>Submitted</span><strong>{new Date(job.createdAt).toLocaleString()}</strong></div></div>}
+                  {job.rejectionReason && <p className="admin-rejection">Previous review: {job.rejectionReason}</p>}
+                  <div className="admin-actions">
+                    {job.status === "pending_review" && <><button type="button" className="btn btn-teal btn-sm" disabled={reviewJob.isPending} onClick={() => decideJob(job.id, "approve")}>Approve</button>{rejecting === `job-${job.id}` ? <div className="reject-form"><input className="input" maxLength="1000" placeholder="Reason for the resident" value={reason} onChange={(e) => setReason(e.target.value)} /><button type="button" className="btn btn-sm btn-danger" disabled={reviewJob.isPending || !reason.trim()} onClick={() => decideJob(job.id, "reject", reason.trim())}>Confirm rejection</button><button type="button" className="text-button" onClick={() => { setRejecting(""); setReason(""); }}>Cancel</button></div> : <button type="button" className="btn btn-sm btn-outline" onClick={() => { setRejecting(`job-${job.id}`); setReason(""); }}>Reject</button>}</>}
+                    {job.status === "open" && <button type="button" className="btn btn-sm btn-outline" disabled={closeJob.isPending} onClick={() => closeAdminJob(job.id)}>Close job</button>}
+                    <span className="admin-updated">Updated {new Date(job.updatedAt).toLocaleDateString()}</span>
+                  </div>
+                </article>
+              ))}</div> : <div className="phase-empty"><p className="eyebrow">All caught up</p><h2>No jobs to review.</h2><p>New resident job postings will appear here.</p></div>}
+        </section>
         <section className="admin-section email-section">
-          <div className="phase-section-title"><div><p className="eyebrow">02 / Delivery checks</p><h2>Email log</h2><p className="phase-help">This in-memory log clears when the API restarts.</p></div><button type="button" className="admin-refresh" onClick={() => emailLog.refetch()} disabled={emailLog.isFetching} data-testid="button-refresh-email-log">{emailLog.isFetching ? "Refreshing…" : "Refresh log"}</button></div>
+          <div className="phase-section-title"><div><p className="eyebrow">03 / Delivery checks</p><h2>Email log</h2><p className="phase-help">This in-memory log clears when the API restarts.</p></div><button type="button" className="admin-refresh" onClick={() => emailLog.refetch()} disabled={emailLog.isFetching} data-testid="button-refresh-email-log">{emailLog.isFetching ? "Refreshing…" : "Refresh log"}</button></div>
           {emailLog.data?.notice && <p className="email-notice" data-testid="notice-email-log">{emailLog.data.notice}</p>}
           {emailLog.isLoading ? <div className="phase-panel skeleton-panel" data-testid="loading-email-log"><span /><span /><span /></div> :
             emailLog.isError ? <div className="phase-empty" role="alert" data-testid="error-email-log"><p>The email log could not be loaded.</p><button type="button" className="text-button" onClick={() => emailLog.refetch()} data-testid="button-retry-email-log">Try again</button></div> :

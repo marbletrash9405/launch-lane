@@ -42,7 +42,7 @@ export default function ListingCard({ listing }) {
       <div className="listing-foot">
         <div className="who">
           <strong>{listing.name}</strong>
-          {isOffer ? "Student" : `${listing.street}, Mercer Crossing`}
+          {isOffer ? "Student" : listing.street ? `${listing.street}, Mercer Crossing` : "Mercer Crossing"}
         </div>
         <RequestButton listing={listing} />
       </div>

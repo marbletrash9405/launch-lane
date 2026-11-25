@@ -25,28 +25,51 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ActionResponse,
   AdminBusiness,
+  AdminJob,
+  AdminJobApplication,
   BookingCreated,
   BookingInput,
   BookingStatusInput,
   BusinessInput,
   BusinessUpdateInput,
+  ChatMessage,
+  ChatMessageInput,
+  ChatReportInput,
+  ChatThreadLockInput,
   GetAdminBusinesses200,
+  GetAdminChatReports200,
   GetAdminEmailLog200,
+  GetAdminJobApplications200,
+  GetAdminJobs200,
+  GetChatThread200,
+  GetChatThreads200,
+  GetChatUnreadCount200,
   GetIncomingBookings200,
   GetMyBookings200,
   GetMyBusinesses200,
+  GetMyJobApplications200,
+  GetMyJobs200,
   GetPublicBusinesses200,
+  GetPublicJobs200,
   GuardianApproval,
+  GuardianDashboard,
   HealthStatus,
   IncomingBooking,
+  JobApplicationInput,
+  JobApplicationReviewInput,
+  JobInput,
+  JobReviewInput,
   RequestBusinessPhotoUpload200,
   RequestBusinessPhotoUploadBody,
   ResidentBooking,
+  ResidentJob,
   ReviewBusinessBody,
   SetAdminBusinessPauseBody,
   SetBusinessPauseBody,
   StudentBusiness,
+  StudentJobApplication,
   SubmitGuardianApproval200,
   SubmitGuardianApprovalBody
 } from './api.schemas';
@@ -1101,6 +1124,1164 @@ export const useCancelBooking = <TError = ErrorType<void>,
       return useMutation(getCancelBookingMutationOptions(options), queryClient);
     }
 
+export const getGetPublicJobsUrl = () => {
+
+
+
+
+  return `/api/jobs/public`
+}
+
+/**
+ * @summary List open jobs accepting applications
+ */
+export const getPublicJobs = async ( options?: Parameters<typeof customFetch>[1]): Promise<GetPublicJobs200> => {
+
+  return customFetch<GetPublicJobs200>(getGetPublicJobsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPublicJobsQueryKey = () => {
+    return [
+    `/api/jobs/public`
+    ] as const;
+    }
+
+
+export const getGetPublicJobsQueryOptions = <TData = Awaited<ReturnType<typeof getPublicJobs>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicJobs>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPublicJobsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicJobs>>> = ({ signal }) => getPublicJobs({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPublicJobs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPublicJobsQueryResult = NonNullable<Awaited<ReturnType<typeof getPublicJobs>>>
+export type GetPublicJobsQueryError = ErrorType<unknown>
+
+
+export function useGetPublicJobs<TData = Awaited<ReturnType<typeof getPublicJobs>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicJobs>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPublicJobs>>,
+          TError,
+          Awaited<ReturnType<typeof getPublicJobs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPublicJobs<TData = Awaited<ReturnType<typeof getPublicJobs>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicJobs>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPublicJobs>>,
+          TError,
+          Awaited<ReturnType<typeof getPublicJobs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPublicJobs<TData = Awaited<ReturnType<typeof getPublicJobs>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicJobs>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List open jobs accepting applications
+ */
+
+export function useGetPublicJobs<TData = Awaited<ReturnType<typeof getPublicJobs>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicJobs>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPublicJobsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetMyJobsUrl = () => {
+
+
+
+
+  return `/api/jobs/mine`
+}
+
+/**
+ * @summary List jobs posted by the signed-in resident
+ */
+export const getMyJobs = async ( options?: Parameters<typeof customFetch>[1]): Promise<GetMyJobs200> => {
+
+  return customFetch<GetMyJobs200>(getGetMyJobsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyJobsQueryKey = () => {
+    return [
+    `/api/jobs/mine`
+    ] as const;
+    }
+
+
+export const getGetMyJobsQueryOptions = <TData = Awaited<ReturnType<typeof getMyJobs>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyJobs>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyJobsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyJobs>>> = ({ signal }) => getMyJobs({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyJobs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMyJobsQueryResult = NonNullable<Awaited<ReturnType<typeof getMyJobs>>>
+export type GetMyJobsQueryError = ErrorType<void>
+
+
+export function useGetMyJobs<TData = Awaited<ReturnType<typeof getMyJobs>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyJobs>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyJobs>>,
+          TError,
+          Awaited<ReturnType<typeof getMyJobs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyJobs<TData = Awaited<ReturnType<typeof getMyJobs>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyJobs>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyJobs>>,
+          TError,
+          Awaited<ReturnType<typeof getMyJobs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyJobs<TData = Awaited<ReturnType<typeof getMyJobs>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyJobs>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List jobs posted by the signed-in resident
+ */
+
+export function useGetMyJobs<TData = Awaited<ReturnType<typeof getMyJobs>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyJobs>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMyJobsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateJobUrl = () => {
+
+
+
+
+  return `/api/jobs`
+}
+
+/**
+ * @summary Post a job as a resident
+ */
+export const createJob = async (jobInput: JobInput, options?: Parameters<typeof customFetch>[1]): Promise<ResidentJob> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ResidentJob>(getCreateJobUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(jobInput)
+  }
+);}
+
+
+
+
+
+export const getCreateJobMutationKey = () => ['createJob'] as const;
+
+export const getCreateJobMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJob>>, TError,CreateJobMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createJob>>, TError,CreateJobMutationVariables, TContext> => {
+
+const mutationKey = getCreateJobMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createJob>>, CreateJobMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createJob(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateJobMutationResult = NonNullable<Awaited<ReturnType<typeof createJob>>>
+    export type CreateJobMutationBody = BodyType<JobInput>
+    export type CreateJobMutationError = ErrorType<void>
+    export type CreateJobMutationVariables = {data: BodyType<JobInput>}
+
+    /**
+ * @summary Post a job as a resident
+ */
+export const useCreateJob = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJob>>, TError,CreateJobMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createJob>>,
+        TError,
+        CreateJobMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateJobMutationOptions(options), queryClient);
+    }
+
+export const getCreateJobApplicationUrl = (jobId: string,) => {
+
+
+
+
+  return `/api/jobs/${jobId}/applications`
+}
+
+/**
+ * @summary Submit an application for administrator review
+ */
+export const createJobApplication = async (jobId: string,
+    jobApplicationInput: JobApplicationInput, options?: Parameters<typeof customFetch>[1]): Promise<StudentJobApplication> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<StudentJobApplication>(getCreateJobApplicationUrl(jobId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(jobApplicationInput)
+  }
+);}
+
+
+
+
+
+export const getCreateJobApplicationMutationKey = () => ['createJobApplication'] as const;
+
+export const getCreateJobApplicationMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJobApplication>>, TError,CreateJobApplicationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createJobApplication>>, TError,CreateJobApplicationMutationVariables, TContext> => {
+
+const mutationKey = getCreateJobApplicationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createJobApplication>>, CreateJobApplicationMutationVariables> = (props) => {
+          const {jobId,data} = props ?? {};
+
+          return  createJobApplication(jobId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateJobApplicationMutationResult = NonNullable<Awaited<ReturnType<typeof createJobApplication>>>
+    export type CreateJobApplicationMutationBody = BodyType<JobApplicationInput>
+    export type CreateJobApplicationMutationError = ErrorType<void>
+    export type CreateJobApplicationMutationVariables = {jobId: string;data: BodyType<JobApplicationInput>}
+
+    /**
+ * @summary Submit an application for administrator review
+ */
+export const useCreateJobApplication = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJobApplication>>, TError,CreateJobApplicationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createJobApplication>>,
+        TError,
+        CreateJobApplicationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateJobApplicationMutationOptions(options), queryClient);
+    }
+
+export const getGetMyJobApplicationsUrl = () => {
+
+
+
+
+  return `/api/jobs/applications/mine`
+}
+
+/**
+ * @summary List the signed-in student's job applications
+ */
+export const getMyJobApplications = async ( options?: Parameters<typeof customFetch>[1]): Promise<GetMyJobApplications200> => {
+
+  return customFetch<GetMyJobApplications200>(getGetMyJobApplicationsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyJobApplicationsQueryKey = () => {
+    return [
+    `/api/jobs/applications/mine`
+    ] as const;
+    }
+
+
+export const getGetMyJobApplicationsQueryOptions = <TData = Awaited<ReturnType<typeof getMyJobApplications>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyJobApplications>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyJobApplicationsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyJobApplications>>> = ({ signal }) => getMyJobApplications({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyJobApplications>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMyJobApplicationsQueryResult = NonNullable<Awaited<ReturnType<typeof getMyJobApplications>>>
+export type GetMyJobApplicationsQueryError = ErrorType<void>
+
+
+export function useGetMyJobApplications<TData = Awaited<ReturnType<typeof getMyJobApplications>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyJobApplications>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyJobApplications>>,
+          TError,
+          Awaited<ReturnType<typeof getMyJobApplications>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyJobApplications<TData = Awaited<ReturnType<typeof getMyJobApplications>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyJobApplications>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyJobApplications>>,
+          TError,
+          Awaited<ReturnType<typeof getMyJobApplications>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyJobApplications<TData = Awaited<ReturnType<typeof getMyJobApplications>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyJobApplications>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the signed-in student's job applications
+ */
+
+export function useGetMyJobApplications<TData = Awaited<ReturnType<typeof getMyJobApplications>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyJobApplications>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMyJobApplicationsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getWithdrawJobApplicationUrl = (applicationId: string,) => {
+
+
+
+
+  return `/api/jobs/applications/${applicationId}/withdraw`
+}
+
+/**
+ * @summary Withdraw the signed-in student's application
+ */
+export const withdrawJobApplication = async (applicationId: string, options?: Parameters<typeof customFetch>[1]): Promise<StudentJobApplication> => {
+
+  return customFetch<StudentJobApplication>(getWithdrawJobApplicationUrl(applicationId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getWithdrawJobApplicationMutationKey = () => ['withdrawJobApplication'] as const;
+
+export const getWithdrawJobApplicationMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof withdrawJobApplication>>, TError,WithdrawJobApplicationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof withdrawJobApplication>>, TError,WithdrawJobApplicationMutationVariables, TContext> => {
+
+const mutationKey = getWithdrawJobApplicationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof withdrawJobApplication>>, WithdrawJobApplicationMutationVariables> = (props) => {
+          const {applicationId} = props ?? {};
+
+          return  withdrawJobApplication(applicationId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WithdrawJobApplicationMutationResult = NonNullable<Awaited<ReturnType<typeof withdrawJobApplication>>>
+
+    export type WithdrawJobApplicationMutationError = ErrorType<void>
+    export type WithdrawJobApplicationMutationVariables = {applicationId: string}
+
+    /**
+ * @summary Withdraw the signed-in student's application
+ */
+export const useWithdrawJobApplication = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof withdrawJobApplication>>, TError,WithdrawJobApplicationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof withdrawJobApplication>>,
+        TError,
+        WithdrawJobApplicationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getWithdrawJobApplicationMutationOptions(options), queryClient);
+    }
+
+export const getChooseJobApplicantUrl = (jobId: string,
+    applicationId: string,) => {
+
+
+
+
+  return `/api/jobs/${jobId}/applications/${applicationId}/choose`
+}
+
+/**
+ * @summary Choose an applicant and request guardian approval
+ */
+export const chooseJobApplicant = async (jobId: string,
+    applicationId: string, options?: Parameters<typeof customFetch>[1]): Promise<ResidentJob> => {
+
+  return customFetch<ResidentJob>(getChooseJobApplicantUrl(jobId,applicationId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getChooseJobApplicantMutationKey = () => ['chooseJobApplicant'] as const;
+
+export const getChooseJobApplicantMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof chooseJobApplicant>>, TError,ChooseJobApplicantMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof chooseJobApplicant>>, TError,ChooseJobApplicantMutationVariables, TContext> => {
+
+const mutationKey = getChooseJobApplicantMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof chooseJobApplicant>>, ChooseJobApplicantMutationVariables> = (props) => {
+          const {jobId,applicationId} = props ?? {};
+
+          return  chooseJobApplicant(jobId,applicationId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChooseJobApplicantMutationResult = NonNullable<Awaited<ReturnType<typeof chooseJobApplicant>>>
+
+    export type ChooseJobApplicantMutationError = ErrorType<void>
+    export type ChooseJobApplicantMutationVariables = {jobId: string;applicationId: string}
+
+    /**
+ * @summary Choose an applicant and request guardian approval
+ */
+export const useChooseJobApplicant = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof chooseJobApplicant>>, TError,ChooseJobApplicantMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof chooseJobApplicant>>,
+        TError,
+        ChooseJobApplicantMutationVariables,
+        TContext
+      > => {
+      return useMutation(getChooseJobApplicantMutationOptions(options), queryClient);
+    }
+
+export const getCloseMyJobUrl = (jobId: string,) => {
+
+
+
+
+  return `/api/jobs/${jobId}/close`
+}
+
+/**
+ * @summary Close a job owned by the signed-in resident
+ */
+export const closeMyJob = async (jobId: string, options?: Parameters<typeof customFetch>[1]): Promise<ResidentJob> => {
+
+  return customFetch<ResidentJob>(getCloseMyJobUrl(jobId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCloseMyJobMutationKey = () => ['closeMyJob'] as const;
+
+export const getCloseMyJobMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeMyJob>>, TError,CloseMyJobMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof closeMyJob>>, TError,CloseMyJobMutationVariables, TContext> => {
+
+const mutationKey = getCloseMyJobMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof closeMyJob>>, CloseMyJobMutationVariables> = (props) => {
+          const {jobId} = props ?? {};
+
+          return  closeMyJob(jobId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CloseMyJobMutationResult = NonNullable<Awaited<ReturnType<typeof closeMyJob>>>
+
+    export type CloseMyJobMutationError = ErrorType<void>
+    export type CloseMyJobMutationVariables = {jobId: string}
+
+    /**
+ * @summary Close a job owned by the signed-in resident
+ */
+export const useCloseMyJob = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeMyJob>>, TError,CloseMyJobMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof closeMyJob>>,
+        TError,
+        CloseMyJobMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCloseMyJobMutationOptions(options), queryClient);
+    }
+
+export const getGetAdminJobsUrl = () => {
+
+
+
+
+  return `/api/admin/jobs`
+}
+
+/**
+ * @summary List jobs for administrator review and management
+ */
+export const getAdminJobs = async ( options?: Parameters<typeof customFetch>[1]): Promise<GetAdminJobs200> => {
+
+  return customFetch<GetAdminJobs200>(getGetAdminJobsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAdminJobsQueryKey = () => {
+    return [
+    `/api/admin/jobs`
+    ] as const;
+    }
+
+
+export const getGetAdminJobsQueryOptions = <TData = Awaited<ReturnType<typeof getAdminJobs>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminJobs>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminJobsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminJobs>>> = ({ signal }) => getAdminJobs({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminJobs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAdminJobsQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminJobs>>>
+export type GetAdminJobsQueryError = ErrorType<void>
+
+
+export function useGetAdminJobs<TData = Awaited<ReturnType<typeof getAdminJobs>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminJobs>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminJobs>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminJobs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdminJobs<TData = Awaited<ReturnType<typeof getAdminJobs>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminJobs>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminJobs>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminJobs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdminJobs<TData = Awaited<ReturnType<typeof getAdminJobs>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminJobs>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List jobs for administrator review and management
+ */
+
+export function useGetAdminJobs<TData = Awaited<ReturnType<typeof getAdminJobs>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminJobs>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAdminJobsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getReviewJobUrl = (jobId: string,) => {
+
+
+
+
+  return `/api/admin/jobs/${jobId}/review`
+}
+
+/**
+ * @summary Approve or reject a job post
+ */
+export const reviewJob = async (jobId: string,
+    jobReviewInput: JobReviewInput, options?: Parameters<typeof customFetch>[1]): Promise<AdminJob> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AdminJob>(getReviewJobUrl(jobId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(jobReviewInput)
+  }
+);}
+
+
+
+
+
+export const getReviewJobMutationKey = () => ['reviewJob'] as const;
+
+export const getReviewJobMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewJob>>, TError,ReviewJobMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reviewJob>>, TError,ReviewJobMutationVariables, TContext> => {
+
+const mutationKey = getReviewJobMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviewJob>>, ReviewJobMutationVariables> = (props) => {
+          const {jobId,data} = props ?? {};
+
+          return  reviewJob(jobId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReviewJobMutationResult = NonNullable<Awaited<ReturnType<typeof reviewJob>>>
+    export type ReviewJobMutationBody = BodyType<JobReviewInput>
+    export type ReviewJobMutationError = ErrorType<void>
+    export type ReviewJobMutationVariables = {jobId: string;data: BodyType<JobReviewInput>}
+
+    /**
+ * @summary Approve or reject a job post
+ */
+export const useReviewJob = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewJob>>, TError,ReviewJobMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reviewJob>>,
+        TError,
+        ReviewJobMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReviewJobMutationOptions(options), queryClient);
+    }
+
+export const getCloseAdminJobUrl = (jobId: string,) => {
+
+
+
+
+  return `/api/admin/jobs/${jobId}/close`
+}
+
+/**
+ * @summary Close or unpublish a job as administrator
+ */
+export const closeAdminJob = async (jobId: string, options?: Parameters<typeof customFetch>[1]): Promise<AdminJob> => {
+
+  return customFetch<AdminJob>(getCloseAdminJobUrl(jobId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCloseAdminJobMutationKey = () => ['closeAdminJob'] as const;
+
+export const getCloseAdminJobMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeAdminJob>>, TError,CloseAdminJobMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof closeAdminJob>>, TError,CloseAdminJobMutationVariables, TContext> => {
+
+const mutationKey = getCloseAdminJobMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof closeAdminJob>>, CloseAdminJobMutationVariables> = (props) => {
+          const {jobId} = props ?? {};
+
+          return  closeAdminJob(jobId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CloseAdminJobMutationResult = NonNullable<Awaited<ReturnType<typeof closeAdminJob>>>
+
+    export type CloseAdminJobMutationError = ErrorType<void>
+    export type CloseAdminJobMutationVariables = {jobId: string}
+
+    /**
+ * @summary Close or unpublish a job as administrator
+ */
+export const useCloseAdminJob = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeAdminJob>>, TError,CloseAdminJobMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof closeAdminJob>>,
+        TError,
+        CloseAdminJobMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCloseAdminJobMutationOptions(options), queryClient);
+    }
+
+export const getGetAdminJobApplicationsUrl = () => {
+
+
+
+
+  return `/api/admin/job-applications`
+}
+
+/**
+ * @summary List job applications waiting for administrator review
+ */
+export const getAdminJobApplications = async ( options?: Parameters<typeof customFetch>[1]): Promise<GetAdminJobApplications200> => {
+
+  return customFetch<GetAdminJobApplications200>(getGetAdminJobApplicationsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAdminJobApplicationsQueryKey = () => {
+    return [
+    `/api/admin/job-applications`
+    ] as const;
+    }
+
+
+export const getGetAdminJobApplicationsQueryOptions = <TData = Awaited<ReturnType<typeof getAdminJobApplications>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminJobApplications>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminJobApplicationsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminJobApplications>>> = ({ signal }) => getAdminJobApplications({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminJobApplications>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAdminJobApplicationsQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminJobApplications>>>
+export type GetAdminJobApplicationsQueryError = ErrorType<void>
+
+
+export function useGetAdminJobApplications<TData = Awaited<ReturnType<typeof getAdminJobApplications>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminJobApplications>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminJobApplications>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminJobApplications>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdminJobApplications<TData = Awaited<ReturnType<typeof getAdminJobApplications>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminJobApplications>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminJobApplications>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminJobApplications>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdminJobApplications<TData = Awaited<ReturnType<typeof getAdminJobApplications>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminJobApplications>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List job applications waiting for administrator review
+ */
+
+export function useGetAdminJobApplications<TData = Awaited<ReturnType<typeof getAdminJobApplications>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminJobApplications>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAdminJobApplicationsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getReviewJobApplicationUrl = (applicationId: string,) => {
+
+
+
+
+  return `/api/admin/job-applications/${applicationId}/review`
+}
+
+/**
+ * @summary Approve or reject a student job application
+ */
+export const reviewJobApplication = async (applicationId: string,
+    jobApplicationReviewInput: JobApplicationReviewInput, options?: Parameters<typeof customFetch>[1]): Promise<AdminJobApplication> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AdminJobApplication>(getReviewJobApplicationUrl(applicationId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(jobApplicationReviewInput)
+  }
+);}
+
+
+
+
+
+export const getReviewJobApplicationMutationKey = () => ['reviewJobApplication'] as const;
+
+export const getReviewJobApplicationMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewJobApplication>>, TError,ReviewJobApplicationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reviewJobApplication>>, TError,ReviewJobApplicationMutationVariables, TContext> => {
+
+const mutationKey = getReviewJobApplicationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviewJobApplication>>, ReviewJobApplicationMutationVariables> = (props) => {
+          const {applicationId,data} = props ?? {};
+
+          return  reviewJobApplication(applicationId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReviewJobApplicationMutationResult = NonNullable<Awaited<ReturnType<typeof reviewJobApplication>>>
+    export type ReviewJobApplicationMutationBody = BodyType<JobApplicationReviewInput>
+    export type ReviewJobApplicationMutationError = ErrorType<void>
+    export type ReviewJobApplicationMutationVariables = {applicationId: string;data: BodyType<JobApplicationReviewInput>}
+
+    /**
+ * @summary Approve or reject a student job application
+ */
+export const useReviewJobApplication = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewJobApplication>>, TError,ReviewJobApplicationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reviewJobApplication>>,
+        TError,
+        ReviewJobApplicationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReviewJobApplicationMutationOptions(options), queryClient);
+    }
+
 export const getGetAdminBusinessesUrl = () => {
 
 
@@ -1389,7 +2570,7 @@ export const getGetAdminEmailLogUrl = () => {
 }
 
 /**
- * @summary Read the in-memory email log
+ * @summary Read the administrator-only email log
  */
 export const getAdminEmailLog = async ( options?: Parameters<typeof customFetch>[1]): Promise<GetAdminEmailLog200> => {
 
@@ -1460,7 +2641,7 @@ export function useGetAdminEmailLog<TData = Awaited<ReturnType<typeof getAdminEm
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Read the in-memory email log
+ * @summary Read the administrator-only email log
  */
 
 export function useGetAdminEmailLog<TData = Awaited<ReturnType<typeof getAdminEmailLog>>, TError = ErrorType<void>>(
@@ -1469,6 +2650,926 @@ export function useGetAdminEmailLog<TData = Awaited<ReturnType<typeof getAdminEm
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetAdminEmailLogQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetChatThreadsUrl = () => {
+
+
+
+
+  return `/api/messages`
+}
+
+/**
+ * @summary List chat threads available to the signed-in account
+ */
+export const getChatThreads = async ( options?: Parameters<typeof customFetch>[1]): Promise<GetChatThreads200> => {
+
+  return customFetch<GetChatThreads200>(getGetChatThreadsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetChatThreadsQueryKey = () => {
+    return [
+    `/api/messages`
+    ] as const;
+    }
+
+
+export const getGetChatThreadsQueryOptions = <TData = Awaited<ReturnType<typeof getChatThreads>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatThreads>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetChatThreadsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getChatThreads>>> = ({ signal }) => getChatThreads({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getChatThreads>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetChatThreadsQueryResult = NonNullable<Awaited<ReturnType<typeof getChatThreads>>>
+export type GetChatThreadsQueryError = ErrorType<void>
+
+
+export function useGetChatThreads<TData = Awaited<ReturnType<typeof getChatThreads>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatThreads>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChatThreads>>,
+          TError,
+          Awaited<ReturnType<typeof getChatThreads>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChatThreads<TData = Awaited<ReturnType<typeof getChatThreads>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatThreads>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChatThreads>>,
+          TError,
+          Awaited<ReturnType<typeof getChatThreads>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChatThreads<TData = Awaited<ReturnType<typeof getChatThreads>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatThreads>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List chat threads available to the signed-in account
+ */
+
+export function useGetChatThreads<TData = Awaited<ReturnType<typeof getChatThreads>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatThreads>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetChatThreadsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetChatUnreadCountUrl = () => {
+
+
+
+
+  return `/api/messages/unread-count`
+}
+
+/**
+ * @summary Count unread messages available to the signed-in account
+ */
+export const getChatUnreadCount = async ( options?: Parameters<typeof customFetch>[1]): Promise<GetChatUnreadCount200> => {
+
+  return customFetch<GetChatUnreadCount200>(getGetChatUnreadCountUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetChatUnreadCountQueryKey = () => {
+    return [
+    `/api/messages/unread-count`
+    ] as const;
+    }
+
+
+export const getGetChatUnreadCountQueryOptions = <TData = Awaited<ReturnType<typeof getChatUnreadCount>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatUnreadCount>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetChatUnreadCountQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getChatUnreadCount>>> = ({ signal }) => getChatUnreadCount({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getChatUnreadCount>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetChatUnreadCountQueryResult = NonNullable<Awaited<ReturnType<typeof getChatUnreadCount>>>
+export type GetChatUnreadCountQueryError = ErrorType<void>
+
+
+export function useGetChatUnreadCount<TData = Awaited<ReturnType<typeof getChatUnreadCount>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatUnreadCount>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChatUnreadCount>>,
+          TError,
+          Awaited<ReturnType<typeof getChatUnreadCount>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChatUnreadCount<TData = Awaited<ReturnType<typeof getChatUnreadCount>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatUnreadCount>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChatUnreadCount>>,
+          TError,
+          Awaited<ReturnType<typeof getChatUnreadCount>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChatUnreadCount<TData = Awaited<ReturnType<typeof getChatUnreadCount>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatUnreadCount>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Count unread messages available to the signed-in account
+ */
+
+export function useGetChatUnreadCount<TData = Awaited<ReturnType<typeof getChatUnreadCount>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatUnreadCount>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetChatUnreadCountQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetChatThreadUrl = (threadId: string,) => {
+
+
+
+
+  return `/api/messages/${threadId}`
+}
+
+/**
+ * @summary Read a thread and its text messages
+ */
+export const getChatThread = async (threadId: string, options?: Parameters<typeof customFetch>[1]): Promise<GetChatThread200> => {
+
+  return customFetch<GetChatThread200>(getGetChatThreadUrl(threadId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetChatThreadQueryKey = (threadId: string,) => {
+    return [
+    `/api/messages/${threadId}`
+    ] as const;
+    }
+
+
+export const getGetChatThreadQueryOptions = <TData = Awaited<ReturnType<typeof getChatThread>>, TError = ErrorType<void>>(threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatThread>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetChatThreadQueryKey(threadId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getChatThread>>> = ({ signal }) => getChatThread(threadId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: threadId !== null && threadId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getChatThread>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetChatThreadQueryResult = NonNullable<Awaited<ReturnType<typeof getChatThread>>>
+export type GetChatThreadQueryError = ErrorType<void>
+
+
+export function useGetChatThread<TData = Awaited<ReturnType<typeof getChatThread>>, TError = ErrorType<void>>(
+ threadId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatThread>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChatThread>>,
+          TError,
+          Awaited<ReturnType<typeof getChatThread>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChatThread<TData = Awaited<ReturnType<typeof getChatThread>>, TError = ErrorType<void>>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatThread>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChatThread>>,
+          TError,
+          Awaited<ReturnType<typeof getChatThread>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChatThread<TData = Awaited<ReturnType<typeof getChatThread>>, TError = ErrorType<void>>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatThread>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Read a thread and its text messages
+ */
+
+export function useGetChatThread<TData = Awaited<ReturnType<typeof getChatThread>>, TError = ErrorType<void>>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatThread>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetChatThreadQueryOptions(threadId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateChatMessageUrl = (threadId: string,) => {
+
+
+
+
+  return `/api/messages/${threadId}`
+}
+
+/**
+ * @summary Send a text message to a thread
+ */
+export const createChatMessage = async (threadId: string,
+    chatMessageInput: ChatMessageInput, options?: Parameters<typeof customFetch>[1]): Promise<ChatMessage> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ChatMessage>(getCreateChatMessageUrl(threadId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(chatMessageInput)
+  }
+);}
+
+
+
+
+
+export const getCreateChatMessageMutationKey = () => ['createChatMessage'] as const;
+
+export const getCreateChatMessageMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChatMessage>>, TError,CreateChatMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createChatMessage>>, TError,CreateChatMessageMutationVariables, TContext> => {
+
+const mutationKey = getCreateChatMessageMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createChatMessage>>, CreateChatMessageMutationVariables> = (props) => {
+          const {threadId,data} = props ?? {};
+
+          return  createChatMessage(threadId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateChatMessageMutationResult = NonNullable<Awaited<ReturnType<typeof createChatMessage>>>
+    export type CreateChatMessageMutationBody = BodyType<ChatMessageInput>
+    export type CreateChatMessageMutationError = ErrorType<void>
+    export type CreateChatMessageMutationVariables = {threadId: string;data: BodyType<ChatMessageInput>}
+
+    /**
+ * @summary Send a text message to a thread
+ */
+export const useCreateChatMessage = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChatMessage>>, TError,CreateChatMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createChatMessage>>,
+        TError,
+        CreateChatMessageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateChatMessageMutationOptions(options), queryClient);
+    }
+
+export const getMarkChatThreadReadUrl = (threadId: string,) => {
+
+
+
+
+  return `/api/messages/${threadId}/read`
+}
+
+/**
+ * @summary Mark a thread as read
+ */
+export const markChatThreadRead = async (threadId: string, options?: Parameters<typeof customFetch>[1]): Promise<ActionResponse> => {
+
+  return customFetch<ActionResponse>(getMarkChatThreadReadUrl(threadId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getMarkChatThreadReadMutationKey = () => ['markChatThreadRead'] as const;
+
+export const getMarkChatThreadReadMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markChatThreadRead>>, TError,MarkChatThreadReadMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof markChatThreadRead>>, TError,MarkChatThreadReadMutationVariables, TContext> => {
+
+const mutationKey = getMarkChatThreadReadMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof markChatThreadRead>>, MarkChatThreadReadMutationVariables> = (props) => {
+          const {threadId} = props ?? {};
+
+          return  markChatThreadRead(threadId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarkChatThreadReadMutationResult = NonNullable<Awaited<ReturnType<typeof markChatThreadRead>>>
+
+    export type MarkChatThreadReadMutationError = ErrorType<void>
+    export type MarkChatThreadReadMutationVariables = {threadId: string}
+
+    /**
+ * @summary Mark a thread as read
+ */
+export const useMarkChatThreadRead = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markChatThreadRead>>, TError,MarkChatThreadReadMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof markChatThreadRead>>,
+        TError,
+        MarkChatThreadReadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getMarkChatThreadReadMutationOptions(options), queryClient);
+    }
+
+export const getReportChatMessageUrl = (threadId: string,) => {
+
+
+
+
+  return `/api/messages/${threadId}/reports`
+}
+
+/**
+ * @summary Report a message to Launch Lane
+ */
+export const reportChatMessage = async (threadId: string,
+    chatReportInput: ChatReportInput, options?: Parameters<typeof customFetch>[1]): Promise<ActionResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ActionResponse>(getReportChatMessageUrl(threadId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(chatReportInput)
+  }
+);}
+
+
+
+
+
+export const getReportChatMessageMutationKey = () => ['reportChatMessage'] as const;
+
+export const getReportChatMessageMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportChatMessage>>, TError,ReportChatMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reportChatMessage>>, TError,ReportChatMessageMutationVariables, TContext> => {
+
+const mutationKey = getReportChatMessageMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reportChatMessage>>, ReportChatMessageMutationVariables> = (props) => {
+          const {threadId,data} = props ?? {};
+
+          return  reportChatMessage(threadId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReportChatMessageMutationResult = NonNullable<Awaited<ReturnType<typeof reportChatMessage>>>
+    export type ReportChatMessageMutationBody = BodyType<ChatReportInput>
+    export type ReportChatMessageMutationError = ErrorType<void>
+    export type ReportChatMessageMutationVariables = {threadId: string;data: BodyType<ChatReportInput>}
+
+    /**
+ * @summary Report a message to Launch Lane
+ */
+export const useReportChatMessage = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportChatMessage>>, TError,ReportChatMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reportChatMessage>>,
+        TError,
+        ReportChatMessageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReportChatMessageMutationOptions(options), queryClient);
+    }
+
+export const getGetAdminChatReportsUrl = () => {
+
+
+
+
+  return `/api/admin/messages/reports`
+}
+
+/**
+ * @summary List reported messages for administrator review
+ */
+export const getAdminChatReports = async ( options?: Parameters<typeof customFetch>[1]): Promise<GetAdminChatReports200> => {
+
+  return customFetch<GetAdminChatReports200>(getGetAdminChatReportsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAdminChatReportsQueryKey = () => {
+    return [
+    `/api/admin/messages/reports`
+    ] as const;
+    }
+
+
+export const getGetAdminChatReportsQueryOptions = <TData = Awaited<ReturnType<typeof getAdminChatReports>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminChatReports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminChatReportsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminChatReports>>> = ({ signal }) => getAdminChatReports({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminChatReports>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAdminChatReportsQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminChatReports>>>
+export type GetAdminChatReportsQueryError = ErrorType<void>
+
+
+export function useGetAdminChatReports<TData = Awaited<ReturnType<typeof getAdminChatReports>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminChatReports>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminChatReports>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminChatReports>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdminChatReports<TData = Awaited<ReturnType<typeof getAdminChatReports>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminChatReports>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminChatReports>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminChatReports>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdminChatReports<TData = Awaited<ReturnType<typeof getAdminChatReports>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminChatReports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List reported messages for administrator review
+ */
+
+export function useGetAdminChatReports<TData = Awaited<ReturnType<typeof getAdminChatReports>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminChatReports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAdminChatReportsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDeleteAdminChatMessageUrl = (messageId: string,) => {
+
+
+
+
+  return `/api/admin/messages/${messageId}`
+}
+
+/**
+ * @summary Remove a message from a thread
+ */
+export const deleteAdminChatMessage = async (messageId: string, options?: Parameters<typeof customFetch>[1]): Promise<ActionResponse> => {
+
+  return customFetch<ActionResponse>(getDeleteAdminChatMessageUrl(messageId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteAdminChatMessageMutationKey = () => ['deleteAdminChatMessage'] as const;
+
+export const getDeleteAdminChatMessageMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminChatMessage>>, TError,DeleteAdminChatMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAdminChatMessage>>, TError,DeleteAdminChatMessageMutationVariables, TContext> => {
+
+const mutationKey = getDeleteAdminChatMessageMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAdminChatMessage>>, DeleteAdminChatMessageMutationVariables> = (props) => {
+          const {messageId} = props ?? {};
+
+          return  deleteAdminChatMessage(messageId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAdminChatMessageMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAdminChatMessage>>>
+
+    export type DeleteAdminChatMessageMutationError = ErrorType<void>
+    export type DeleteAdminChatMessageMutationVariables = {messageId: string}
+
+    /**
+ * @summary Remove a message from a thread
+ */
+export const useDeleteAdminChatMessage = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminChatMessage>>, TError,DeleteAdminChatMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAdminChatMessage>>,
+        TError,
+        DeleteAdminChatMessageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteAdminChatMessageMutationOptions(options), queryClient);
+    }
+
+export const getSetAdminChatThreadLockUrl = (threadId: string,) => {
+
+
+
+
+  return `/api/admin/messages/threads/${threadId}`
+}
+
+/**
+ * @summary Lock or unlock a chat thread
+ */
+export const setAdminChatThreadLock = async (threadId: string,
+    chatThreadLockInput: ChatThreadLockInput, options?: Parameters<typeof customFetch>[1]): Promise<ActionResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ActionResponse>(getSetAdminChatThreadLockUrl(threadId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(chatThreadLockInput)
+  }
+);}
+
+
+
+
+
+export const getSetAdminChatThreadLockMutationKey = () => ['setAdminChatThreadLock'] as const;
+
+export const getSetAdminChatThreadLockMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setAdminChatThreadLock>>, TError,SetAdminChatThreadLockMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setAdminChatThreadLock>>, TError,SetAdminChatThreadLockMutationVariables, TContext> => {
+
+const mutationKey = getSetAdminChatThreadLockMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setAdminChatThreadLock>>, SetAdminChatThreadLockMutationVariables> = (props) => {
+          const {threadId,data} = props ?? {};
+
+          return  setAdminChatThreadLock(threadId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetAdminChatThreadLockMutationResult = NonNullable<Awaited<ReturnType<typeof setAdminChatThreadLock>>>
+    export type SetAdminChatThreadLockMutationBody = BodyType<ChatThreadLockInput>
+    export type SetAdminChatThreadLockMutationError = ErrorType<void>
+    export type SetAdminChatThreadLockMutationVariables = {threadId: string;data: BodyType<ChatThreadLockInput>}
+
+    /**
+ * @summary Lock or unlock a chat thread
+ */
+export const useSetAdminChatThreadLock = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setAdminChatThreadLock>>, TError,SetAdminChatThreadLockMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setAdminChatThreadLock>>,
+        TError,
+        SetAdminChatThreadLockMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetAdminChatThreadLockMutationOptions(options), queryClient);
+    }
+
+export const getGetGuardianDashboardUrl = () => {
+
+
+
+
+  return `/api/guardian/dashboard`
+}
+
+/**
+ * @summary List students linked to the verified guardian email
+ */
+export const getGuardianDashboard = async ( options?: Parameters<typeof customFetch>[1]): Promise<GuardianDashboard> => {
+
+  return customFetch<GuardianDashboard>(getGetGuardianDashboardUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGuardianDashboardQueryKey = () => {
+    return [
+    `/api/guardian/dashboard`
+    ] as const;
+    }
+
+
+export const getGetGuardianDashboardQueryOptions = <TData = Awaited<ReturnType<typeof getGuardianDashboard>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGuardianDashboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGuardianDashboardQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGuardianDashboard>>> = ({ signal }) => getGuardianDashboard({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGuardianDashboard>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetGuardianDashboardQueryResult = NonNullable<Awaited<ReturnType<typeof getGuardianDashboard>>>
+export type GetGuardianDashboardQueryError = ErrorType<void>
+
+
+export function useGetGuardianDashboard<TData = Awaited<ReturnType<typeof getGuardianDashboard>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGuardianDashboard>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGuardianDashboard>>,
+          TError,
+          Awaited<ReturnType<typeof getGuardianDashboard>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGuardianDashboard<TData = Awaited<ReturnType<typeof getGuardianDashboard>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGuardianDashboard>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGuardianDashboard>>,
+          TError,
+          Awaited<ReturnType<typeof getGuardianDashboard>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGuardianDashboard<TData = Awaited<ReturnType<typeof getGuardianDashboard>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGuardianDashboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List students linked to the verified guardian email
+ */
+
+export function useGetGuardianDashboard<TData = Awaited<ReturnType<typeof getGuardianDashboard>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGuardianDashboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetGuardianDashboardQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -39,14 +39,13 @@ app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 app.use(cors({ credentials: true, origin: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-const publicFormLimiter = rateLimit({
+const guardianApprovalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 30,
   standardHeaders: true,
   legacyHeaders: false,
 });
-app.use("/api/submit", publicFormLimiter);
-app.use("/api/guardian/approvals", publicFormLimiter);
+app.use("/api/guardian/approvals", guardianApprovalLimiter);
 
 app.use(
   clerkMiddleware((req) => ({

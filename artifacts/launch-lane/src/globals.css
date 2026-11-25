@@ -689,3 +689,32 @@ p { margin: 0; }
 .profile-form textarea { resize: vertical; }
 .profile-form .btn { justify-self: start; }
 .dashboard-card { gap: 20px; }
+
+/* Phase 5/6: resident jobs and student applications */
+.job-access { display: grid; justify-items: start; gap: 12px; }
+.job-access h3 { color: var(--teal); font-family: var(--display); font-weight: 400; font-size: 1.45rem; }
+.job-access p { color: var(--muted); max-width: 640px; }
+.job-safety { margin-top: 24px; position: static; }
+.job-status-pending_review { background: #fff1d5; color: #79520f; }
+.job-status-open { background: var(--mint-soft); color: var(--teal); }
+.job-status-filled, .job-status-closed { background: var(--blue-soft); color: var(--blue); }
+.job-status-rejected { background: #f4e8e2; color: #754735; }
+.application-status-applied { background: #fff1d5; color: #79520f; }
+.application-status-chosen { background: var(--blue-soft); color: var(--blue); }
+.application-status-guardian_approved { background: var(--mint-soft); color: var(--teal); }
+.application-status-declined, .application-status-withdrawn { background: #f4e8e2; color: #754735; }
+.applicant-list { display: grid; gap: 12px; border-top: 1px dashed var(--line); padding-top: 16px; }
+.applicant-list h4 { display: flex; align-items: center; gap: 10px; margin: 0; color: var(--teal); font-weight: 600; }
+.applicant-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 14px; background: var(--cream); border-radius: 12px; }
+.applicant-row > div { display: grid; grid-template-columns: auto auto; align-items: center; justify-content: start; gap: 7px 10px; min-width: 0; }
+.applicant-row p { grid-column: 1 / -1; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--muted); }
+.applicant-row .status-pill { font-size: .68rem; padding: 4px 10px; }
+.admin-job .booking-timing { margin-left: 0; }
+@media (max-width: 640px) {
+  .job-access .phase-actions { align-items: stretch; flex-direction: column; width: 100%; }
+  .job-access .phase-actions .btn { width: 100%; }
+  .applicant-row { flex-direction: column; }
+  .applicant-row > div { grid-template-columns: 1fr; }
+  .applicant-row p { grid-column: 1; }
+  .phase-section-title { flex-wrap: wrap; }
+}

@@ -1,5 +1,8 @@
 # Launch Lane
 
+> Historical source archive only. The active app runs from `artifacts/launch-lane` with the API in
+> `artifacts/api-server`. Do not use the old setup or deployment instructions below.
+
 Helping students earn. Helping neighbors get things done.
 
 A neighborhood board where Mercer Crossing students (18 & under) list services and residents post requests. Built with Next.js; deploys to Vercel with no extra configuration.
@@ -15,7 +18,7 @@ A neighborhood board where Mercer Crossing students (18 & under) list services a
 | `/residents` | Residents – Post a job: steps and the job form (`#post-a-job`) |
 | `/about` | About us: mission, how it started (with a photo placeholder), ethos |
 | `/faq` | All FAQs, grouped |
-| `/login`, `/signup` | Google sign-in and sign-up through Firebase |
+| `/login`, `/signup` | Legacy authentication pages; not used by the active app |
 
 Old addresses (`/listings`, `/apply`, `/request`, `/hirers`, `/our-story`) redirect to the new pages.
 
@@ -45,30 +48,10 @@ different inbox instead (comma-separate for several).
 
 Until these are set, the forms show "we can't accept submissions just yet".
 
-## Google sign-in (Firebase)
+## Authentication
 
-Log in and Sign up use **Firebase Authentication** with Google. Each account gets a Firestore document at
-`users/{uid}` with name, email, photo, sign-up date, last login, and the Student / Resident choice from Sign up.
-
-1. Go to **console.firebase.google.com** → **Add project** → name it "Launch Lane" (Google Analytics optional).
-2. **Build → Authentication → Get started → Sign-in method → Google → Enable**. Pick
-   contact@launch-laneco.com (or your Gmail) as the support email → Save.
-3. **Authentication → Settings → Authorized domains → Add domain**: add `launch-laneco.com`,
-   `www.launch-laneco.com` and `launch-lane-sigma.vercel.app` (`localhost` is there already).
-4. **Build → Firestore Database → Create database** → Production mode → location `us-central` (or nearest).
-   Then open the **Rules** tab, replace everything with the contents of `firestore.rules` in this repo → **Publish**.
-5. **Project settings (gear) → General → Your apps → Web (`</>`)** → register an app called "Launch Lane web"
-   (no Hosting needed). Copy the `firebaseConfig` values.
-6. Either paste them into `lib/firebase-config.js`, or add them in Vercel → Environment Variables and redeploy:
-   - `NEXT_PUBLIC_FIREBASE_API_KEY`
-   - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
-   - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
-   - `NEXT_PUBLIC_FIREBASE_APP_ID`
-   - `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` and `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` (optional)
-
-The web config isn't secret: it only identifies the project. Access is controlled by the authorized
-domains and the Firestore rules. Until it's set, the Google buttons are greyed out with "almost ready".
-To see who has signed up: Firebase → Authentication → Users, and Firestore → `users`.
+The Firebase implementation was removed during the Replit migration. The active app uses Clerk;
+see `replit.md` and `docs/launch-lane-spec.md` in the workspace root.
 
 ## Develop in the cloud (Codespaces)
 
@@ -80,8 +63,6 @@ A ready-made cloud dev machine is defined in `.devcontainer/devcontainer.json`.
 4. Commit and push from the Source Control tab. Pushing to `main` updates the live site.
 
 Stop the codespace when you're done (GitHub → Codespaces → ⋯ → Stop) so it doesn't use up the free monthly hours.
-To test Google sign-in inside a codespace, add the codespace's `*.app.github.dev` address under Firebase →
-Authentication → Settings → Authorized domains.
 
 ## Run it on your computer
 
@@ -103,7 +84,6 @@ Then open http://localhost:3000.
 - **FAQ answers:** `data/faq.js`
 - **Student / neighbor steps:** `data/steps.js`
 - **About us photo placeholder:** `app/about/page.jsx`
-- **Firebase settings:** `lib/firebase-config.js`; Firestore rules in `firestore.rules`
 - **Colors and fonts:** top of `app/globals.css`
 
 ## Deploy to Vercel

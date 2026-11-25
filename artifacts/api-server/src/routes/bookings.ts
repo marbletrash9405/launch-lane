@@ -29,6 +29,7 @@ import {
   requireSignedIn,
 } from "../lib/authorization";
 import { deriveResidentStreetName } from "../lib/resident-street";
+import { createChatThread } from "../lib/chat-threads";
 // @ts-ignore - the shared mail helper is maintained in JavaScript.
 import { sendEmail } from "../lib/notify.js";
 
@@ -332,6 +333,16 @@ router.patch(
         if (!resident || !studentProfile) {
           throw new Error("The booking participant profile is unavailable.");
         }
+        if (action === "accept") {
+          await createChatThread(tx, {
+            bookingId: booking.id,
+            studentId: business.ownerId,
+            studentEmail: account.user.email,
+            residentId: booking.residentId,
+            residentEmail: resident.email,
+            guardianEmail: studentProfile.guardianEmail,
+          });
+        }
 
         return {
           kind: "updated" as const,
@@ -451,11 +462,19 @@ router.post(
           .where(eq(businessesTable.id, booking.businessId))
           .limit(1);
         const [student] = await tx
-          .select({ name: usersTable.name })
+          .select({
+            name: usersTable.name,
+            email: usersTable.email,
+            guardianEmail: studentProfilesTable.guardianEmail,
+          })
           .from(usersTable)
           .innerJoin(
             businessesTable,
             eq(businessesTable.ownerId, usersTable.id),
+          )
+          .innerJoin(
+            studentProfilesTable,
+            eq(studentProfilesTable.userId, usersTable.id),
           )
           .where(eq(businessesTable.id, booking.businessId))
           .limit(1);
@@ -467,6 +486,8 @@ router.post(
           booking: updated,
           business,
           studentName: student.name,
+          studentEmail: student.email,
+          guardianEmail: student.guardianEmail,
         };
       });
 
@@ -478,6 +499,12 @@ router.post(
         res.status(409).json({ error: "Completed or already-cancelled bookings cannot be cancelled." });
         return;
       }
+      await sendEmail({
+        to: [result.studentEmail],
+        cc: [result.guardianEmail],
+        subject: `Booking cancelled: ${result.business.name}`,
+        text: `A resident cancelled their booking for ${result.business.name}. The booking status is now cancelled. Open your Launch Lane dashboard to review the update.`,
+      });
       res.json(
         CancelBookingResponse.parse(
           residentBookingResponse(

@@ -14,10 +14,14 @@ tags:
     description: Student-owned businesses and public listings
   - name: bookings
     description: Resident booking requests and student booking management
+  - name: jobs
+    description: Resident job posts, student applications, and guardian approval
   - name: moderation
     description: Administrator business review and email log
   - name: guardian
-    description: Guardian approval links
+    description: Guardian dashboard, access, and approval links
+  - name: messaging
+    description: Private Launch Lane chat and moderation
   - name: storage
     description: Private business photo uploads
 paths:
@@ -292,6 +296,347 @@ paths:
           description: Booking not found
         "409":
           description: A completed or already cancelled booking cannot be cancelled
+  /jobs/public:
+    get:
+      operationId: getPublicJobs
+      tags: [jobs]
+      summary: List open jobs accepting applications
+      responses:
+        "200":
+          description: Open jobs with resident street names only
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobs:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PublicJob"
+                required: [jobs]
+  /jobs/mine:
+    get:
+      operationId: getMyJobs
+      tags: [jobs]
+      summary: List jobs posted by the signed-in resident
+      responses:
+        "200":
+          description: The resident's jobs and safe applicant summaries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobs:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ResidentJob"
+                required: [jobs]
+        "401":
+          description: Sign in required
+        "403":
+          description: Resident role required
+  /jobs:
+    post:
+      operationId: createJob
+      tags: [jobs]
+      summary: Post a job as a resident
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobInput"
+      responses:
+        "201":
+          description: Job created and queued for administrator review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResidentJob"
+        "400":
+          description: Invalid job details
+        "401":
+          description: Sign in required
+        "403":
+          description: Resident role and complete profile required
+        "429":
+          description: Too many job posts
+  /jobs/{jobId}/applications:
+    post:
+      operationId: createJobApplication
+      tags: [jobs]
+      summary: Submit an application for administrator review
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobApplicationInput"
+      responses:
+        "201":
+          description: Application submitted to administrator review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentJobApplication"
+        "401":
+          description: Sign in required
+        "403":
+          description: Student role and complete profile required
+        "404":
+          description: Job is not accepting applications
+        "409":
+          description: An active application already exists
+        "429":
+          description: Too many applications
+  /jobs/applications/mine:
+    get:
+      operationId: getMyJobApplications
+      tags: [jobs]
+      summary: List the signed-in student's job applications
+      responses:
+        "200":
+          description: The student's own application statuses, including administrator review
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  applications:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/StudentJobApplication"
+                required: [applications]
+        "401":
+          description: Sign in required
+        "403":
+          description: Student role required
+  /jobs/applications/{applicationId}/withdraw:
+    post:
+      operationId: withdrawJobApplication
+      tags: [jobs]
+      summary: Withdraw the signed-in student's application
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Application withdrawn
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentJobApplication"
+        "401":
+          description: Sign in required
+        "403":
+          description: Student role and application ownership required
+        "404":
+          description: Application not found
+        "409":
+          description: Application cannot be withdrawn in its current state
+  /jobs/{jobId}/applications/{applicationId}/choose:
+    post:
+      operationId: chooseJobApplicant
+      tags: [jobs]
+      summary: Choose an applicant and request guardian approval
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Applicant chosen; guardian approval requested
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResidentJob"
+        "403":
+          description: Resident role and job ownership required
+        "404":
+          description: Job or application not found
+        "409":
+          description: Job or application cannot be chosen
+  /jobs/{jobId}/close:
+    post:
+      operationId: closeMyJob
+      tags: [jobs]
+      summary: Close a job owned by the signed-in resident
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Job closed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResidentJob"
+        "403":
+          description: Resident role and job ownership required
+        "404":
+          description: Job not found
+        "409":
+          description: A filled job cannot be closed
+  /admin/jobs:
+    get:
+      operationId: getAdminJobs
+      tags: [jobs]
+      summary: List jobs for administrator review and management
+      responses:
+        "200":
+          description: Job details including residents' private addresses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobs:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AdminJob"
+                required: [jobs]
+        "403":
+          description: Administrator role required
+  /admin/jobs/{jobId}/review:
+    post:
+      operationId: reviewJob
+      tags: [jobs]
+      summary: Approve or reject a job post
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobReviewInput"
+      responses:
+        "200":
+          description: Moderation action recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminJob"
+        "400":
+          description: Invalid action or missing rejection reason
+        "403":
+          description: Administrator role required
+        "404":
+          description: Job not found
+        "409":
+          description: Job is no longer waiting for review
+  /admin/jobs/{jobId}/close:
+    post:
+      operationId: closeAdminJob
+      tags: [jobs]
+      summary: Close or unpublish a job as administrator
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Job unpublished
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminJob"
+        "403":
+          description: Administrator role required
+        "404":
+          description: Job not found
+        "409":
+          description: Job cannot be unpublished in its current state
+  /admin/job-applications:
+    get:
+      operationId: getAdminJobApplications
+      tags: [jobs]
+      summary: List job applications waiting for administrator review
+      responses:
+        "200":
+          description: Pending applications and private student details for the administrator
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  applications:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AdminJobApplication"
+                required: [applications]
+        "401":
+          description: Sign in required
+        "403":
+          description: Administrator role required
+  /admin/job-applications/{applicationId}/review:
+    post:
+      operationId: reviewJobApplication
+      tags: [jobs]
+      summary: Approve or reject a student job application
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobApplicationReviewInput"
+      responses:
+        "200":
+          description: Application review recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminJobApplication"
+        "400":
+          description: Invalid action or missing rejection reason
+        "401":
+          description: Sign in required
+        "403":
+          description: Administrator role required
+        "404":
+          description: Application not found
+        "409":
+          description: Application is no longer waiting for review
   /admin/businesses:
     get:
       operationId: getAdminBusinesses
@@ -386,10 +731,10 @@ paths:
     get:
       operationId: getAdminEmailLog
       tags: [moderation]
-      summary: Read the in-memory email log
+      summary: Read the administrator-only email log
       responses:
         "200":
-          description: Recent email attempts for testing
+          description: The latest 500 email attempts stored in the database
           content:
             application/json:
               schema:
@@ -404,6 +749,270 @@ paths:
                 required: [emails, notice]
         "403":
           description: Administrator role required
+  /messages:
+    get:
+      operationId: getChatThreads
+      tags: [messaging]
+      summary: List chat threads available to the signed-in account
+      responses:
+        "200":
+          description: Threads visible to the signed-in participant or administrator
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  threads:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ChatThreadSummary"
+                required: [threads]
+        "401":
+          description: Sign in required
+        "403":
+          description: Complete account setup required
+  /messages/unread-count:
+    get:
+      operationId: getChatUnreadCount
+      tags: [messaging]
+      summary: Count unread messages available to the signed-in account
+      responses:
+        "200":
+          description: Unread message count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  unreadCount:
+                    type: integer
+                    minimum: 0
+                required: [unreadCount]
+        "401":
+          description: Sign in required
+        "403":
+          description: Complete account setup required
+  /messages/{threadId}:
+    get:
+      operationId: getChatThread
+      tags: [messaging]
+      summary: Read a thread and its text messages
+      parameters:
+        - name: threadId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Thread and messages visible to a participant or administrator
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  thread:
+                    $ref: "#/components/schemas/ChatThreadSummary"
+                  messages:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ChatMessage"
+                required: [thread, messages]
+        "401":
+          description: Sign in required
+        "403":
+          description: Thread participant or administrator access required
+        "404":
+          description: Thread not found
+    post:
+      operationId: createChatMessage
+      tags: [messaging]
+      summary: Send a text message to a thread
+      parameters:
+        - name: threadId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatMessageInput"
+      responses:
+        "201":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessage"
+        "400":
+          description: Invalid message
+        "401":
+          description: Sign in required
+        "403":
+          description: Thread participant or administrator access required
+        "404":
+          description: Thread not found
+        "409":
+          description: Thread is locked
+        "429":
+          description: Too many messages
+  /messages/{threadId}/read:
+    post:
+      operationId: markChatThreadRead
+      tags: [messaging]
+      summary: Mark a thread as read
+      parameters:
+        - name: threadId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Thread marked read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResponse"
+        "401":
+          description: Sign in required
+        "403":
+          description: Thread participant or administrator access required
+        "404":
+          description: Thread not found
+  /messages/{threadId}/reports:
+    post:
+      operationId: reportChatMessage
+      tags: [messaging]
+      summary: Report a message to Launch Lane
+      parameters:
+        - name: threadId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatReportInput"
+      responses:
+        "201":
+          description: Report submitted and administrator notified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResponse"
+        "400":
+          description: Invalid report
+        "401":
+          description: Sign in required
+        "403":
+          description: Thread participant or administrator access required
+        "404":
+          description: Message not found in this thread
+  /admin/messages/reports:
+    get:
+      operationId: getAdminChatReports
+      tags: [messaging]
+      summary: List reported messages for administrator review
+      responses:
+        "200":
+          description: Open message reports
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reports:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ChatReport"
+                required: [reports]
+        "401":
+          description: Sign in required
+        "403":
+          description: Administrator role required
+  /admin/messages/{messageId}:
+    delete:
+      operationId: deleteAdminChatMessage
+      tags: [messaging]
+      summary: Remove a message from a thread
+      parameters:
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Message removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResponse"
+        "401":
+          description: Sign in required
+        "403":
+          description: Administrator role required
+        "404":
+          description: Message not found
+  /admin/messages/threads/{threadId}:
+    patch:
+      operationId: setAdminChatThreadLock
+      tags: [messaging]
+      summary: Lock or unlock a chat thread
+      parameters:
+        - name: threadId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatThreadLockInput"
+      responses:
+        "200":
+          description: Thread lock updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResponse"
+        "401":
+          description: Sign in required
+        "403":
+          description: Administrator role required
+        "404":
+          description: Thread not found
+  /guardian/dashboard:
+    get:
+      operationId: getGuardianDashboard
+      tags: [guardian]
+      summary: List students linked to the verified guardian email
+      responses:
+        "200":
+          description: Linked student businesses, bookings, job applications and chats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuardianDashboard"
+        "401":
+          description: Sign in required
+        "403":
+          description: Parent or Guardian role required
   /guardian/approvals/{token}:
     get:
       operationId: getGuardianApproval
@@ -535,6 +1144,396 @@ components:
     BookingStatus:
       type: string
       enum: [requested, accepted, declined, completed, cancelled]
+    JobStatus:
+      type: string
+      enum: [pending_review, open, filled, closed, rejected]
+    JobApplicationStatus:
+      type: string
+      enum: [pending_review, applied, chosen, guardian_approved, rejected, declined, withdrawn]
+    ChatRole:
+      type: string
+      enum: [student, guardian, resident, admin]
+    ChatSourceType:
+      type: string
+      enum: [booking, job_application]
+    ActionResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+      required: [ok]
+    JobInput:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 2
+          maxLength: 120
+        category:
+          $ref: "#/components/schemas/BusinessCategory"
+        description:
+          type: string
+          minLength: 10
+          maxLength: 2000
+        timing:
+          type: string
+          minLength: 1
+          maxLength: 300
+        payText:
+          type: string
+          minLength: 1
+          maxLength: 300
+      required: [title, category, description, timing, payText]
+    JobApplicationInput:
+      type: object
+      properties:
+        message:
+          type: string
+          minLength: 3
+          maxLength: 2000
+      required: [message]
+    JobReviewInput:
+      type: object
+      properties:
+        action:
+          type: string
+          enum: [approve, reject]
+        reason:
+          type: string
+          maxLength: 1000
+      required: [action]
+    JobApplicationReviewInput:
+      type: object
+      properties:
+        action:
+          type: string
+          enum: [approve, reject]
+        reason:
+          type: string
+          maxLength: 1000
+      required: [action]
+    PublicJob:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        category:
+          $ref: "#/components/schemas/BusinessCategory"
+        description:
+          type: string
+        timing:
+          type: string
+        payText:
+          type: string
+        residentStreetName:
+          type: [string, "null"]
+      required: [id, title, category, description, timing, payText, residentStreetName]
+    ResidentJobApplication:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        studentFirstName:
+          type: string
+        age:
+          type: integer
+        message:
+          type: string
+        status:
+          $ref: "#/components/schemas/JobApplicationStatus"
+        createdAt:
+          type: string
+      required: [id, studentFirstName, age, message, status, createdAt]
+    ResidentJob:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        category:
+          $ref: "#/components/schemas/BusinessCategory"
+        description:
+          type: string
+        timing:
+          type: string
+        payText:
+          type: string
+        status:
+          $ref: "#/components/schemas/JobStatus"
+        rejectionReason:
+          type: [string, "null"]
+        applications:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResidentJobApplication"
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, title, category, description, timing, payText, status, rejectionReason, applications, createdAt, updatedAt]
+    StudentJobApplication:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        jobId:
+          type: string
+          format: uuid
+        jobTitle:
+          type: string
+        category:
+          $ref: "#/components/schemas/BusinessCategory"
+        message:
+          type: string
+        status:
+          $ref: "#/components/schemas/JobApplicationStatus"
+        rejectionReason:
+          type: [string, "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, jobId, jobTitle, category, message, status, rejectionReason, createdAt, updatedAt]
+    AdminJob:
+      allOf:
+        - $ref: "#/components/schemas/ResidentJob"
+        - type: object
+          properties:
+            residentName:
+              type: string
+            residentEmail:
+              type: string
+            privateAddress:
+              type: string
+            residentStreetName:
+              type: [string, "null"]
+          required: [residentName, residentEmail, privateAddress, residentStreetName]
+    AdminJobApplication:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        jobId:
+          type: string
+          format: uuid
+        jobTitle:
+          type: string
+        studentFirstName:
+          type: string
+        studentEmail:
+          type: string
+          format: email
+        age:
+          type: integer
+          minimum: 13
+          maximum: 18
+        message:
+          type: string
+        status:
+          $ref: "#/components/schemas/JobApplicationStatus"
+        rejectionReason:
+          type: [string, "null"]
+        privateAddress:
+          type: string
+        guardianName:
+          type: string
+        guardianEmail:
+          type: string
+          format: email
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, jobId, jobTitle, studentFirstName, studentEmail, age, message, status, rejectionReason, privateAddress, guardianName, guardianEmail, createdAt]
+    ChatThreadSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sourceType:
+          $ref: "#/components/schemas/ChatSourceType"
+        title:
+          type: string
+        studentFirstName:
+          type: string
+        residentFirstName:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+        latestMessage:
+          type: [string, "null"]
+        unreadCount:
+          type: integer
+          minimum: 0
+        locked:
+          type: boolean
+      required: [id, sourceType, title, studentFirstName, residentFirstName, updatedAt, latestMessage, unreadCount, locked]
+    ChatMessage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        senderFirstName:
+          type: string
+        senderRole:
+          $ref: "#/components/schemas/ChatRole"
+        text:
+          type: string
+          maxLength: 1000
+        createdAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: [string, "null"]
+          format: date-time
+      required: [id, senderFirstName, senderRole, text, createdAt, deletedAt]
+    ChatMessageInput:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 1000
+      required: [text]
+    ChatReportInput:
+      type: object
+      properties:
+        messageId:
+          type: string
+          format: uuid
+        reason:
+          type: string
+          maxLength: 1000
+      required: [messageId]
+    ChatThreadLockInput:
+      type: object
+      properties:
+        locked:
+          type: boolean
+      required: [locked]
+    ChatReport:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        threadId:
+          type: string
+          format: uuid
+        messageId:
+          type: string
+          format: uuid
+        messageText:
+          type: string
+        senderFirstName:
+          type: string
+        senderRole:
+          $ref: "#/components/schemas/ChatRole"
+        reporterFirstName:
+          type: string
+        reason:
+          type: [string, "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, threadId, messageId, messageText, senderFirstName, senderRole, reporterFirstName, reason, createdAt]
+    GuardianBusinessSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          $ref: "#/components/schemas/BusinessCategory"
+        description:
+          type: string
+        pricingText:
+          type: string
+        photoUrls:
+          type: array
+          items:
+            type: string
+        status:
+          $ref: "#/components/schemas/BusinessStatus"
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, name, category, description, pricingText, photoUrls, status, updatedAt]
+    GuardianBookingSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        businessName:
+          type: string
+        status:
+          $ref: "#/components/schemas/BookingStatus"
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, businessName, status, createdAt]
+    GuardianJobApplicationSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        jobTitle:
+          type: string
+        status:
+          $ref: "#/components/schemas/JobApplicationStatus"
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, jobTitle, status, createdAt]
+    GuardianDashboardStudent:
+      type: object
+      properties:
+        studentId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        age:
+          type: integer
+        businesses:
+          type: array
+          items:
+            $ref: "#/components/schemas/GuardianBusinessSummary"
+        bookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/GuardianBookingSummary"
+        jobApplications:
+          type: array
+          items:
+            $ref: "#/components/schemas/GuardianJobApplicationSummary"
+        chats:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatThreadSummary"
+      required: [studentId, firstName, age, businesses, bookings, jobApplications, chats]
+    GuardianDashboard:
+      type: object
+      properties:
+        students:
+          type: array
+          items:
+            $ref: "#/components/schemas/GuardianDashboardStudent"
+      required: [students]
     BookingInput:
       type: object
       properties:
@@ -758,10 +1757,19 @@ components:
     GuardianApproval:
       type: object
       properties:
-        businessName:
+        targetType:
           type: string
+          enum: [business, job_application]
+        businessName:
+          type: [string, "null"]
         category:
-          $ref: "#/components/schemas/BusinessCategory"
+          anyOf:
+            - $ref: "#/components/schemas/BusinessCategory"
+            - type: "null"
+        jobTitle:
+          type: [string, "null"]
+        residentFirstName:
+          type: [string, "null"]
         studentName:
           type: string
         expired:
@@ -770,5 +1778,5 @@ components:
           type: boolean
         decision:
           type: [string, "null"]
-      required: [businessName, category, studentName, expired, used, decision]
+      required: [targetType, businessName, category, jobTitle, residentFirstName, studentName, expired, used, decision]
 

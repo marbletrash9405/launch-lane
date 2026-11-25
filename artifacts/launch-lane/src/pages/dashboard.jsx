@@ -7,8 +7,9 @@ import {
   useGetMyBusinesses, useCreateBusiness, useUpdateBusiness, useSetBusinessPause,
   useRequestBusinessPhotoUpload,
 } from "@workspace/api-client-react";
-import { categories } from "@/data/listings";
+import { categories } from "@/data/categories";
 import { IncomingBookings, ResidentBookings } from "@/components/BookingPanels";
+import { ResidentJobs, StudentJobApplications } from "@/components/JobDashboardPanels";
 
 const blankBusiness = { name: "", category: categories[0], description: "", pricingText: "", photoPaths: [] };
 const labels = {
@@ -189,7 +190,7 @@ export default function DashboardPage() {
   return (
     <section className="phase-dashboard">
       <div className="phase-wrap">
-        <header className="phase-intro"><div><p className="eyebrow">Launch Lane / Dashboard</p><h1>Your corner of Mercer Crossing</h1><p>Keep your service details current. Your guardian stays in the loop at every step.</p></div><div className="phase-mark">LL<span>STUDENT SPACE</span></div></header>
+        <header className="phase-intro"><div><p className="eyebrow">Launch Lane / Dashboard</p><h1>{account?.role === "resident" ? "Your neighborhood dashboard" : account?.role === "admin" ? "Launch Lane administration" : "Your corner of Mercer Crossing"}</h1><p>{account?.role === "resident" ? "Keep track of the services you have booked and the jobs you have posted." : account?.role === "admin" ? "Review businesses and jobs, and check email delivery during testing." : "Keep your service details current. Your guardian stays in the loop at every step."}</p></div><div className="phase-mark">LL<span>{account?.role === "resident" ? "NEIGHBOR SPACE" : account?.role === "admin" ? "ADMIN WORKSPACE" : "STUDENT SPACE"}</span></div></header>
         {error && <div className="phase-error" role="alert" data-testid="error-account">{error}</div>}
         {!isLoaded || (!account && !error) ? <div className="phase-panel skeleton-panel" data-testid="loading-account"><span /><span /><span /></div> : account && (
           account.role === "student" ? (
@@ -199,6 +200,7 @@ export default function DashboardPage() {
               {editor !== undefined && <BusinessEditor key={editor?.id ?? "new"} existing={editor} onClose={() => setEditor(undefined)} onSaved={refreshAfterSave} />}
               <div className="phase-section-title"><div><p className="eyebrow">Your services</p><h2>Business listings</h2></div><span className="phase-count" data-testid="count-my-businesses">{businesses.length} {businesses.length === 1 ? "listing" : "listings"}</span></div>
               <IncomingBookings account={account} />
+              <StudentJobApplications />
               {myBusinessesQuery.isLoading ? <div className="phase-panel skeleton-panel" data-testid="loading-my-businesses"><span /><span /><span /></div> :
                 myBusinessesQuery.isError ? <div className="phase-empty" role="alert" data-testid="error-my-businesses"><p>We couldn&apos;t load your businesses.</p><button className="text-button" type="button" onClick={() => myBusinessesQuery.refetch()} data-testid="button-retry-my-businesses">Try again</button></div> :
                   sortedBusinesses.length ? <div className="phase-business-list">{sortedBusinesses.map((business) => <article className="phase-business" key={business.id} data-testid={`card-my-business-${business.id}`}>
@@ -216,6 +218,7 @@ export default function DashboardPage() {
             <>
               <div className="phase-welcome resident-welcome"><div><p className="eyebrow">Neighbor workspace</p><h2>Hi, {account.firstName || account.name || "there"}.</h2><p>Keep track of the services you&apos;ve booked nearby.</p></div><Link href="/explore" className="btn btn-teal" data-testid="link-explore-services">Explore services</Link></div>
               <ResidentBookings account={account} />
+              <ResidentJobs />
             </>
           )
         )}

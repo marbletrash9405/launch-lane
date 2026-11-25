@@ -55,7 +55,7 @@ async function accountResponse(user: User, identity: ReturnType<typeof getIdenti
 router.post("/auth/register", requireSignedIn, async (req, res) => {
   const parsed = RegisterAccountInput.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: "Choose Student or Resident to continue." });
+    res.status(400).json({ error: "Choose Student, Resident, or Parent / Guardian to continue." });
     return;
   }
 
@@ -138,12 +138,19 @@ router.patch("/auth/profile", requireSignedIn, async (req, res) => {
       }
       await db
         .insert(studentProfilesTable)
-        .values({ userId: user.id, ...parsed.data })
+        .values({
+          userId: user.id,
+          ...parsed.data,
+          guardianEmail: parsed.data.guardianEmail.toLowerCase(),
+        })
         .onConflictDoUpdate({
           target: studentProfilesTable.userId,
-          set: parsed.data,
+          set: {
+            ...parsed.data,
+            guardianEmail: parsed.data.guardianEmail.toLowerCase(),
+          },
         });
-    } else {
+    } else if (user.role === "resident") {
       const parsed = ResidentProfileInput.safeParse(req.body);
       if (!parsed.success) {
         res.status(400).json({ error: "Enter your home address to finish your profile." });
@@ -163,6 +170,9 @@ router.patch("/auth/profile", requireSignedIn, async (req, res) => {
             streetName: deriveResidentStreetName(parsed.data.homeAddress),
           },
         });
+    } else {
+      res.status(403).json({ error: "Parent / Guardian accounts do not have a profile to complete." });
+      return;
     }
 
     res.json(await accountResponse(user, identity));

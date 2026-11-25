@@ -3,4 +3,8 @@ export * from "./student-profiles";
 export * from "./resident-profiles";
 export * from "./businesses";
 export * from "./bookings";
+export * from "./jobs";
+export * from "./job-applications";
 export * from "./guardian-approvals";
+export * from "./chat";
+export * from "./email-logs";

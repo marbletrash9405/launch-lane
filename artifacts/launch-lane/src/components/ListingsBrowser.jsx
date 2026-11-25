@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import ListingCard from "./ListingCard";
-import { categories } from "@/data/listings";
+import { categories } from "@/data/categories";
 
 const TABS = [
   { id: "all", label: "All" },

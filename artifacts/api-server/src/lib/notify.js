@@ -9,13 +9,13 @@
 //                   onboarding@resend.dev works, but only delivers to your Resend account email.
 
 import { randomUUID } from "node:crypto";
+import { desc, db, emailLogsTable, sql } from "@workspace/db";
 import { logger } from "./logger";
 import { site } from "./site";
 
 const RESEND_URL = process.env.RESEND_API_URL || "https://api.resend.com/emails";
 const notifyTo = () => process.env.NOTIFY_EMAIL || site.contactEmail;
-const EMAIL_LOG_LIMIT = 200;
-const emailLog = [];
+const EMAIL_LOG_LIMIT = 500;
 
 export function emailConfigured() {
   return Boolean(process.env.RESEND_API_KEY && notifyTo());
@@ -32,28 +32,58 @@ function escapeHtml(s) {
 /**
  * @param {{ subject: string, intro: string, rows: [string, string][], replyTo?: string }} msg
  */
-function recordEmail(entry) {
-  emailLog.unshift(entry);
-  if (emailLog.length > EMAIL_LOG_LIMIT) emailLog.length = EMAIL_LOG_LIMIT;
+async function recordEmail(entry) {
   const logText = entry.text.replace(
     /https?:\/\/[^\s]+\/guardian\/approval\/[A-Za-z0-9_-]+/g,
     "[guardian approval link redacted]",
   );
+  try {
+    await db.transaction(async (tx) => {
+      await tx.insert(emailLogsTable).values({
+        id: entry.id,
+        createdAt: new Date(entry.createdAt),
+        to: entry.to,
+        cc: entry.cc,
+        subject: entry.subject,
+        text: entry.text,
+        status: entry.status,
+        detail: entry.detail,
+      });
+      await tx.execute(sql`
+        DELETE FROM email_logs
+        WHERE id NOT IN (
+          SELECT id FROM email_logs
+          ORDER BY created_at DESC, id DESC
+          OFFSET ${EMAIL_LOG_LIMIT}
+        )
+      `);
+    });
+  } catch (error) {
+    logger.error({ err: error, emailId: entry.id }, "Could not persist Launch Lane email log entry");
+  }
   logger.info(
     {
       emailId: entry.id,
       to: entry.to,
       cc: entry.cc,
       subject: entry.subject,
-      text: logText,
+      text: logText.replace(/[\r\n]+/g, " ").slice(0, 500),
       status: entry.status,
     },
     "Launch Lane email attempt",
   );
 }
 
-export function getEmailLog() {
-  return emailLog.map((entry) => ({ ...entry, to: [...entry.to], cc: [...entry.cc] }));
+export async function getEmailLog() {
+  const entries = await db
+    .select()
+    .from(emailLogsTable)
+    .orderBy(desc(emailLogsTable.createdAt), desc(emailLogsTable.id))
+    .limit(EMAIL_LOG_LIMIT);
+  return entries.map((entry) => ({
+    ...entry,
+    createdAt: entry.createdAt.toISOString(),
+  }));
 }
 
 export async function sendEmail({
@@ -77,7 +107,7 @@ export async function sendEmail({
 
   if (!process.env.RESEND_API_KEY) {
     entry.detail = "RESEND_API_KEY is not set; this email was logged but not sent.";
-    recordEmail(entry);
+    await recordEmail(entry);
     return { status: entry.status, id: entry.id };
   }
 
@@ -110,7 +140,7 @@ export async function sendEmail({
     entry.detail = "The email service could not be reached.";
   }
 
-  recordEmail(entry);
+  await recordEmail(entry);
   return { status: entry.status, id: entry.id };
 }
 

@@ -4,14 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@clerk/react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { getGetMyBookingsQueryKey, useCreateBooking } from "@workspace/api-client-react";
-import SubmitForm from "./SubmitForm";
+import {
+  getGetMyBookingsQueryKey, getGetMyJobApplicationsQueryKey, getGetMyJobsQueryKey, getGetPublicJobsQueryKey,
+  useCreateBooking, useCreateJobApplication,
+} from "@workspace/api-client-react";
 import { CloseIcon } from "./Icons";
 
 // "Book" (resident → student service) or "Apply" (student → resident's job).
 export default function RequestButton({ listing }) {
   const ref = useRef(null);
-  const [key, setKey] = useState(0);
   const [account, setAccount] = useState(null);
   const [accountMissing, setAccountMissing] = useState(false);
   const [accountLoading, setAccountLoading] = useState(false);
@@ -25,6 +26,7 @@ export default function RequestButton({ listing }) {
   const { isLoaded, isSignedIn } = useAuth();
   const queryClient = useQueryClient();
   const createBooking = useCreateBooking();
+  const createApplication = useCreateJobApplication();
   const isOffer = listing.type === "offering";
   const uid = `l${listing.id}`;
 
@@ -56,7 +58,6 @@ export default function RequestButton({ listing }) {
   }, [dialogOpen, isLoaded, isSignedIn, accountRefresh]);
 
   const open = () => {
-    setKey((current) => current + 1);
     setDialogOpen(true);
     setMessage("");
     setPreferredTiming("");
@@ -85,6 +86,22 @@ export default function RequestButton({ listing }) {
       await queryClient.invalidateQueries({ queryKey: getGetMyBookingsQueryKey() });
     } catch (error) {
       setBookingError(error instanceof Error ? error.message : "We couldn't send your request. Please try again.");
+    }
+  }
+
+  async function submitApplication(event) {
+    event.preventDefault();
+    setBookingError("");
+    try {
+      await createApplication.mutateAsync({ jobId: String(listing.id), data: { message: message.trim() } });
+      setBookingSent(true);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: getGetMyJobApplicationsQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getGetMyJobsQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getGetPublicJobsQueryKey() }),
+      ]);
+    } catch (error) {
+      setBookingError(error instanceof Error ? error.message : "We couldn't send your application. Please try again.");
     }
   }
 
@@ -140,49 +157,26 @@ export default function RequestButton({ listing }) {
             <>
               <p className="eyebrow">Apply for a job</p>
               <h2 id={`${uid}-title`}>{listing.title}</h2>
-              <p className="modal-note">Your application goes to the Launch Lane team first. We&apos;ll review it and then connect you with {listing.name}.</p>
-              <SubmitForm
-                key={key}
-                kind="job-application"
-                listingId={listing.id}
-                compact
-                onDone={close}
-                submitLabel="Send application"
-                submitClass="btn-blue"
-                successTitle="Application sent"
-                successBody="Thanks! We'll review it and get back to you by email."
-              >
-                <>
-                  <div className="row-2">
-                    <div className="field">
-                      <label htmlFor={`${uid}-name`}>Your name</label>
-                      <input className="input" id={`${uid}-name`} name="name" required autoComplete="name" />
-                    </div>
-                    <div className="field">
-                      <label htmlFor={`${uid}-age`}>Age</label>
-                      <input className="input" id={`${uid}-age`} name="age" type="number" min="10" max="18" required />
-                    </div>
-                  </div>
-                  <div className="field">
-                    <label htmlFor={`${uid}-email`}>Your email</label>
-                    <input className="input" id={`${uid}-email`} name="email" type="email" required autoComplete="email" />
-                  </div>
-                  <div className="row-2">
-                    <div className="field">
-                      <label htmlFor={`${uid}-gname`}>Guardian name</label>
-                      <input className="input" id={`${uid}-gname`} name="guardianName" required />
-                    </div>
-                    <div className="field">
-                      <label htmlFor={`${uid}-gemail`}>Guardian email</label>
-                      <input className="input" id={`${uid}-gemail`} name="guardianEmail" type="email" required />
-                    </div>
-                  </div>
-                  <div className="field">
-                    <label htmlFor={`${uid}-message`}>Why you&apos;re a good fit</label>
-                    <textarea className="textarea" id={`${uid}-message`} name="message" required placeholder="Mention work you've done that relates to this job, e.g. mowing your family's lawn." />
-                  </div>
-                </>
-              </SubmitForm>
+              <p className="modal-note">Tell the resident why you&apos;re a good fit. Your guardian will be asked to approve before you take the job.</p>
+              {!isLoaded ? <p className="modal-note">Checking your sign-in…</p> : !isSignedIn ? (
+                <div className="booking-signin"><p>Log in or sign up as a student to apply for this neighborhood job.</p><div className="phase-actions"><Link href="/login" className="btn btn-teal">Log in</Link><Link href="/signup?role=student" className="btn btn-outline">Sign up as a student</Link></div></div>
+              ) : accountMissing ? (
+                <div className="booking-signin"><p>Choose Student on sign-up before applying.</p><Link href="/signup?role=student" className="btn btn-teal">Sign up as a student</Link></div>
+              ) : accountLoading ? <p className="modal-note" role="status">Checking your Launch Lane account…</p> : accountError ? (
+                <div className="booking-signin"><p className="form-error" role="alert">{accountError}</p><button type="button" className="text-button" onClick={() => { setAccountError(""); setAccountRefresh((value) => value + 1); }}>Try again</button></div>
+              ) : account?.role !== "student" ? (
+                <div className="booking-signin" role="status"><p>Only student accounts can apply for neighborhood jobs.</p><Link href="/dashboard" className="btn btn-outline">Open your dashboard</Link></div>
+              ) : !account.profileComplete ? (
+                <div className="booking-signin"><p>Complete your student profile before applying.</p><Link href="/complete-profile" className="btn btn-teal">Complete profile</Link></div>
+              ) : bookingSent ? (
+                <div className="success" role="status" data-testid={`success-application-${uid}`}><h2>Application sent</h2><p>Your application is in review. You can follow its status from your dashboard.</p><button className="btn btn-teal" type="button" onClick={close}>Done</button></div>
+              ) : (
+                <form className="form" onSubmit={submitApplication} data-testid={`form-application-${uid}`}>
+                  <div className="field"><label htmlFor={`${uid}-message`}>Why you&apos;re a good fit</label><textarea className="textarea" id={`${uid}-message`} required minLength="3" maxLength="2000" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Mention work you've done that relates to this job." /></div>
+                  {bookingError && <p className="form-error" role="alert">{bookingError}</p>}
+                  <button type="submit" className="btn btn-blue" disabled={createApplication.isPending}>{createApplication.isPending ? "Sending…" : "Send application"}</button>
+                </form>
+              )}
             </>
           )}
         </div>

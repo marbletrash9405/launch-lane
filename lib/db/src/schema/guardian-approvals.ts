@@ -1,4 +1,4 @@
-import { pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { index, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 export const guardianApprovalTargetEnum = pgEnum("guardian_approval_target", [
   "business",
@@ -24,5 +24,8 @@ export const guardianApprovalsTable = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [uniqueIndex("guardian_approvals_token_hash_unique").on(table.tokenHash)],
+  (table) => [
+    uniqueIndex("guardian_approvals_token_hash_unique").on(table.tokenHash),
+    index("guardian_approvals_target_type_id_idx").on(table.targetType, table.targetId),
+  ],
 );
