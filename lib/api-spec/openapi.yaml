@@ -1443,10 +1443,12 @@ components:
           type: string
         reason:
           type: [string, "null"]
+        locked:
+          type: boolean
         createdAt:
           type: string
           format: date-time
-      required: [id, threadId, messageId, messageText, senderFirstName, senderRole, reporterFirstName, reason, createdAt]
+      required: [id, threadId, messageId, messageText, senderFirstName, senderRole, reporterFirstName, reason, locked, createdAt]
     GuardianBusinessSummary:
       type: object
       properties:

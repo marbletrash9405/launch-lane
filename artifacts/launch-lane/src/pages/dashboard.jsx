@@ -6,6 +6,7 @@ import {
   getGetMyBusinessesQueryKey, getGetPublicBusinessesQueryKey,
   useGetMyBusinesses, useCreateBusiness, useUpdateBusiness, useSetBusinessPause,
   useRequestBusinessPhotoUpload,
+  getGetGuardianDashboardQueryKey, useGetGuardianDashboard,
 } from "@workspace/api-client-react";
 import { categories } from "@/data/categories";
 import { IncomingBookings, ResidentBookings } from "@/components/BookingPanels";
@@ -145,6 +146,9 @@ export default function DashboardPage() {
     query: { queryKey: getGetMyBusinessesQueryKey(), enabled: account?.role === "student" },
   });
   const pauseBusiness = useSetBusinessPause();
+  const guardianDashboard = useGetGuardianDashboard({
+    query: { queryKey: getGetGuardianDashboardQueryKey(), enabled: account?.role === "guardian" },
+  });
   const [actionError, setActionError] = useState("");
   const businesses = myBusinessesQuery.data?.businesses ?? [];
   const sortedBusinesses = useMemo(() => businesses, [businesses]);
@@ -190,7 +194,7 @@ export default function DashboardPage() {
   return (
     <section className="phase-dashboard">
       <div className="phase-wrap">
-        <header className="phase-intro"><div><p className="eyebrow">Launch Lane / Dashboard</p><h1>{account?.role === "resident" ? "Your neighborhood dashboard" : account?.role === "admin" ? "Launch Lane administration" : "Your corner of Mercer Crossing"}</h1><p>{account?.role === "resident" ? "Keep track of the services you have booked and the jobs you have posted." : account?.role === "admin" ? "Review businesses and jobs, and check email delivery during testing." : "Keep your service details current. Your guardian stays in the loop at every step."}</p></div><div className="phase-mark">LL<span>{account?.role === "resident" ? "NEIGHBOR SPACE" : account?.role === "admin" ? "ADMIN WORKSPACE" : "STUDENT SPACE"}</span></div></header>
+        <header className="phase-intro"><div><p className="eyebrow">Launch Lane / Dashboard</p><h1>{account?.role === "resident" ? "Your neighborhood dashboard" : account?.role === "admin" ? "Launch Lane administration" : account?.role === "guardian" ? "Your family dashboard" : "Your corner of Mercer Crossing"}</h1><p>{account?.role === "resident" ? "Keep track of the services you have booked and the jobs you have posted." : account?.role === "admin" ? "Review businesses and jobs, and check email delivery during testing." : account?.role === "guardian" ? "Stay close to your student's services, work requests, and conversations." : "Keep your service details current. Your guardian stays in the loop at every step."}</p></div><div className="phase-mark">LL<span>{account?.role === "resident" ? "NEIGHBOR SPACE" : account?.role === "admin" ? "ADMIN WORKSPACE" : account?.role === "guardian" ? "FAMILY SPACE" : "STUDENT SPACE"}</span></div></header>
         {error && <div className="phase-error" role="alert" data-testid="error-account">{error}</div>}
         {!isLoaded || (!account && !error) ? <div className="phase-panel skeleton-panel" data-testid="loading-account"><span /><span /><span /></div> : account && (
           account.role === "student" ? (
@@ -214,6 +218,24 @@ export default function DashboardPage() {
             </>
           ) : account.role === "admin" ? (
             <div className="phase-panel role-panel" data-testid="admin-dashboard-placeholder"><p className="eyebrow">Administrator</p><h2>Review tools are ready.</h2><p>Open the admin workspace to review student services and check testing email delivery.</p><Link href="/admin" className="btn btn-teal" data-testid="link-admin-workspace">Open admin workspace</Link></div>
+          ) : account.role === "guardian" ? (
+            <section className="guardian-dashboard" aria-label="Linked student activity">
+              <div className="phase-welcome"><div><p className="eyebrow">Parent / Guardian workspace</p><h2>Linked student activity</h2><p>Business details are read-only here. Open a conversation to follow up with the group.</p></div><Link className="btn btn-teal" href="/messages">Open messages</Link></div>
+              {guardianDashboard.isLoading ? <div className="phase-panel skeleton-panel" aria-label="Loading linked student activity"><span /><span /><span /></div> :
+                guardianDashboard.isError ? <div className="phase-empty" role="alert"><p>We couldn't load linked student activity.</p><button className="text-button" type="button" onClick={() => guardianDashboard.refetch()}>Try again</button></div> :
+                  guardianDashboard.data?.students?.length ? guardianDashboard.data.students.map((student) => <article className="phase-panel guardian-student" key={student.studentId}>
+                    <header className="guardian-student-head"><div><p className="eyebrow">Student account · age {student.age}</p><h2>{student.firstName}</h2></div><span className="phase-count">{student.businesses.length} {student.businesses.length === 1 ? "service" : "services"}</span></header>
+                    <section className="guardian-subsection"><div className="phase-section-title"><div><p className="eyebrow">Read-only details</p><h3>Services</h3></div></div>
+                      {student.businesses.length ? <div className="guardian-business-grid">{student.businesses.map((business) => <article className="guardian-business" key={business.id}>{business.photoUrls?.[0] && <img src={business.photoUrls[0]} alt="" loading="lazy" />}<div className="business-title-line"><h4>{business.name}</h4><StatusPill status={business.status} /></div><p className="business-category">{business.category} · {business.pricingText}</p><p>{business.description}</p></article>)}</div> : <p className="phase-help">No business listings yet.</p>}
+                    </section>
+                    <section className="guardian-subsection"><div className="phase-section-title"><div><p className="eyebrow">Work activity</p><h3>Bookings & applications</h3></div></div>
+                      <div className="guardian-activity-grid"><div><h4>Bookings</h4>{student.bookings.length ? student.bookings.map((booking) => <div className="guardian-activity" key={booking.id}><span>{booking.businessName}</span><span className={`status-pill booking-status-${booking.status}`}>{booking.status.replaceAll("_", " ")}</span></div>) : <p className="phase-help">No bookings yet.</p>}</div><div><h4>Job applications</h4>{student.jobApplications.length ? student.jobApplications.map((application) => <div className="guardian-activity" key={application.id}><span>{application.jobTitle}</span><span className={`status-pill application-status-${application.status}`}>{application.status.replaceAll("_", " ")}</span></div>) : <p className="phase-help">No applications yet.</p>}</div></div>
+                    </section>
+                    <section className="guardian-subsection"><div className="phase-section-title"><div><p className="eyebrow">Stay in the loop</p><h3>Group chats</h3></div></div>
+                      {student.chats.length ? <div className="guardian-chat-list">{student.chats.map((chat) => <Link className="guardian-chat-link" key={chat.id} href={`/messages/${chat.id}`}><span><strong>{chat.title}</strong><small>{chat.latestMessage || "No messages yet"}</small></span><span className="status-pill">{chat.locked ? "Locked" : chat.unreadCount ? `${chat.unreadCount} unread` : "Open chat"}</span></Link>)}</div> : <p className="phase-help">No group chats yet.</p>}
+                    </section>
+                  </article>) : <div className="phase-empty"><p className="eyebrow">Family workspace</p><h2>No linked students yet.</h2><p>Once your guardian account is connected to a student account, their activity will appear here.</p></div>}
+            </section>
           ) : (
             <>
               <div className="phase-welcome resident-welcome"><div><p className="eyebrow">Neighbor workspace</p><h2>Hi, {account.firstName || account.name || "there"}.</h2><p>Keep track of the services you&apos;ve booked nearby.</p></div><Link href="/explore" className="btn btn-teal" data-testid="link-explore-services">Explore services</Link></div>

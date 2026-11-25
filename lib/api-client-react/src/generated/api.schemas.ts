@@ -281,6 +281,7 @@ export interface ChatReport {
   reporterFirstName: string;
   /** @nullable */
   reason: string | null;
+  locked: boolean;
   createdAt: string;
 }
 

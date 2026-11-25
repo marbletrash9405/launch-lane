@@ -18,6 +18,9 @@ import NotFound from '@/pages/not_found';
 import ClerkAppShell from '@/components/ClerkAppShell';
 import AdminPage from '@/pages/admin';
 import GuardianApprovalPage from '@/pages/guardian-approval';
+import MessagesPage from '@/pages/messages';
+import TermsPage from '@/pages/terms';
+import PrivacyPage from '@/pages/privacy';
 
 import './globals.css';
 
@@ -35,6 +38,10 @@ function Router() {
         <Route path="/signup" component={Signup} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/admin" component={AdminPage} />
+        <Route path="/messages" component={MessagesPage} />
+        <Route path="/messages/:threadId" component={MessagesPage} />
+        <Route path="/terms" component={TermsPage} />
+        <Route path="/privacy" component={PrivacyPage} />
         <Route path="/guardian/approval/:token" component={GuardianApprovalPage} />
         <Route path="/complete-profile" component={CompleteProfile} />
         <Route path="/sign-in/*?" component={ClerkSignInPage} />

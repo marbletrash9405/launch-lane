@@ -1,6 +1,6 @@
-// Server-only Launch Lane email delivery and the temporary testing log.
+// Server-only Launch Lane email delivery and the persistent testing log.
 //
-// Set in Vercel → Project → Settings → Environment Variables:
+// Set in Replit Secrets:
 //   RESEND_API_KEY  your Resend API key (required)
 //   NOTIFY_EMAIL    optional: send submissions somewhere other than site.contactEmail
 //                   (comma-separate for more than one inbox)
@@ -54,7 +54,7 @@ async function recordEmail(entry) {
         WHERE id NOT IN (
           SELECT id FROM email_logs
           ORDER BY created_at DESC, id DESC
-          OFFSET ${EMAIL_LOG_LIMIT}
+          LIMIT ${EMAIL_LOG_LIMIT}
         )
       `);
     });

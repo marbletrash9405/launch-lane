@@ -26,7 +26,7 @@ export default function ListingsPage() {
         <div className="wrap">
           <p className="eyebrow">Explore Services</p>
           <h1>Student services &amp; neighborhood jobs</h1>
-          <p>See what {site.community} students offer, or find a job a neighbor posted and apply by email.</p>
+          <p>See what {site.community} students offer, or find a neighbor's job and apply through Launch Lane. Conversations happen in a group chat with the student's parent or guardian.</p>
         </div>
       </section>
       <section className="section">

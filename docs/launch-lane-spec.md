@@ -65,3 +65,36 @@ RESEND_API_KEY, NOTIFY_FROM, ADMIN_EMAIL, plus whatever sign-in needs. Never put
 6. Polish and checks: remove sample data and old Firebase code, test every role end to end with test accounts, check phone-width layouts, confirm no private address or email appears in any public page or API response, remove the "Made with Replit" badge.
 
 Do not publish or connect a custom domain until I say so.
+
+## Phase 7 — Applications, guardians, messaging, and privacy
+
+### Phase 7A: Job applications go to the admin first
+
+- A student applying to an open job creates an application with status `pending_review`. Notify the administrator by email; do not show the application to the resident yet.
+- Add a Job applications queue to `/admin` showing the student's first name, age, message, job title, and private details for the administrator only.
+- The administrator can approve or reject an application with a reason. An approved application becomes `applied` and the resident is notified. A rejected application notifies the student with the guardian copied.
+- Business applications remain admin-first. Booking requests remain unchanged.
+
+### Phase 7B: Group chat for each booking and job
+
+- Add a Parent / Guardian account type to `/signup`. A guardian account can access a student only when its verified sign-in email matches the guardian email on the student's profile, case-insensitively. Guardians can sign in with Google or an email code.
+- A guardian dashboard lists linked students' businesses, bookings, job applications, and chats. Business details are read-only.
+- Create a chat thread when a booking is accepted and when a job is filled after guardian approval. Each thread includes the student, the student's guardian, and the resident. The administrator can read every thread.
+- Add `/messages` and `/messages/:threadId`. Messages are text-only and at most 1,000 characters. Show each sender's first name and role (Student / Parent / Resident / Launch Lane); refresh messages every few seconds while open and show unread counts in the header.
+- Show this notice in every thread: “Messages may be reviewed by Launch Lane to keep everyone safe. Don't share passwords or payment details.”
+- Before sending a message that appears to contain a phone number, show a gentle reminder; allow the sender to continue.
+- The administrator can delete a message, lock a thread, and view reported messages. Any participant can report a message, which notifies the administrator.
+- Email participants with unread messages at most once per thread per hour per person. Copy the guardian on student notifications. Email only says “You have a new message on Launch Lane” with a link; never include message text.
+- Enforce server-side that only thread participants and the administrator can read or post, and rate-limit message posting.
+
+### Phase 7C: Fix remaining issues
+
+- Change `/students` from “If you're 18 or under” to “If you're 13 to 18”. Change the student step from “Neighbors can email you about your listing” to “Neighbors can send you booking requests”.
+- Update the FAQ question “How do students and neighbors communicate?” to explain that they message in a Launch Lane group chat with the student's parent or guardian, and that Launch Lane can review chats for safety. Update other text that describes the old email-only process.
+- Add `/terms` and `/privacy` in the existing site design with clearly marked placeholder text for the founder to replace. Privacy text covers name, email, age, home address, guardian name and email, messages, and photos; says addresses are not public and guardians are involved for student accounts; and gives `contact@launch-laneco.com` for deletion requests.
+- Link Terms and Privacy in the footer and on the sign-up page.
+- Hide listing-card star ratings and “No reviews yet” until a review system exists.
+- Store the administrator email log in the database, keep it administrator-only, and retain the latest 500 entries.
+- Fix remaining end-to-end issues. Typecheck and build must pass; test student, resident, guardian, and administrator flows, including chat.
+
+Do not publish or connect a domain during Phase 7.

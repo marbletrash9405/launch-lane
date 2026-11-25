@@ -29,16 +29,6 @@ export default function ListingCard({ listing }) {
         </dl>
       )}
 
-      {isOffer && !listing.pricingText && (
-        <div className="stars" aria-label={listing.reviews ? `${listing.rating} out of 5 stars` : "No reviews yet"}>
-          <span aria-hidden="true">
-            {"★".repeat(Math.round(listing.rating))}
-            {"☆".repeat(5 - Math.round(listing.rating))}
-          </span>
-          <small>{listing.reviews ? `${listing.reviews} reviews` : "No reviews yet"}</small>
-        </div>
-      )}
-
       <div className="listing-foot">
         <div className="who">
           <strong>{listing.name}</strong>

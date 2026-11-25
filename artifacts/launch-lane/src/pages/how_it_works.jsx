@@ -8,7 +8,7 @@ export const metadata = { title: "How it works" };
 const terms = [
   {
     t: "Safety and privacy",
-    b: `A guardian reviews and signs off on every student listing before it goes live. Guardians receive a copy of every email sent to their student through ${site.name} and can request removal of the listing at any time. Student phone numbers and home addresses stay off public listings. We check whether the address provided falls within ${site.community}.`,
+    b: `A guardian reviews and signs off on every student listing before it goes live. Guardians are included in Launch Lane group chats and can request removal of the listing at any time. Student phone numbers and home addresses stay off public listings. We check whether the address provided falls within ${site.community}.`,
   },
   {
     t: "Insurance",

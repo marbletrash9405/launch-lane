@@ -18,10 +18,12 @@ export default function Footer() {
               <Link key={item.href} href={item.href}>{item.label}</Link>
             ))}
             <a href={`mailto:${site.contactEmail}`}>Contact</a>
+            <Link href="/terms">Terms</Link>
+            <Link href="/privacy">Privacy</Link>
           </nav>
         </div>
         <p className="footer-small">
-          {site.name} connects students (18 &amp; under) and residents in {site.community},{" "}
+          {site.name} connects students ages 13 to 18 and residents in {site.community},{" "}
           {site.location}. It isn&apos;t a party to any job: the scope of work, payment, insurance and
           safety arrangements are agreed directly between the student, their guardian and the
           neighbor. Terms and conditions apply. © {new Date().getFullYear()} {site.name}.

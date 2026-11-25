@@ -13,6 +13,7 @@ import {
   sql,
   usersTable,
 } from "@workspace/db";
+import { count } from "drizzle-orm";
 import {
   bookingsTable,
   businessesTable,
@@ -192,8 +193,8 @@ async function threadSummary(
 
   let unreadCount = 0;
   if (participant && participant.userId) {
-    const unread = await db
-      .select({ id: chatMessagesTable.id })
+    const [unread] = await db
+      .select({ count: count() })
       .from(chatMessagesTable)
       .where(
         and(
@@ -204,7 +205,7 @@ async function threadSummary(
             : sql`true`,
         ),
       );
-    unreadCount = unread.length;
+    unreadCount = Number(unread?.count ?? 0);
   }
 
   return {

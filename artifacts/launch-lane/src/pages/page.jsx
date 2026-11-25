@@ -76,7 +76,7 @@ export default function Home() {
               <h3>Find it close to home</h3>
               <ol className="mini-steps">
                 <li><b>Browse listings or post a job</b> with your timing and what you&apos;re offering to pay.</li>
-                <li><b>Connect with a student</b> by email. Guardians get a copy of every message.</li>
+                <li><b>Connect with a student</b> in a Launch Lane group chat with their parent or guardian.</li>
                 <li><b>Agree on the details,</b> then pay the student directly.</li>
               </ol>
               <div className="hero-actions">
@@ -107,7 +107,7 @@ export default function Home() {
           <div className="section-head row-head">
             <div>
               <p className="eyebrow">Explore Services</p>
-              <h2>Sample listings</h2>
+              <h2>Live neighborhood listings</h2>
             </div>
             <Link href="/explore" className="text-link">See all <ArrowIcon /></Link>
           </div>
@@ -145,8 +145,8 @@ export default function Home() {
             <div className="feature feature-row" style={{ background: "var(--white)" }}>
               <IconRing><MailIcon /></IconRing>
               <div>
-                <h3>Email, not phone numbers</h3>
-                <p>Students and neighbors talk by email, and guardians get a copy of every message.</p>
+                <h3>Group chats with guardians</h3>
+                <p>Students and neighbors arrange work in a Launch Lane group chat that includes the student's parent or guardian.</p>
               </div>
             </div>
           </div>

@@ -9,7 +9,9 @@ export default function ClerkSignInPage() {
         <SignIn
           routing="path"
           path={`${basePath}/sign-in`}
-          signUpUrl={`${basePath}/sign-up`}
+          signUpUrl={`${basePath}/signup`}
+          forceRedirectUrl={`${basePath}/dashboard`}
+          fallbackRedirectUrl={`${basePath}/dashboard`}
         />
       </div>
     </section>

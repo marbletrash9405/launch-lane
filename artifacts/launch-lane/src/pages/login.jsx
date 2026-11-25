@@ -13,6 +13,7 @@ export default function LoginPage() {
           <p className="login-note">Welcome back to {site.name}.</p>
 
           <GoogleSignIn label="Continue with Google" />
+          <p className="auth-switch"><Link href="/sign-in">Sign in with an email code</Link></p>
 
           <p className="auth-switch">
             New to {site.name}? <Link href="/signup">Sign up</Link>

@@ -11,7 +11,7 @@ export const faqGroups = [
       },
       {
         q: "Who can use Launch Lane?",
-        a: "Students who are 18 or under and live in Mercer Crossing can offer services or apply for jobs. Residents of Mercer Crossing in Farmers Branch, Texas, can post requests and hire students.",
+        a: "Students ages 13 to 18 who live in Mercer Crossing can offer services or apply for jobs. Residents of Mercer Crossing in Farmers Branch, Texas, can post requests and hire students.",
       },
       {
         q: "What kind of work can I find or offer?",
@@ -64,7 +64,7 @@ export const faqGroups = [
       },
       {
         q: "How do students and neighbors communicate?",
-        a: "Students and neighbors communicate directly by email. A parent or guardian receives a copy of every email sent to their student through Launch Lane.",
+        a: "Communication happens in a Launch Lane group chat that includes the student, the neighbor, and the student's parent or guardian. Launch Lane may review chats to help keep everyone safe.",
       },
       {
         q: "How do I remove my listing?",

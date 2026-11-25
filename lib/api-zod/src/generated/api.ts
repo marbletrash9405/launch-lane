@@ -940,6 +940,7 @@ export const GetAdminChatReportsResponse = zod.object({
   "senderRole": zod.enum(['student', 'guardian', 'resident', 'admin']),
   "reporterFirstName": zod.string(),
   "reason": zod.string().nullable(),
+  "locked": zod.boolean(),
   "createdAt": zod.coerce.date()
 }))
 })
