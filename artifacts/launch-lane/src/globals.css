@@ -845,3 +845,6 @@ p { margin: 0; }
   .applicant-row p { grid-column: 1; }
   .phase-section-title { flex-wrap: wrap; }
 }
+
+.admin-pending-media { border: 1px dashed var(--line, #e4dccb); border-radius: 14px; padding: 12px 14px; margin: 10px 0; background: #fffdf7; }
+.admin-pending-media .photo-strip { margin: 8px 0; }

@@ -5,7 +5,7 @@ import {
   RequestBusinessPhotoUploadResponse,
 } from '@workspace/api-zod';
 import express, { Router, type IRouter, type Request, type Response } from 'express';
-import { arrayContains, db, businessesTable, eq, or } from '@workspace/db';
+import { arrayContains, db, businessesTable, eq, or, sql } from '@workspace/db';
 
 import {
   isPhotoObjectPath,
@@ -122,12 +122,17 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
       .select({
         ownerId: businessesTable.ownerId,
         status: businessesTable.status,
+        photoPaths: businessesTable.photoPaths,
+        logoPath: businessesTable.logoPath,
       })
       .from(businessesTable)
       .where(
         or(
           arrayContains(businessesTable.photoPaths, [objectPath]),
           eq(businessesTable.logoPath, objectPath),
+          // New photos/logo waiting for review: owner and admin only.
+          sql`${businessesTable.pendingMedia} -> 'photoPaths' ? ${objectPath}`,
+          sql`${businessesTable.pendingMedia} ->> 'logoPath' = ${objectPath}`,
         ),
       );
     if (!relatedBusinesses.length) {
@@ -135,7 +140,12 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
       return;
     }
 
-    const isPublic = relatedBusinesses.some((business) => business.status === 'live');
+    // Public only when it is a current (approved) photo or logo of a live business.
+    const isPublic = relatedBusinesses.some(
+      (business) =>
+        business.status === 'live' &&
+        (business.photoPaths.includes(objectPath) || business.logoPath === objectPath),
+    );
     let canReadPrivate = false;
     if (!isPublic) {
       const auth = getAuth(req);

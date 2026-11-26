@@ -489,6 +489,13 @@ export type StudentBusiness = PublicBusiness & ({
   photoPaths: string[];
   /** @nullable */
   logoPath: string | null;
+  hasPendingMedia: boolean;
+  pendingPhotoPaths: string[];
+  pendingPhotoUrls: string[];
+  /** @nullable */
+  pendingLogoPath: string | null;
+  /** @nullable */
+  pendingLogoUrl: string | null;
   status: BusinessStatus;
   /** @nullable */
   rejectionReason: string | null;
@@ -610,6 +617,20 @@ export const ReviewBusinessBodyAction = {
 
 export type ReviewBusinessBody = {
   action: ReviewBusinessBodyAction;
+  /** @maxLength 1000 */
+  reason?: string;
+};
+
+export type ReviewBusinessMediaBodyAction = typeof ReviewBusinessMediaBodyAction[keyof typeof ReviewBusinessMediaBodyAction];
+
+
+export const ReviewBusinessMediaBodyAction = {
+  approve: 'approve',
+  reject: 'reject',
+} as const;
+
+export type ReviewBusinessMediaBody = {
+  action: ReviewBusinessMediaBodyAction;
   /** @maxLength 1000 */
   reason?: string;
 };

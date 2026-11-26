@@ -47,12 +47,20 @@ async function makeWebp(file, maxWidth = 1600) {
 function BusinessEditor({ existing, onClose, onSaved }) {
   const [form, setForm] = useState(() => existing ? {
     name: existing.name, category: existing.category, description: existing.description,
-    pricingText: existing.pricingText, photoPaths: [...existing.photoPaths], logoPath: existing.logoPath ?? null,
+    pricingText: existing.pricingText,
+    // Start from photos still waiting for review, if there are any.
+    photoPaths: [...(existing.hasPendingMedia ? existing.pendingPhotoPaths : existing.photoPaths)],
+    logoPath: (existing.hasPendingMedia ? existing.pendingLogoPath : existing.logoPath) ?? null,
   } : { ...blankBusiness });
-  const [logoPreview, setLogoPreview] = useState(() => existing?.logoUrl ? { url: existing.logoUrl, existing: true } : null);
-  const [previews, setPreviews] = useState(() => (existing?.photoUrls ?? []).map((url, index) => ({
-    url, path: existing.photoPaths[index], existing: true,
-  })));
+  const approved = existing && ["live", "paused"].includes(existing.status);
+  const startLogoUrl = existing ? (existing.hasPendingMedia ? existing.pendingLogoUrl : existing.logoUrl) : null;
+  const [logoPreview, setLogoPreview] = useState(() => startLogoUrl ? { url: startLogoUrl, existing: true } : null);
+  const [previews, setPreviews] = useState(() => {
+    if (!existing) return [];
+    const urls = existing.hasPendingMedia ? existing.pendingPhotoUrls : existing.photoUrls;
+    const paths = existing.hasPendingMedia ? existing.pendingPhotoPaths : existing.photoPaths;
+    return urls.map((url, index) => ({ url, path: paths[index], existing: true }));
+  });
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
   const createBusiness = useCreateBusiness();
@@ -154,6 +162,7 @@ function BusinessEditor({ existing, onClose, onSaved }) {
         <label className="field"><span>What do you offer?</span><textarea className="textarea" required minLength="10" maxLength="2000" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} data-testid="input-business-description" /></label>
         <label className="field"><span>Pricing</span><input className="input" required minLength="1" maxLength="300" placeholder="For example, $15 per visit" value={form.pricingText} onChange={(e) => setForm({ ...form, pricingText: e.target.value })} data-testid="input-business-pricing" /></label>
         <div className="field" data-testid="field-business-logo">
+          {approved && <p className="phase-help" data-testid="text-media-review-note">New photos or a new logo are checked by Launch Lane first. Your listing keeps its current images until they&apos;re approved.</p>}
           <span>Logo <small className="optional">(optional)</small></span>
           <p className="phase-help">If your business has a logo, add it here. JPEG, PNG, or WebP; it&apos;s resized before upload.</p>
           {logoPreview && <div className="photo-strip"><div className="photo-thumb logo-thumb" data-testid="logo-preview"><img src={logoPreview.url} alt="Business logo" /><button type="button" onClick={removeLogo} aria-label="Remove logo" data-testid="button-remove-logo">Remove</button></div></div>}
@@ -248,7 +257,7 @@ export default function DashboardPage() {
                 myBusinessesQuery.isError ? <div className="phase-empty" role="alert" data-testid="error-my-businesses"><p>We couldn&apos;t load your businesses.</p><button className="text-button" type="button" onClick={() => myBusinessesQuery.refetch()} data-testid="button-retry-my-businesses">Try again</button></div> :
                   sortedBusinesses.length ? <div className="phase-business-list">{sortedBusinesses.map((business) => <article className="phase-business" key={business.id} data-testid={`card-my-business-${business.id}`}>
                     <div className="phase-business-photo">{business.logoUrl || business.photoUrls?.[0] ? <img src={business.logoUrl || business.photoUrls[0]} alt="" className={business.logoUrl ? "is-logo" : undefined} /> : <span>{business.category.slice(0, 1)}</span>}</div>
-                    <div className="phase-business-copy"><div className="business-title-line"><h3 data-testid={`text-business-name-${business.id}`}>{business.name}</h3><StatusPill status={business.status} /></div><p className="business-category">{business.category} <span>·</span> {business.pricingText}</p><p>{business.description}</p>
+                    <div className="phase-business-copy"><div className="business-title-line"><h3 data-testid={`text-business-name-${business.id}`}>{business.name}</h3>{business.hasPendingMedia && <span className="status-pill job-status-pending_review" data-testid={`text-pending-media-${business.id}`}>New photos in review</span>}<StatusPill status={business.status} /></div><p className="business-category">{business.category} <span>·</span> {business.pricingText}</p><p>{business.description}</p>
                       {business.status === "rejected" && business.rejectionReason && <div className="rejection-note" data-testid={`text-rejection-reason-${business.id}`}><strong>Review note</strong>{business.rejectionReason}</div>}
                        <div className="phase-business-actions"><button type="button" className="text-button" onClick={() => setEditor(business)} data-testid={`button-edit-business-${business.id}`}>Edit details</button>{business.status === "live" && <button type="button" className="text-button" disabled={pauseBusiness.isPending} onClick={() => setPaused(business)} data-testid={`button-toggle-pause-${business.id}`}>Pause listing</button>}{business.status === "paused" && business.pausedBy === "student" && <button type="button" className="text-button" disabled={pauseBusiness.isPending} onClick={() => setPaused(business)} data-testid={`button-toggle-pause-${business.id}`}>Resume listing</button>}{business.status === "paused" && business.pausedBy === "admin" && <span className="business-category" data-testid={`text-admin-paused-business-${business.id}`}>Paused by Launch Lane</span>}</div>
                     </div>

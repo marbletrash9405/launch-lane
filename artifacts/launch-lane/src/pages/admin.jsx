@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   getGetAdminBusinessesQueryKey, getGetAdminEmailLogQueryKey, getGetMyBusinessesQueryKey,
   getGetPublicBusinessesQueryKey, useGetAdminBusinesses, useGetAdminEmailLog,
-  useReviewBusiness, useSetAdminBusinessPause,
+  useReviewBusiness, useReviewBusinessMedia, useSetAdminBusinessPause,
   getGetAdminJobsQueryKey, getGetPublicJobsQueryKey, useGetAdminJobs, useReviewJob, useCloseAdminJob,
   getGetAdminJobApplicationsQueryKey, useGetAdminJobApplications, useReviewJobApplication,
   getGetAdminChatReportsQueryKey, useGetAdminChatReports, useDeleteAdminChatMessage, useSetAdminChatThreadLock,
@@ -46,6 +46,7 @@ export default function AdminPage() {
   const adminBusinesses = useGetAdminBusinesses({ query: { queryKey: getGetAdminBusinessesQueryKey(), enabled: account?.role === "admin" } });
   const emailLog = useGetAdminEmailLog({ query: { queryKey: getGetAdminEmailLogQueryKey(), enabled: account?.role === "admin" } });
   const review = useReviewBusiness();
+  const reviewMedia = useReviewBusinessMedia();
   const pause = useSetAdminBusinessPause();
   const adminJobs = useGetAdminJobs({ query: { queryKey: getGetAdminJobsQueryKey(), enabled: account?.role === "admin" } });
   const reviewJob = useReviewJob();
@@ -100,6 +101,15 @@ export default function AdminPage() {
       await pause.mutateAsync({ businessId: business.id, data: { paused: business.status !== "paused" } });
       await refreshAdmin();
     } catch (error) { setActionError(error instanceof Error ? error.message : "The listing could not be updated."); }
+  }
+
+  async function decideMedia(businessId, action, rejectReason) {
+    setActionError("");
+    try {
+      await reviewMedia.mutateAsync({ businessId, data: { action, ...(rejectReason ? { reason: rejectReason } : {}) } });
+      setRejecting(""); setReason("");
+      await refreshAdmin();
+    } catch (error) { setActionError(error instanceof Error ? error.message : "The photo review could not be saved."); }
   }
 
   async function decideJob(jobId, action, rejectReason) {
@@ -175,6 +185,20 @@ export default function AdminPage() {
                     <div><span>Student email</span><strong data-testid={`text-admin-owner-email-${business.id}`}>{business.ownerEmail}</strong></div><div><span>Private address</span><strong data-testid={`text-admin-private-address-${business.id}`}>{business.privateAddress}</strong></div><div><span>Guardian</span><strong data-testid={`text-admin-guardian-name-${business.id}`}>{business.guardianName}</strong></div><div><span>Guardian email</span><strong data-testid={`text-admin-guardian-email-${business.id}`}>{business.guardianEmail}</strong></div><div><span>Submitted</span><strong>{new Date(business.createdAt).toLocaleString()}</strong></div>
                   </div>}
                   {business.rejectionReason && <p className="admin-rejection" data-testid={`text-admin-rejection-${business.id}`}>Previous review: {business.rejectionReason}</p>}
+                  {business.hasPendingMedia && <div className="admin-pending-media" data-testid={`pending-media-${business.id}`}>
+                    <p className="eyebrow">New photos waiting for review</p>
+                    <p className="phase-help">The listing keeps its current images until you approve these.</p>
+                    <div className="photo-strip">
+                      {business.pendingLogoUrl && <div className="photo-thumb logo-thumb"><img src={business.pendingLogoUrl} alt="New logo" /></div>}
+                      {business.pendingPhotoUrls.map((url, index) => <div className="photo-thumb" key={url}><img src={url} alt={`New photo ${index + 1}`} /></div>)}
+                      {!business.pendingLogoUrl && !business.pendingPhotoUrls.length && <p className="phase-help">The owner removed all photos and the logo.</p>}
+                    </div>
+                    <div className="admin-actions">
+                      <button type="button" className="btn btn-teal btn-sm" disabled={reviewMedia.isPending} onClick={() => decideMedia(business.id, "approve")} data-testid={`button-approve-media-${business.id}`}>Approve new photos</button>
+                      {rejecting === `media-${business.id}` ? <div className="reject-form"><input className="input" maxLength="1000" placeholder="Reason for the student" value={reason} onChange={(e) => setReason(e.target.value)} data-testid={`input-reject-media-${business.id}`} /><button type="button" className="btn btn-sm btn-danger" disabled={reviewMedia.isPending || !reason.trim()} onClick={() => decideMedia(business.id, "reject", reason.trim())} data-testid={`button-confirm-reject-media-${business.id}`}>Confirm rejection</button><button type="button" className="text-button" onClick={() => { setRejecting(""); setReason(""); }}>Cancel</button></div>
+                        : <button type="button" className="btn btn-sm btn-outline" onClick={() => { setRejecting(`media-${business.id}`); setReason(""); }} data-testid={`button-reject-media-${business.id}`}>Reject</button>}
+                    </div>
+                  </div>}
                   <div className="admin-actions">
                     {business.status === "pending_review" && <><button type="button" className="btn btn-teal btn-sm" disabled={review.isPending} onClick={() => decide(business.id, "approve")} data-testid={`button-approve-business-${business.id}`}>Approve</button>{rejecting === business.id ? <div className="reject-form"><input className="input" maxLength="1000" placeholder="Reason for the student" value={reason} onChange={(e) => setReason(e.target.value)} data-testid={`input-reject-reason-${business.id}`} /><button type="button" className="btn btn-sm btn-danger" disabled={review.isPending || !reason.trim()} onClick={() => decide(business.id, "reject", reason.trim())} data-testid={`button-confirm-reject-${business.id}`}>Confirm rejection</button><button type="button" className="text-button" onClick={() => { setRejecting(""); setReason(""); }} data-testid={`button-cancel-reject-${business.id}`}>Cancel</button></div> : <button type="button" className="btn btn-sm btn-outline" onClick={() => setRejecting(business.id)} data-testid={`button-reject-business-${business.id}`}>Reject</button>}</>}
                     {business.status === "pending_guardian" && <span className="admin-updated" data-testid={`text-guardian-pending-${business.id}`}>Waiting for guardian approval</span>}

@@ -753,6 +753,47 @@ paths:
           description: Administrator role required
         "404":
           description: Business not found
+  /admin/businesses/{businessId}/media-review:
+    post:
+      operationId: reviewBusinessMedia
+      tags: [moderation]
+      summary: Approve or reject new photos/logo for an approved business
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [approve, reject]
+                reason:
+                  type: string
+                  maxLength: 1000
+              required: [action]
+      responses:
+        "200":
+          description: Media review recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminBusiness"
+        "400":
+          description: Invalid action or missing rejection reason
+        "403":
+          description: Administrator role required
+        "404":
+          description: Business not found
+        "409":
+          description: No media waiting for review
   /admin/businesses/{businessId}/pause:
     post:
       operationId: setAdminBusinessPause
@@ -1806,6 +1847,20 @@ components:
                 type: string
             logoPath:
               type: [string, "null"]
+            hasPendingMedia:
+              type: boolean
+            pendingPhotoPaths:
+              type: array
+              items:
+                type: string
+            pendingPhotoUrls:
+              type: array
+              items:
+                type: string
+            pendingLogoPath:
+              type: [string, "null"]
+            pendingLogoUrl:
+              type: [string, "null"]
             status:
               $ref: "#/components/schemas/BusinessStatus"
             rejectionReason:
@@ -1816,7 +1871,7 @@ components:
               type: string
             updatedAt:
               type: string
-          required: [photoPaths, logoPath, status, rejectionReason, pausedBy, createdAt, updatedAt]
+          required: [photoPaths, logoPath, hasPendingMedia, pendingPhotoPaths, pendingPhotoUrls, pendingLogoPath, pendingLogoUrl, status, rejectionReason, pausedBy, createdAt, updatedAt]
     AdminBusiness:
       allOf:
         - $ref: "#/components/schemas/StudentBusiness"

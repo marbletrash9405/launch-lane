@@ -50,6 +50,11 @@ export const GetMyBusinessesResponse = zod.object({
 }).and(zod.object({
   "photoPaths": zod.array(zod.string()),
   "logoPath": zod.string().nullable(),
+  "hasPendingMedia": zod.boolean(),
+  "pendingPhotoPaths": zod.array(zod.string()),
+  "pendingPhotoUrls": zod.array(zod.string()),
+  "pendingLogoPath": zod.string().nullable(),
+  "pendingLogoUrl": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'pending_guardian', 'live', 'paused', 'rejected']),
   "rejectionReason": zod.string().nullable(),
   "pausedBy": zod.string().nullable(),
@@ -97,6 +102,11 @@ export const CreateBusinessResponse = zod.object({
 }).and(zod.object({
   "photoPaths": zod.array(zod.string()),
   "logoPath": zod.string().nullable(),
+  "hasPendingMedia": zod.boolean(),
+  "pendingPhotoPaths": zod.array(zod.string()),
+  "pendingPhotoUrls": zod.array(zod.string()),
+  "pendingLogoPath": zod.string().nullable(),
+  "pendingLogoUrl": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'pending_guardian', 'live', 'paused', 'rejected']),
   "rejectionReason": zod.string().nullable(),
   "pausedBy": zod.string().nullable(),
@@ -147,6 +157,11 @@ export const UpdateBusinessResponse = zod.object({
 }).and(zod.object({
   "photoPaths": zod.array(zod.string()),
   "logoPath": zod.string().nullable(),
+  "hasPendingMedia": zod.boolean(),
+  "pendingPhotoPaths": zod.array(zod.string()),
+  "pendingPhotoUrls": zod.array(zod.string()),
+  "pendingLogoPath": zod.string().nullable(),
+  "pendingLogoUrl": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'pending_guardian', 'live', 'paused', 'rejected']),
   "rejectionReason": zod.string().nullable(),
   "pausedBy": zod.string().nullable(),
@@ -178,6 +193,11 @@ export const SetBusinessPauseResponse = zod.object({
 }).and(zod.object({
   "photoPaths": zod.array(zod.string()),
   "logoPath": zod.string().nullable(),
+  "hasPendingMedia": zod.boolean(),
+  "pendingPhotoPaths": zod.array(zod.string()),
+  "pendingPhotoUrls": zod.array(zod.string()),
+  "pendingLogoPath": zod.string().nullable(),
+  "pendingLogoUrl": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'pending_guardian', 'live', 'paused', 'rejected']),
   "rejectionReason": zod.string().nullable(),
   "pausedBy": zod.string().nullable(),
@@ -841,6 +861,11 @@ export const GetAdminBusinessesResponse = zod.object({
 }).and(zod.object({
   "photoPaths": zod.array(zod.string()),
   "logoPath": zod.string().nullable(),
+  "hasPendingMedia": zod.boolean(),
+  "pendingPhotoPaths": zod.array(zod.string()),
+  "pendingPhotoUrls": zod.array(zod.string()),
+  "pendingLogoPath": zod.string().nullable(),
+  "pendingLogoUrl": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'pending_guardian', 'live', 'paused', 'rejected']),
   "rejectionReason": zod.string().nullable(),
   "pausedBy": zod.string().nullable(),
@@ -885,6 +910,59 @@ export const ReviewBusinessResponse = zod.object({
 }).and(zod.object({
   "photoPaths": zod.array(zod.string()),
   "logoPath": zod.string().nullable(),
+  "hasPendingMedia": zod.boolean(),
+  "pendingPhotoPaths": zod.array(zod.string()),
+  "pendingPhotoUrls": zod.array(zod.string()),
+  "pendingLogoPath": zod.string().nullable(),
+  "pendingLogoUrl": zod.string().nullable(),
+  "status": zod.enum(['pending_review', 'pending_guardian', 'live', 'paused', 'rejected']),
+  "rejectionReason": zod.string().nullable(),
+  "pausedBy": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})).and(zod.object({
+  "ownerName": zod.string(),
+  "ownerEmail": zod.string(),
+  "age": zod.int(),
+  "privateAddress": zod.string(),
+  "guardianName": zod.string(),
+  "guardianEmail": zod.string()
+}))
+
+
+/**
+ * @summary Approve or reject new photos/logo for an approved business
+ */
+export const ReviewBusinessMediaParams = zod.object({
+  "businessId": zod.uuid()
+})
+
+export const reviewBusinessMediaBodyReasonMax = 1000;
+
+
+
+export const ReviewBusinessMediaBody = zod.object({
+  "action": zod.enum(['approve', 'reject']),
+  "reason": zod.string().max(reviewBusinessMediaBodyReasonMax).optional()
+})
+
+export const ReviewBusinessMediaResponse = zod.object({
+  "id": zod.uuid(),
+  "name": zod.string(),
+  "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
+  "description": zod.string(),
+  "pricingText": zod.string(),
+  "studentName": zod.string(),
+  "photoUrls": zod.array(zod.string()),
+  "logoUrl": zod.string().nullable()
+}).and(zod.object({
+  "photoPaths": zod.array(zod.string()),
+  "logoPath": zod.string().nullable(),
+  "hasPendingMedia": zod.boolean(),
+  "pendingPhotoPaths": zod.array(zod.string()),
+  "pendingPhotoUrls": zod.array(zod.string()),
+  "pendingLogoPath": zod.string().nullable(),
+  "pendingLogoUrl": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'pending_guardian', 'live', 'paused', 'rejected']),
   "rejectionReason": zod.string().nullable(),
   "pausedBy": zod.string().nullable(),
@@ -923,6 +1001,11 @@ export const SetAdminBusinessPauseResponse = zod.object({
 }).and(zod.object({
   "photoPaths": zod.array(zod.string()),
   "logoPath": zod.string().nullable(),
+  "hasPendingMedia": zod.boolean(),
+  "pendingPhotoPaths": zod.array(zod.string()),
+  "pendingPhotoUrls": zod.array(zod.string()),
+  "pendingLogoPath": zod.string().nullable(),
+  "pendingLogoUrl": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'pending_guardian', 'live', 'paused', 'rejected']),
   "rejectionReason": zod.string().nullable(),
   "pausedBy": zod.string().nullable(),

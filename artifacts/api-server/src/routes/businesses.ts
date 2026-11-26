@@ -8,6 +8,8 @@ import {
   GetMyBusinessesResponse,
   GetPublicBusinessesResponse,
   ReviewBusinessBody,
+  ReviewBusinessMediaBody,
+  ReviewBusinessMediaResponse,
   ReviewBusinessResponse,
   SetAdminBusinessPauseResponse,
   SetAdminBusinessPauseBody,
@@ -60,6 +62,11 @@ function toStudentBusiness(business: typeof businessesTable.$inferSelect, ownerN
     photoUrls: business.photoPaths.map(toPhotoUrl),
     logoPath: business.logoPath ?? null,
     logoUrl: business.logoPath ? toPhotoUrl(business.logoPath) : null,
+    hasPendingMedia: Boolean(business.pendingMedia),
+    pendingPhotoPaths: business.pendingMedia?.photoPaths ?? [],
+    pendingPhotoUrls: (business.pendingMedia?.photoPaths ?? []).map(toPhotoUrl),
+    pendingLogoPath: business.pendingMedia?.logoPath ?? null,
+    pendingLogoUrl: business.pendingMedia?.logoPath ? toPhotoUrl(business.pendingMedia.logoPath) : null,
     status: business.status,
     rejectionReason: business.rejectionReason,
     pausedBy: business.pausedBy,
@@ -293,13 +300,19 @@ router.patch("/businesses/:businessId", ...studentAccess, async (req, res) => {
       res.status(404).json({ error: "Business not found." });
       return;
     }
-    const nextPhotos = parsed.data.photoPaths ?? business.photoPaths;
+    // Approved businesses (live or paused) keep their current photos/logo on
+    // the listing; new ones wait in pendingMedia for admin review.
+    const approved = business.status === "live" || business.status === "paused";
+    const baseMedia = approved && business.pendingMedia
+      ? business.pendingMedia
+      : { photoPaths: business.photoPaths, logoPath: business.logoPath };
+    const nextPhotos = parsed.data.photoPaths ?? baseMedia.photoPaths;
     if (!(await validatePhotoPaths(nextPhotos, account.user.id))) {
       res.status(400).json({ error: "Photos must be your own resized WebP uploads and no larger than 210 KB each." });
       return;
     }
     await setPrivatePhotoOwners(nextPhotos, account.user.id);
-    const nextLogo = parsed.data.logoPath === undefined ? business.logoPath : parsed.data.logoPath;
+    const nextLogo = parsed.data.logoPath === undefined ? baseMedia.logoPath : parsed.data.logoPath;
     if (nextLogo && nextLogo !== business.logoPath && !(await validatePhotoPaths([nextLogo], account.user.id))) {
       res.status(400).json({ error: "The logo must be your own resized WebP upload and no larger than 210 KB." });
       return;
@@ -314,6 +327,9 @@ router.patch("/businesses/:businessId", ...studentAccess, async (req, res) => {
       (parsed.data.photoPaths !== undefined &&
         JSON.stringify(parsed.data.photoPaths) !== JSON.stringify(business.photoPaths)) ||
       nextLogo !== business.logoPath;
+    const mediaDiffersFromLive =
+      JSON.stringify(nextPhotos) !== JSON.stringify(business.photoPaths) ||
+      (nextLogo ?? null) !== (business.logoPath ?? null);
     let status = business.status;
     let pausedBy = business.pausedBy;
     let rejectionReason = business.rejectionReason;
@@ -339,12 +355,22 @@ router.patch("/businesses/:businessId", ...studentAccess, async (req, res) => {
             ),
           );
       }
+      const { photoPaths: _photos, logoPath: _logo, ...textFields } = parsed.data;
+      const stillApproved = approved && status === business.status;
+      const media = stillApproved
+        ? {
+            photoPaths: business.photoPaths,
+            logoPath: business.logoPath,
+            pendingMedia: mediaDiffersFromLive
+              ? { photoPaths: nextPhotos, logoPath: nextLogo ?? null }
+              : null,
+          }
+        : { photoPaths: nextPhotos, logoPath: nextLogo ?? null, pendingMedia: null };
       const [row] = await tx
         .update(businessesTable)
         .set({
-          ...parsed.data,
-          photoPaths: nextPhotos,
-          logoPath: nextLogo ?? null,
+          ...textFields,
+          ...media,
           status,
           pausedBy,
           rejectionReason,
@@ -354,6 +380,22 @@ router.patch("/businesses/:businessId", ...studentAccess, async (req, res) => {
         .returning();
       return row;
     });
+    const newlyPendingMedia =
+      updated.pendingMedia &&
+      JSON.stringify(updated.pendingMedia) !== JSON.stringify(business.pendingMedia);
+    if (newlyPendingMedia) {
+      await sendNotification({
+        subject: `Photo review needed: ${updated.name}`,
+        intro: "An approved student business changed its photos or logo. The listing keeps its current images until you approve the new ones on /admin.",
+        replyTo: account.user.email,
+        rows: [
+          ["Business", updated.name],
+          ["Owner", `${account.user.name} (${account.user.email})`],
+          ["New photos", String(updated.pendingMedia?.photoPaths.length ?? 0)],
+          ["Logo", updated.pendingMedia?.logoPath ? "New or kept logo" : "No logo"],
+        ],
+      });
+    }
     if (status === "pending_review" && business.status !== "pending_review") {
       const [profile] = await db
         .select()
@@ -543,6 +585,66 @@ router.post("/admin/businesses/:businessId/review", ...adminAccess, async (req, 
   } catch (error) {
     req.log.error({ err: error }, "Could not review student business");
     res.status(500).json({ error: "We couldn't complete the review. Please try again." });
+  }
+});
+
+router.post("/admin/businesses/:businessId/media-review", ...adminAccess, async (req, res) => {
+  const params = UpdateBusinessParams.safeParse(req.params);
+  const parsed = ReviewBusinessMediaBody.safeParse(req.body);
+  if (!params.success || !parsed.success) {
+    res.status(400).json({ error: "Invalid photo review request." });
+    return;
+  }
+  const reason = parsed.data.reason?.trim() || "";
+  if (parsed.data.action === "reject" && !reason) {
+    res.status(400).json({ error: "Add a reason when rejecting photos." });
+    return;
+  }
+  try {
+    const current = await getAdminBusiness(params.data.businessId);
+    if (!current) {
+      res.status(404).json({ error: "Business not found." });
+      return;
+    }
+    const [row] = await db
+      .select()
+      .from(businessesTable)
+      .where(eq(businessesTable.id, current.id))
+      .limit(1);
+    const pending = row?.pendingMedia;
+    if (!row || !pending) {
+      res.status(409).json({ error: "There are no new photos waiting for review." });
+      return;
+    }
+    const [updated] = await db
+      .update(businessesTable)
+      .set(
+        parsed.data.action === "approve"
+          ? { photoPaths: pending.photoPaths, logoPath: pending.logoPath, pendingMedia: null, updatedAt: new Date() }
+          : { pendingMedia: null, updatedAt: new Date() },
+      )
+      .where(and(eq(businessesTable.id, row.id), eq(businessesTable.updatedAt, row.updatedAt)))
+      .returning();
+    if (!updated) {
+      res.status(409).json({ error: "The photos changed while you were reviewing. Please refresh." });
+      return;
+    }
+    await sendEmail({
+      to: [current.ownerEmail],
+      cc: [current.guardianEmail],
+      subject:
+        parsed.data.action === "approve"
+          ? `New photos approved: ${current.name}`
+          : `New photos not approved: ${current.name}`,
+      text:
+        parsed.data.action === "approve"
+          ? `Your new photos and logo for ${current.name} were approved and are now on your Launch Lane listing.`
+          : `Your new photos or logo for ${current.name} were not approved, so your listing keeps its current images.\n\nReason: ${reason}\n\nYou can upload different ones from your Launch Lane dashboard.`,
+    });
+    res.json(ReviewBusinessMediaResponse.parse(await getAdminBusiness(updated.id)));
+  } catch (error) {
+    req.log.error({ err: error }, "Could not review business media");
+    res.status(500).json({ error: "We couldn't complete the photo review. Please try again." });
   }
 });
 

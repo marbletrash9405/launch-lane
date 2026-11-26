@@ -67,6 +67,7 @@ import type {
   ResidentBooking,
   ResidentJob,
   ReviewBusinessBody,
+  ReviewBusinessMediaBody,
   SetAdminBusinessPauseBody,
   SetBusinessPauseBody,
   StudentBusiness,
@@ -2661,6 +2662,95 @@ export const useReviewBusiness = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getReviewBusinessMutationOptions(options), queryClient);
+    }
+
+export const getReviewBusinessMediaUrl = (businessId: string,) => {
+
+
+
+
+  return `/api/admin/businesses/${businessId}/media-review`
+}
+
+/**
+ * @summary Approve or reject new photos/logo for an approved business
+ */
+export const reviewBusinessMedia = async (businessId: string,
+    reviewBusinessMediaBody: ReviewBusinessMediaBody, options?: Parameters<typeof customFetch>[1]): Promise<AdminBusiness> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AdminBusiness>(getReviewBusinessMediaUrl(businessId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(reviewBusinessMediaBody)
+  }
+);}
+
+
+
+
+
+export const getReviewBusinessMediaMutationKey = () => ['reviewBusinessMedia'] as const;
+
+export const getReviewBusinessMediaMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewBusinessMedia>>, TError,ReviewBusinessMediaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reviewBusinessMedia>>, TError,ReviewBusinessMediaMutationVariables, TContext> => {
+
+const mutationKey = getReviewBusinessMediaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviewBusinessMedia>>, ReviewBusinessMediaMutationVariables> = (props) => {
+          const {businessId,data} = props ?? {};
+
+          return  reviewBusinessMedia(businessId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReviewBusinessMediaMutationResult = NonNullable<Awaited<ReturnType<typeof reviewBusinessMedia>>>
+    export type ReviewBusinessMediaMutationBody = BodyType<ReviewBusinessMediaBody>
+    export type ReviewBusinessMediaMutationError = ErrorType<void>
+    export type ReviewBusinessMediaMutationVariables = {businessId: string;data: BodyType<ReviewBusinessMediaBody>}
+
+    /**
+ * @summary Approve or reject new photos/logo for an approved business
+ */
+export const useReviewBusinessMedia = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewBusinessMedia>>, TError,ReviewBusinessMediaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reviewBusinessMedia>>,
+        TError,
+        ReviewBusinessMediaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReviewBusinessMediaMutationOptions(options), queryClient);
     }
 
 export const getSetAdminBusinessPauseUrl = (businessId: string,) => {

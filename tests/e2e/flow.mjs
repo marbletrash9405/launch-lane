@@ -72,6 +72,7 @@ r = await call("POST", `/api/admin/businesses/${businessId}/review`, { user: ADM
 
 const db = new pg.Client({ connectionString: process.env.DATABASE_URL }); await db.connect();
 const db2 = () => db;
+let erows;
 const { rows } = await db.query("select text, to_ from (select text, \"to\" as to_ , created_at from email_logs) e order by created_at desc");
 const link = rows.map((x) => x.text.match(/https?:\/\/[^\s]+\/guardian\/approval\/([A-Za-z0-9_-]+)/)).find(Boolean);
 ok("guardian email with approval link logged", Boolean(link));
@@ -83,13 +84,44 @@ r = await call("POST", `/api/guardian/approvals/${token}`, { json: { decision: "
 r = await call("GET", "/api/businesses/public"); ok("business now public", JSON.stringify(r.data).includes(businessId));
 ok("public listing includes logo", r.data.businesses.find((b) => b.id === businessId)?.logoUrl === logoUrl);
 r = await call("GET", logoUrl); ok("logo now public", r.status === 200 && r.headers.get("content-type") === "image/webp");
-r = await call("PATCH", `/api/businesses/${businessId}`, { user: STUDENT, json: { logoPath: null } }); ok("owner can remove logo", r.status === 200 && r.data.logoUrl === null, r.raw);
-r = await call("GET", logoUrl); ok("removed logo no longer served", r.status === 404, String(r.status));
-r = await call("PATCH", `/api/businesses/${businessId}`, { user: STUDENT, json: { logoPath } }); ok("owner can add logo back", r.status === 200 && r.data.logoUrl === logoUrl, r.raw);
+
 r = await call("GET", photoUrl); ok("photo now public", r.status === 200 && Buffer.from(r.raw, "latin1").length > 0);
 ok("public photo cacheable", r.headers.get("cache-control").startsWith("public"));
 r = await call("GET", "/api/storage/objects/uploads/../../etc/passwd"); ok("path tricks rejected", r.status === 404, String(r.status));
 r = await call("GET", "/api/admin/email-log", { user: ADMIN }); ok("admin email log loads", r.status === 200, String(r.status));
+
+console.log("Photo changes on a live business");
+r = await call("POST", "/api/storage/uploads/request-url", { user: STUDENT, json: { name: "n.webp", size: photo.length, contentType: "image/webp" } });
+const newPhoto = r.data.objectPath;
+await call("PUT", new URL(r.data.uploadURL).pathname, { user: STUDENT, body: photo, type: "image/webp" });
+const newPhotoUrl = `/api/storage/objects/${newPhoto.replace(/^\/objects\//, "")}`;
+r = await call("PATCH", `/api/businesses/${businessId}`, { user: STUDENT, json: { photoPaths: [newPhoto], logoPath: null, pricingText: "$12 per bin" } });
+ok("live business stays live after photo change", r.status === 200 && r.data.status === "live", r.raw);
+ok("new photos wait for review, current ones stay", r.data.hasPendingMedia && r.data.pendingPhotoPaths[0] === newPhoto && r.data.photoPaths[0] === objectPath && r.data.logoUrl === logoUrl, r.raw);
+ok("text edits still apply right away", r.data.pricingText === "$12 per bin");
+r = await call("GET", "/api/businesses/public"); let pb = r.data.businesses.find((b) => b.id === businessId);
+ok("public listing still shows approved photo and logo", pb.photoUrls[0] === photoUrl && pb.logoUrl === logoUrl, JSON.stringify(pb));
+r = await call("GET", newPhotoUrl); ok("pending photo hidden from public", r.status === 403, String(r.status));
+r = await call("GET", newPhotoUrl, { user: STUDENT }); ok("owner can preview pending photo", r.status === 200);
+r = await call("GET", newPhotoUrl, { user: ADMIN }); ok("admin can preview pending photo", r.status === 200);
+erows = (await db2().query("select subject from email_logs order by created_at desc limit 1")).rows;
+ok("admin emailed about photo review", erows[0].subject.startsWith("Photo review needed"), erows[0].subject);
+r = await call("POST", `/api/admin/businesses/${businessId}/media-review`, { user: STUDENT, json: { action: "approve" } }); ok("only admin reviews photos", r.status === 403);
+r = await call("POST", `/api/admin/businesses/${businessId}/media-review`, { user: ADMIN, json: { action: "reject" } }); ok("rejecting needs a reason", r.status === 400);
+r = await call("POST", `/api/admin/businesses/${businessId}/media-review`, { user: ADMIN, json: { action: "reject", reason: "Please use a photo of your own work." } });
+ok("admin rejects new photos; listing keeps old ones", r.status === 200 && !r.data.hasPendingMedia && r.data.photoPaths[0] === objectPath && r.data.logoUrl === logoUrl, r.raw);
+erows = (await db2().query("select subject, cc from email_logs order by created_at desc limit 1")).rows;
+ok("owner + guardian told why", erows[0].subject.startsWith("New photos not approved") && erows[0].cc.includes("pat.parent@example.test"));
+r = await call("POST", `/api/admin/businesses/${businessId}/media-review`, { user: ADMIN, json: { action: "approve" } }); ok("nothing left to review", r.status === 409);
+r = await call("PATCH", `/api/businesses/${businessId}`, { user: STUDENT, json: { photoPaths: [newPhoto], logoPath: null } });
+r = await call("PATCH", `/api/businesses/${businessId}`, { user: STUDENT, json: { description: "I clean trash bins on pickup day with eco soap. Now on Sundays too." } });
+ok("later text edit keeps pending photos", r.data.hasPendingMedia && r.data.pendingPhotoPaths[0] === newPhoto, r.raw);
+r = await call("POST", `/api/admin/businesses/${businessId}/media-review`, { user: ADMIN, json: { action: "approve" } });
+ok("admin approves; new photo live, logo removed", r.status === 200 && r.data.photoPaths[0] === newPhoto && r.data.logoUrl === null && !r.data.hasPendingMedia, r.raw);
+r = await call("GET", newPhotoUrl); ok("approved photo now public", r.status === 200);
+r = await call("GET", logoUrl); ok("old logo no longer served", r.status === 404, String(r.status));
+r = await call("PATCH", `/api/businesses/${businessId}`, { user: STUDENT, json: { logoPath } });
+r = await call("POST", `/api/admin/businesses/${businessId}/media-review`, { user: ADMIN, json: { action: "approve" } }); ok("logo re-added after review", r.data.logoUrl === logoUrl, r.raw);
 
 console.log("Business openings");
 r = await call("PATCH", "/api/auth/profile", { user: OTHER, json: { age: 14, homeAddress: "456 Example Ct, Farmers Branch", guardianName: "Riley Parent", guardianEmail: "riley.parent@example.test" } }); ok("applicant profile saved", r.status < 300, r.raw);
@@ -109,7 +141,8 @@ r = await call("POST", `/api/jobs/${openingId}/applications`, { user: OTHER, jso
 r = await call("POST", `/api/jobs/${openingId}/applications`, { user: OTHER, json: { message: "I mow lawns and like cleaning.", hasOtherJob: true, otherJobDetails: "Tutoring, Tue/Thu 5-6pm", availability: "Saturday mornings" } });
 ok("student applies to opening", r.status === 201 && r.data.status === "pending_review" && r.data.businessName === biz.name, r.raw);
 const appId = r.data.id;
-let erows = (await db2().query("select subject, text, \"to\" as t, cc from email_logs order by created_at desc limit 1")).rows;
+let erows2 = null;
+erows = (await db2().query("select subject, text, \"to\" as t, cc from email_logs order by created_at desc limit 1")).rows;
 ok("admin email has age, other job, availability", erows[0].text.includes("age 14") && erows[0].text.includes("Tutoring, Tue/Thu") && erows[0].text.includes("Saturday mornings") && erows[0].text.includes(biz.name), erows[0].text);
 r = await call("GET", "/api/businesses/openings/mine", { user: STUDENT }); ok("owner doesn't see application before admin review", r.data.jobs[0].applications.length === 0, r.raw);
 r = await call("GET", "/api/admin/job-applications", { user: ADMIN });
