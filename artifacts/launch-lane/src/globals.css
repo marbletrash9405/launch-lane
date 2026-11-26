@@ -606,6 +606,7 @@ p { margin: 0; }
 .legal-page { min-height: 70vh; padding: 54px 0 90px; background: var(--cream); }
 .legal-page h1 { color: var(--teal); font-size: clamp(2.5rem, 6vw, 4rem); margin: 12px 0 10px; }
 .legal-lead { color: var(--muted); font-size: 1.12rem; max-width: 720px; }
+.legal-updated { color: var(--muted); font-size: .85rem; margin-top: 6px; }
 .legal-placeholder { display: flex; flex-wrap: wrap; gap: 4px 10px; padding: 14px 18px; margin-bottom: 34px; border-radius: 12px; background: #fff1d5; border-left: 4px solid var(--gold); color: #79520f; }
 .legal-content { display: grid; gap: 14px; max-width: 780px; margin-top: 38px; padding: 32px; background: var(--white); border: 1px solid var(--line); border-radius: 20px; }
 .legal-content h2 { margin-top: 12px; color: var(--teal); font-size: 1.45rem; }
