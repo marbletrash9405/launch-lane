@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { rateLimit } from "express-rate-limit";
 import {
   CreateChatMessageBody,
   CreateChatMessageParams,
@@ -46,18 +45,16 @@ import {
 // @ts-ignore - this module preserves the JavaScript email delivery helper.
 import { sendEmail, sendNotification } from "../lib/notify.js";
 import { getPublicOrigin } from "../lib/public-origin";
+import { createRateLimiter } from "../lib/rate-limit";
 
 const router = Router();
 const signedInAccess = [requireSignedIn, requireAccount];
 const adminAccess = [...signedInAccess, requireRole("admin")];
-const messageRateLimiter = rateLimit({
+const messageRateLimiter = createRateLimiter({
+  name: "chat",
   windowMs: 5 * 60 * 1000,
   limit: 30,
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: (_req, res) => {
-    res.status(429).json({ error: "Please wait before sending another message." });
-  },
+  message: "Please wait before sending another message.",
 });
 
 function messageShape(row: {

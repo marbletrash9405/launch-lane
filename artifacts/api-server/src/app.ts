@@ -1,7 +1,7 @@
 import express, { type Express } from "express";
 import cors from "cors";
 import { clerkMiddleware } from "@clerk/express";
-import { rateLimit } from "express-rate-limit";
+import { createRateLimiter } from "./lib/rate-limit";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
@@ -32,11 +32,11 @@ app.use(
 app.use(cors({ credentials: true, origin: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-const guardianApprovalLimiter = rateLimit({
+const guardianApprovalLimiter = createRateLimiter({
+  name: "guardian-link",
   windowMs: 15 * 60 * 1000,
   limit: 30,
-  standardHeaders: true,
-  legacyHeaders: false,
+  message: "Too many attempts. Please wait a few minutes and try again.",
 });
 app.use("/api/guardian/approvals", guardianApprovalLimiter);
 

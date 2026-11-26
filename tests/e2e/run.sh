@@ -10,7 +10,7 @@ export DATABASE_URL="$E2E_DATABASE_URL"
 pnpm db:push >/dev/null
 CLERK_PUBLISHABLE_KEY="pk_test_$(printf 'example.clerk.accounts.dev$' | base64)" pnpm run vercel-build >/dev/null
 node tests/e2e/build-mocked.mjs
-psql "$DATABASE_URL" -qc "truncate users, email_logs cascade;"
+psql "$DATABASE_URL" -qc "truncate users, email_logs, rate_limits cascade;"
 NODE_ENV=production VERCEL=1 VERCEL_URL=localhost:4100 CLERK_PUBLISHABLE_KEY=x CLERK_SECRET_KEY=x \
   ADMIN_EMAIL=launchlanecompany@gmail.com BLOB_READ_WRITE_TOKEN=test \
   node tests/e2e/vercel-sim.mjs .vercel/output 4100 tests/e2e/.out/api-mocked.mjs > tests/e2e/.out/server.log 2>&1 &

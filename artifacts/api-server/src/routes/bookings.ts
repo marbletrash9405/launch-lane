@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { rateLimit } from "express-rate-limit";
 import {
   and,
   bookingsTable,
@@ -32,18 +31,16 @@ import { deriveResidentStreetName } from "../lib/resident-street";
 import { createChatThread } from "../lib/chat-threads";
 // @ts-ignore - the shared mail helper is maintained in JavaScript.
 import { sendEmail } from "../lib/notify.js";
+import { createRateLimiter } from "../lib/rate-limit";
 
 const router = Router();
 const residentAccess = [requireSignedIn, requireAccount, requireRole("resident")];
 const studentAccess = [requireSignedIn, requireAccount, requireRole("student")];
-const bookingCreationLimiter = rateLimit({
+const bookingCreationLimiter = createRateLimiter({
+  name: "booking",
   windowMs: 15 * 60 * 1000,
   limit: 8,
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: (_req, res) => {
-    res.status(429).json({ error: "Please wait before sending another booking request." });
-  },
+  message: "Please wait before sending another booking request.",
 });
 
 function firstName(name: string) {

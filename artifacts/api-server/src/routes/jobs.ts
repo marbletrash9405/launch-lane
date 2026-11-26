@@ -1,6 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
 import { Router } from "express";
-import { rateLimit } from "express-rate-limit";
 import {
   and,
   desc,
@@ -53,29 +52,24 @@ import { getPublicOrigin } from "../lib/public-origin";
 import { getPosterContact, getResidentJob, listResidentJobs } from "../lib/job-helpers";
 // @ts-ignore - the shared mail helper is maintained in JavaScript.
 import { sendEmail, sendNotification } from "../lib/notify.js";
+import { createRateLimiter } from "../lib/rate-limit";
 
 const router = Router();
 const residentAccess = [requireSignedIn, requireAccount, requireRole("resident")];
 const studentAccess = [requireSignedIn, requireAccount, requireRole("student")];
 // Residents manage their jobs; student owners manage openings at their business.
 const posterAccess = [requireSignedIn, requireAccount, requireAnyRole(["resident", "student"])];
-const jobCreationLimiter = rateLimit({
+const jobCreationLimiter = createRateLimiter({
+  name: "job-post",
   windowMs: 60 * 60 * 1000,
   limit: 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: (_req, res) => {
-    res.status(429).json({ error: "Please wait before posting another job." });
-  },
+  message: "Please wait before posting another job.",
 });
-const applicationLimiter = rateLimit({
+const applicationLimiter = createRateLimiter({
+  name: "job-apply",
   windowMs: 60 * 60 * 1000,
   limit: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: (_req, res) => {
-    res.status(429).json({ error: "Please wait before applying to another job." });
-  },
+  message: "Please wait before applying to another job.",
 });
 
 const firstName = (name: string) => name.trim().split(/\s+/)[0] || "Neighbor";

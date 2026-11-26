@@ -120,4 +120,4 @@ _Populate as you build — explicit user instructions worth remembering across s
 ## Pointers
 
 - `README.md` — setup steps for Neon, Clerk, Vercel Blob, Resend and Vercel
-- The in-memory rate limits (guardian links, chat) are per serverless instance on Vercel, so they are looser than on a single server; the database-enforced chat email throttle is unaffected.
+- Rate limits (guardian links, bookings, job posts, applications, chat) are counted in the `rate_limits` table (`lib/rate-limit.ts`), so they hold across all Vercel instances; if the database is unreachable the request is allowed.
