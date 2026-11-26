@@ -73,6 +73,10 @@ A neighborhood marketplace connecting Mercer Crossing students with nearby resid
 - Terms and Privacy pages are placeholders for founder review. The privacy page describes the collected profile, address, photo, and chat data and explains the deletion-request contact.
 - The administrator email log is database-backed and retains the latest 500 attempts.
 
+## Business logos
+
+- A business can have one optional logo (`businesses.logo_path`). It is uploaded and checked exactly like photos (private WebP, ≤210 KB, the owner's own upload) and served by `/api/storage/objects/*` publicly only while the business is live; owner and admin can see it during review. Logos display uncropped on a white tile.
+
 ## Business openings
 
 - A student whose business is live can post an opening (a role at their business). It is a row in `jobs` with `business_id` set; `resident_id` is the poster (the student owner).

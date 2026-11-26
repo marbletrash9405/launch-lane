@@ -42,13 +42,27 @@ r = await call("PUT", putPath, { user: STUDENT, body: photo, type: "image/webp" 
 // other student uploads to the same id -> lands in their own folder, not Sam's
 r = await call("PUT", putPath, { user: OTHER, body: photo, type: "image/webp" }); ok("another student's upload goes to their own folder", r.status === 200);
 
+console.log("Logo upload");
+const logoFile = await readFile(new URL("../../artifacts/api-server/src/lib/__fixtures__/", import.meta.url).pathname + "lossless.webp");
+r = await call("POST", "/api/storage/uploads/request-url", { user: STUDENT, json: { name: "logo.webp", size: logoFile.length, contentType: "image/webp" } });
+const logoPath = r.data.objectPath;
+r = await call("PUT", new URL(r.data.uploadURL).pathname, { user: STUDENT, body: logoFile, type: "image/webp" }); ok("logo uploaded", r.status === 200, r.raw);
+r = await call("POST", "/api/storage/uploads/request-url", { user: OTHER, json: { name: "x.webp", size: logoFile.length, contentType: "image/webp" } });
+const otherLogo = r.data.objectPath;
+await call("PUT", new URL(r.data.uploadURL).pathname, { user: OTHER, body: logoFile, type: "image/webp" });
+
 console.log("Business lifecycle");
 const biz = { name: "Sam's Bin Wash", category: "Bin cleaning", description: "I clean trash bins on pickup day with eco soap.", pricingText: "$10 per bin" };
 r = await call("POST", "/api/businesses", { user: OTHER, json: { ...biz, photoPaths: [objectPath] } }); ok("can't attach someone else's photo", r.status >= 400, String(r.status));
-r = await call("POST", "/api/businesses", { user: STUDENT, json: { ...biz, photoPaths: [objectPath] } }); ok("student creates business", r.status < 300, r.raw);
+r = await call("POST", "/api/businesses", { user: STUDENT, json: { ...biz, photoPaths: [objectPath], logoPath: otherLogo } }); ok("can't use someone else's upload as logo", r.status === 400, String(r.status));
+r = await call("POST", "/api/businesses", { user: STUDENT, json: { ...biz, photoPaths: [objectPath], logoPath } }); ok("student creates business with logo", r.status < 300 && r.data.logoPath === logoPath && r.data.logoUrl.startsWith("/api/storage/objects/"), r.raw);
+const logoUrl = r.data.logoUrl;
 const businessId = r.data.id;
 const photoUrl = `/api/storage/objects/${objectPath.replace(/^\/objects\//, "")}`;
 r = await call("GET", photoUrl); ok("photo hidden from public during review", r.status === 403, String(r.status));
+r = await call("GET", logoUrl); ok("logo hidden from public during review", r.status === 403, String(r.status));
+r = await call("GET", logoUrl, { user: STUDENT }); ok("owner sees own logo", r.status === 200);
+r = await call("GET", "/api/admin/businesses", { user: ADMIN }); ok("admin sees logo on review", r.data.businesses?.some((b) => b.logoUrl === logoUrl), r.raw.slice(0, 200));
 r = await call("GET", photoUrl, { user: STUDENT }); ok("owner sees own photo", r.status === 200 && r.headers.get("content-type") === "image/webp");
 r = await call("GET", photoUrl, { user: ADMIN }); ok("admin sees photo under review", r.status === 200);
 r = await call("GET", photoUrl, { user: OTHER }); ok("other student can't see it", r.status === 403);
@@ -67,6 +81,11 @@ r = await call("GET", `/api/guardian/approvals/${token}`); ok("guardian link ope
 r = await call("POST", `/api/guardian/approvals/${token}`, { json: { decision: "approved" } }); ok("guardian approves", r.status === 200, r.raw);
 r = await call("POST", `/api/guardian/approvals/${token}`, { json: { decision: "approved" } }); ok("link is single-use", r.status === 404, String(r.status));
 r = await call("GET", "/api/businesses/public"); ok("business now public", JSON.stringify(r.data).includes(businessId));
+ok("public listing includes logo", r.data.businesses.find((b) => b.id === businessId)?.logoUrl === logoUrl);
+r = await call("GET", logoUrl); ok("logo now public", r.status === 200 && r.headers.get("content-type") === "image/webp");
+r = await call("PATCH", `/api/businesses/${businessId}`, { user: STUDENT, json: { logoPath: null } }); ok("owner can remove logo", r.status === 200 && r.data.logoUrl === null, r.raw);
+r = await call("GET", logoUrl); ok("removed logo no longer served", r.status === 404, String(r.status));
+r = await call("PATCH", `/api/businesses/${businessId}`, { user: STUDENT, json: { logoPath } }); ok("owner can add logo back", r.status === 200 && r.data.logoUrl === logoUrl, r.raw);
 r = await call("GET", photoUrl); ok("photo now public", r.status === 200 && Buffer.from(r.raw, "latin1").length > 0);
 ok("public photo cacheable", r.headers.get("cache-control").startsWith("public"));
 r = await call("GET", "/api/storage/objects/uploads/../../etc/passwd"); ok("path tricks rejected", r.status === 404, String(r.status));

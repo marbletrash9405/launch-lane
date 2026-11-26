@@ -136,6 +136,7 @@ router.get(
                 description: business.description,
                 pricingText: business.pricingText,
                 photoUrls: business.photoPaths.map(photoUrl),
+                logoUrl: business.logoPath ? photoUrl(business.logoPath) : null,
                 status: business.status,
                 updatedAt: business.updatedAt.toISOString(),
               }),

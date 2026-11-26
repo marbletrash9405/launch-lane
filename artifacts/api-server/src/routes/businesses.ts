@@ -58,6 +58,8 @@ function toStudentBusiness(business: typeof businessesTable.$inferSelect, ownerN
     studentName: ownerName.split(/\s+/)[0] || "Student",
     photoPaths: business.photoPaths,
     photoUrls: business.photoPaths.map(toPhotoUrl),
+    logoPath: business.logoPath ?? null,
+    logoUrl: business.logoPath ? toPhotoUrl(business.logoPath) : null,
     status: business.status,
     rejectionReason: business.rejectionReason,
     pausedBy: business.pausedBy,
@@ -188,6 +190,7 @@ router.get("/businesses/public", async (req, res) => {
           pricingText: student.pricingText,
           studentName: student.studentName,
           photoUrls: student.photoUrls,
+          logoUrl: student.logoUrl,
         };
         }),
       }),
@@ -242,12 +245,18 @@ router.post("/businesses", ...studentAccess, async (req, res) => {
       res.status(400).json({ error: "Photos must be your own resized WebP uploads and no larger than 210 KB each." });
       return;
     }
+    const logoPath = parsed.data.logoPath ?? null;
+    if (logoPath && !(await validatePhotoPaths([logoPath], account.user.id))) {
+      res.status(400).json({ error: "The logo must be your own resized WebP upload and no larger than 210 KB." });
+      return;
+    }
     await setPrivatePhotoOwners(parsed.data.photoPaths, account.user.id);
     const [business] = await db
       .insert(businessesTable)
       .values({
         ownerId: account.user.id,
         ...parsed.data,
+        logoPath,
         status: "pending_review",
       })
       .returning();
@@ -290,6 +299,11 @@ router.patch("/businesses/:businessId", ...studentAccess, async (req, res) => {
       return;
     }
     await setPrivatePhotoOwners(nextPhotos, account.user.id);
+    const nextLogo = parsed.data.logoPath === undefined ? business.logoPath : parsed.data.logoPath;
+    if (nextLogo && nextLogo !== business.logoPath && !(await validatePhotoPaths([nextLogo], account.user.id))) {
+      res.status(400).json({ error: "The logo must be your own resized WebP upload and no larger than 210 KB." });
+      return;
+    }
 
     const nameOrCategoryChanged =
       (parsed.data.name !== undefined && parsed.data.name !== business.name) ||
@@ -298,7 +312,8 @@ router.patch("/businesses/:businessId", ...studentAccess, async (req, res) => {
       (parsed.data.description !== undefined && parsed.data.description !== business.description) ||
       (parsed.data.pricingText !== undefined && parsed.data.pricingText !== business.pricingText) ||
       (parsed.data.photoPaths !== undefined &&
-        JSON.stringify(parsed.data.photoPaths) !== JSON.stringify(business.photoPaths));
+        JSON.stringify(parsed.data.photoPaths) !== JSON.stringify(business.photoPaths)) ||
+      nextLogo !== business.logoPath;
     let status = business.status;
     let pausedBy = business.pausedBy;
     let rejectionReason = business.rejectionReason;
@@ -329,6 +344,7 @@ router.patch("/businesses/:businessId", ...studentAccess, async (req, res) => {
         .set({
           ...parsed.data,
           photoPaths: nextPhotos,
+          logoPath: nextLogo ?? null,
           status,
           pausedBy,
           rejectionReason,

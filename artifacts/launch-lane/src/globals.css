@@ -693,6 +693,12 @@ p { margin: 0; }
 }
 .phase-business-photo { width: 118px; aspect-ratio: 1; background: var(--mint-soft); color: var(--teal); display: grid; place-items: center; border-radius: 14px; overflow: hidden; font: 2.3rem var(--display); }
 .phase-business-photo img { width: 100%; height: 100%; object-fit: cover; }
+/* Logos are shown whole on a white tile instead of cropped like photos */
+.phase-business-photo img.is-logo, .photo-thumb.logo-thumb img { object-fit: contain; background: #fff; padding: 6px; }
+.photo-thumb.logo-thumb { background: #fff; border: 1px solid var(--line, #e4dccb); }
+.listing-title-with-logo { display: flex; align-items: center; gap: 12px; }
+.listing-logo { width: 48px; height: 48px; flex: none; object-fit: contain; background: #fff; border: 1px solid var(--line, #e4dccb); border-radius: 12px; padding: 4px; }
+.business-logo-sm { width: 28px; height: 28px; object-fit: contain; background: #fff; border-radius: 8px; padding: 2px; }
 .phase-business-copy { min-width: 0; }
 .business-title-line { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .business-title-line h3, .admin-business h3 { font-family: var(--display); font-weight: 400; color: var(--teal); font-size: 1.45rem; }

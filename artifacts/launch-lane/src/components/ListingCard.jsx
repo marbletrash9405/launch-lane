@@ -8,9 +8,12 @@ export default function ListingCard({ listing }) {
       <span className={`pill ${isOffer ? "pill-offer" : "pill-job"}`}>
         {isOffer ? "Student service" : listing.businessName ? "Opening" : "Job"}
       </span>
-      <div>
+      <div className={listing.logoUrl ? "listing-title-with-logo" : undefined}>
+        {listing.logoUrl && <img className="listing-logo" src={listing.logoUrl} alt={`${listing.title} logo`} loading="lazy" data-testid={`img-listing-logo-${listing.id}`} />}
+        <div>
         <h3 data-testid={`text-listing-title-${listing.id}`}>{listing.title}</h3>
         <p className="cat" data-testid={`text-listing-category-${listing.id}`}>{listing.category}</p>
+        </div>
       </div>
       <p className="desc" data-testid={`text-listing-description-${listing.id}`}>{listing.description}</p>
 

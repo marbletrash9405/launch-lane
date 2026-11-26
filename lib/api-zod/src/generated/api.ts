@@ -28,7 +28,8 @@ export const GetPublicBusinessesResponse = zod.object({
   "description": zod.string(),
   "pricingText": zod.string(),
   "studentName": zod.string(),
-  "photoUrls": zod.array(zod.string())
+  "photoUrls": zod.array(zod.string()),
+  "logoUrl": zod.string().nullable()
 }))
 })
 
@@ -44,9 +45,11 @@ export const GetMyBusinessesResponse = zod.object({
   "description": zod.string(),
   "pricingText": zod.string(),
   "studentName": zod.string(),
-  "photoUrls": zod.array(zod.string())
+  "photoUrls": zod.array(zod.string()),
+  "logoUrl": zod.string().nullable()
 }).and(zod.object({
   "photoPaths": zod.array(zod.string()),
+  "logoPath": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'pending_guardian', 'live', 'paused', 'rejected']),
   "rejectionReason": zod.string().nullable(),
   "pausedBy": zod.string().nullable(),
@@ -72,12 +75,14 @@ export const createBusinessBodyPhotoPathsMax = 3;
 
 
 
+
 export const CreateBusinessBody = zod.object({
   "name": zod.string().min(createBusinessBodyNameMin).max(createBusinessBodyNameMax),
   "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']),
   "description": zod.string().min(createBusinessBodyDescriptionMin).max(createBusinessBodyDescriptionMax),
   "pricingText": zod.string().min(1).max(createBusinessBodyPricingTextMax),
-  "photoPaths": zod.array(zod.string().min(1)).max(createBusinessBodyPhotoPathsMax)
+  "photoPaths": zod.array(zod.string().min(1)).max(createBusinessBodyPhotoPathsMax),
+  "logoPath": zod.string().min(1).nullish()
 })
 
 export const CreateBusinessResponse = zod.object({
@@ -87,9 +92,11 @@ export const CreateBusinessResponse = zod.object({
   "description": zod.string(),
   "pricingText": zod.string(),
   "studentName": zod.string(),
-  "photoUrls": zod.array(zod.string())
+  "photoUrls": zod.array(zod.string()),
+  "logoUrl": zod.string().nullable()
 }).and(zod.object({
   "photoPaths": zod.array(zod.string()),
+  "logoPath": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'pending_guardian', 'live', 'paused', 'rejected']),
   "rejectionReason": zod.string().nullable(),
   "pausedBy": zod.string().nullable(),
@@ -118,12 +125,14 @@ export const updateBusinessBodyPhotoPathsMax = 3;
 
 
 
+
 export const UpdateBusinessBody = zod.object({
   "name": zod.string().min(updateBusinessBodyNameMin).max(updateBusinessBodyNameMax).optional(),
   "category": zod.enum(['Bin cleaning', 'Lawn care', 'Babysitting', 'Pet care', 'Digital support', 'Hauling', 'Tutoring', 'Others']).optional(),
   "description": zod.string().min(updateBusinessBodyDescriptionMin).max(updateBusinessBodyDescriptionMax).optional(),
   "pricingText": zod.string().min(1).max(updateBusinessBodyPricingTextMax).optional(),
-  "photoPaths": zod.array(zod.string().min(1)).max(updateBusinessBodyPhotoPathsMax).optional()
+  "photoPaths": zod.array(zod.string().min(1)).max(updateBusinessBodyPhotoPathsMax).optional(),
+  "logoPath": zod.string().min(1).nullish()
 })
 
 export const UpdateBusinessResponse = zod.object({
@@ -133,9 +142,11 @@ export const UpdateBusinessResponse = zod.object({
   "description": zod.string(),
   "pricingText": zod.string(),
   "studentName": zod.string(),
-  "photoUrls": zod.array(zod.string())
+  "photoUrls": zod.array(zod.string()),
+  "logoUrl": zod.string().nullable()
 }).and(zod.object({
   "photoPaths": zod.array(zod.string()),
+  "logoPath": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'pending_guardian', 'live', 'paused', 'rejected']),
   "rejectionReason": zod.string().nullable(),
   "pausedBy": zod.string().nullable(),
@@ -162,9 +173,11 @@ export const SetBusinessPauseResponse = zod.object({
   "description": zod.string(),
   "pricingText": zod.string(),
   "studentName": zod.string(),
-  "photoUrls": zod.array(zod.string())
+  "photoUrls": zod.array(zod.string()),
+  "logoUrl": zod.string().nullable()
 }).and(zod.object({
   "photoPaths": zod.array(zod.string()),
+  "logoPath": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'pending_guardian', 'live', 'paused', 'rejected']),
   "rejectionReason": zod.string().nullable(),
   "pausedBy": zod.string().nullable(),
@@ -823,9 +836,11 @@ export const GetAdminBusinessesResponse = zod.object({
   "description": zod.string(),
   "pricingText": zod.string(),
   "studentName": zod.string(),
-  "photoUrls": zod.array(zod.string())
+  "photoUrls": zod.array(zod.string()),
+  "logoUrl": zod.string().nullable()
 }).and(zod.object({
   "photoPaths": zod.array(zod.string()),
+  "logoPath": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'pending_guardian', 'live', 'paused', 'rejected']),
   "rejectionReason": zod.string().nullable(),
   "pausedBy": zod.string().nullable(),
@@ -865,9 +880,11 @@ export const ReviewBusinessResponse = zod.object({
   "description": zod.string(),
   "pricingText": zod.string(),
   "studentName": zod.string(),
-  "photoUrls": zod.array(zod.string())
+  "photoUrls": zod.array(zod.string()),
+  "logoUrl": zod.string().nullable()
 }).and(zod.object({
   "photoPaths": zod.array(zod.string()),
+  "logoPath": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'pending_guardian', 'live', 'paused', 'rejected']),
   "rejectionReason": zod.string().nullable(),
   "pausedBy": zod.string().nullable(),
@@ -901,9 +918,11 @@ export const SetAdminBusinessPauseResponse = zod.object({
   "description": zod.string(),
   "pricingText": zod.string(),
   "studentName": zod.string(),
-  "photoUrls": zod.array(zod.string())
+  "photoUrls": zod.array(zod.string()),
+  "logoUrl": zod.string().nullable()
 }).and(zod.object({
   "photoPaths": zod.array(zod.string()),
+  "logoPath": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'pending_guardian', 'live', 'paused', 'rejected']),
   "rejectionReason": zod.string().nullable(),
   "pausedBy": zod.string().nullable(),
@@ -1135,6 +1154,7 @@ export const GetGuardianDashboardResponse = zod.object({
   "description": zod.string(),
   "pricingText": zod.string(),
   "photoUrls": zod.array(zod.string()),
+  "logoUrl": zod.string().nullable(),
   "status": zod.enum(['pending_review', 'pending_guardian', 'live', 'paused', 'rejected']),
   "updatedAt": zod.coerce.date()
 })),

@@ -24,6 +24,9 @@ export const businessesTable = pgTable("businesses", {
   description: text("description").notNull(),
   pricingText: text("pricing_text").notNull(),
   photoPaths: text("photo_paths").array().notNull().default([]),
+  // Optional logo, stored like photos (private WebP upload, served only
+  // publicly once the business is live).
+  logoPath: text("logo_path"),
   status: businessStatusEnum("status").notNull().default("pending_review"),
   rejectionReason: text("rejection_reason"),
   pausedBy: businessPauseSourceEnum("paused_by"),

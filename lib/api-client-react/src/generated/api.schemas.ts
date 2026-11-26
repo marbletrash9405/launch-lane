@@ -322,6 +322,8 @@ export interface GuardianBusinessSummary {
   description: string;
   pricingText: string;
   photoUrls: string[];
+  /** @nullable */
+  logoUrl: string | null;
   status: BusinessStatus;
   updatedAt: string;
 }
@@ -435,6 +437,11 @@ export interface BusinessInput {
      * @items.minLength 1
      */
   photoPaths: string[];
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  logoPath?: string | null;
 }
 
 export interface BusinessUpdateInput {
@@ -459,6 +466,11 @@ export interface BusinessUpdateInput {
      * @items.minLength 1
      */
   photoPaths?: string[];
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  logoPath?: string | null;
 }
 
 export interface PublicBusiness {
@@ -469,10 +481,14 @@ export interface PublicBusiness {
   pricingText: string;
   studentName: string;
   photoUrls: string[];
+  /** @nullable */
+  logoUrl: string | null;
 }
 
 export type StudentBusiness = PublicBusiness & ({
   photoPaths: string[];
+  /** @nullable */
+  logoPath: string | null;
   status: BusinessStatus;
   /** @nullable */
   rejectionReason: string | null;

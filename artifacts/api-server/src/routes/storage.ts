@@ -5,7 +5,7 @@ import {
   RequestBusinessPhotoUploadResponse,
 } from '@workspace/api-zod';
 import express, { Router, type IRouter, type Request, type Response } from 'express';
-import { arrayContains, db, businessesTable } from '@workspace/db';
+import { arrayContains, db, businessesTable, eq, or } from '@workspace/db';
 
 import {
   isPhotoObjectPath,
@@ -124,7 +124,12 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
         status: businessesTable.status,
       })
       .from(businessesTable)
-      .where(arrayContains(businessesTable.photoPaths, [objectPath]));
+      .where(
+        or(
+          arrayContains(businessesTable.photoPaths, [objectPath]),
+          eq(businessesTable.logoPath, objectPath),
+        ),
+      );
     if (!relatedBusinesses.length) {
       res.status(404).json({ error: 'Object not found' });
       return;

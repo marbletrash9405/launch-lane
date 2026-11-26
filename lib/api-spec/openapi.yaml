@@ -1559,12 +1559,14 @@ components:
           type: array
           items:
             type: string
+        logoUrl:
+          type: [string, "null"]
         status:
           $ref: "#/components/schemas/BusinessStatus"
         updatedAt:
           type: string
           format: date-time
-      required: [id, name, category, description, pricingText, photoUrls, status, updatedAt]
+      required: [id, name, category, description, pricingText, photoUrls, status, updatedAt, logoUrl]
     GuardianBookingSummary:
       type: object
       properties:
@@ -1740,6 +1742,9 @@ components:
           items:
             type: string
             minLength: 1
+        logoPath:
+          type: [string, "null"]
+          minLength: 1
       required: [name, category, description, pricingText, photoPaths]
     BusinessUpdateInput:
       type: object
@@ -1764,6 +1769,9 @@ components:
           items:
             type: string
             minLength: 1
+        logoPath:
+          type: [string, "null"]
+          minLength: 1
     PublicBusiness:
       type: object
       properties:
@@ -1784,7 +1792,9 @@ components:
           type: array
           items:
             type: string
-      required: [id, name, category, description, pricingText, studentName, photoUrls]
+        logoUrl:
+          type: [string, "null"]
+      required: [id, name, category, description, pricingText, studentName, photoUrls, logoUrl]
     StudentBusiness:
       allOf:
         - $ref: "#/components/schemas/PublicBusiness"
@@ -1794,6 +1804,8 @@ components:
               type: array
               items:
                 type: string
+            logoPath:
+              type: [string, "null"]
             status:
               $ref: "#/components/schemas/BusinessStatus"
             rejectionReason:
@@ -1804,7 +1816,7 @@ components:
               type: string
             updatedAt:
               type: string
-          required: [photoPaths, status, rejectionReason, pausedBy, createdAt, updatedAt]
+          required: [photoPaths, logoPath, status, rejectionReason, pausedBy, createdAt, updatedAt]
     AdminBusiness:
       allOf:
         - $ref: "#/components/schemas/StudentBusiness"

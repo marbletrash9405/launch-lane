@@ -12,16 +12,16 @@ import { categories } from "@/data/categories";
 import { IncomingBookings, ResidentBookings } from "@/components/BookingPanels";
 import { ResidentJobs, StudentJobApplications, BusinessOpenings } from "@/components/JobDashboardPanels";
 
-const blankBusiness = { name: "", category: categories[0], description: "", pricingText: "", photoPaths: [] };
+const blankBusiness = { name: "", category: categories[0], description: "", pricingText: "", photoPaths: [], logoPath: null };
 const labels = {
   pending_review: "In review", pending_guardian: "Guardian approval", live: "Live",
   paused: "Paused", rejected: "Needs changes",
 };
 
-async function makeWebp(file) {
+async function makeWebp(file, maxWidth = 1600) {
   if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) throw new Error("Choose a JPEG, PNG, or WebP image.");
   const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, 1600 / bitmap.width);
+  const scale = Math.min(1, maxWidth / bitmap.width);
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(bitmap.width * scale));
   canvas.height = Math.max(1, Math.round(bitmap.height * scale));
@@ -47,8 +47,9 @@ async function makeWebp(file) {
 function BusinessEditor({ existing, onClose, onSaved }) {
   const [form, setForm] = useState(() => existing ? {
     name: existing.name, category: existing.category, description: existing.description,
-    pricingText: existing.pricingText, photoPaths: [...existing.photoPaths],
+    pricingText: existing.pricingText, photoPaths: [...existing.photoPaths], logoPath: existing.logoPath ?? null,
   } : { ...blankBusiness });
+  const [logoPreview, setLogoPreview] = useState(() => existing?.logoUrl ? { url: existing.logoUrl, existing: true } : null);
   const [previews, setPreviews] = useState(() => (existing?.photoUrls ?? []).map((url, index) => ({
     url, path: existing.photoPaths[index], existing: true,
   })));
@@ -88,6 +89,40 @@ function BusinessEditor({ existing, onClose, onSaved }) {
     } finally { setUploading(false); }
   }
 
+  async function uploadOne(file, maxWidth) {
+    const blob = await makeWebp(file, maxWidth);
+    const result = await requestUpload.mutateAsync({
+      data: { name: file.name.replace(/\.[^.]+$/, "") + ".webp", size: blob.size, contentType: "image/webp" },
+    });
+    const response = await fetch(result.uploadURL, {
+      method: "PUT", headers: { "Content-Type": "image/webp" }, body: blob,
+    });
+    if (!response.ok) throw new Error("The upload did not finish. Please try again.");
+    return { url: URL.createObjectURL(blob), path: result.objectPath };
+  }
+
+  async function addLogo(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setError("");
+    setUploading(true);
+    try {
+      const uploaded = await uploadOne(file, 600);
+      if (logoPreview && !logoPreview.existing) URL.revokeObjectURL(logoPreview.url);
+      setLogoPreview({ url: uploaded.url, existing: false });
+      setForm((current) => ({ ...current, logoPath: uploaded.path }));
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "We couldn't upload that logo.");
+    } finally { setUploading(false); }
+  }
+
+  function removeLogo() {
+    if (logoPreview && !logoPreview.existing) URL.revokeObjectURL(logoPreview.url);
+    setLogoPreview(null);
+    setForm((current) => ({ ...current, logoPath: null }));
+  }
+
   function removePhoto(index) {
     const removed = previews[index];
     if (!removed.existing) URL.revokeObjectURL(removed.url);
@@ -118,6 +153,12 @@ function BusinessEditor({ existing, onClose, onSaved }) {
         <label className="field"><span>Category</span><select className="select" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} data-testid="select-business-category">{categories.map((category) => <option key={category}>{category}</option>)}</select></label>
         <label className="field"><span>What do you offer?</span><textarea className="textarea" required minLength="10" maxLength="2000" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} data-testid="input-business-description" /></label>
         <label className="field"><span>Pricing</span><input className="input" required minLength="1" maxLength="300" placeholder="For example, $15 per visit" value={form.pricingText} onChange={(e) => setForm({ ...form, pricingText: e.target.value })} data-testid="input-business-pricing" /></label>
+        <div className="field" data-testid="field-business-logo">
+          <span>Logo <small className="optional">(optional)</small></span>
+          <p className="phase-help">If your business has a logo, add it here. JPEG, PNG, or WebP; it&apos;s resized before upload.</p>
+          {logoPreview && <div className="photo-strip"><div className="photo-thumb logo-thumb" data-testid="logo-preview"><img src={logoPreview.url} alt="Business logo" /><button type="button" onClick={removeLogo} aria-label="Remove logo" data-testid="button-remove-logo">Remove</button></div></div>}
+          {!logoPreview && <input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={addLogo} data-testid="input-business-logo" />}
+        </div>
         <div className="field">
           <span>Photos <small className="optional">({previews.length}/3, optional)</small></span>
           <p className="phase-help">JPEG, PNG, or WebP. Images are resized and compressed before upload.</p>
@@ -206,7 +247,7 @@ export default function DashboardPage() {
               {myBusinessesQuery.isLoading ? <div className="phase-panel skeleton-panel" data-testid="loading-my-businesses"><span /><span /><span /></div> :
                 myBusinessesQuery.isError ? <div className="phase-empty" role="alert" data-testid="error-my-businesses"><p>We couldn&apos;t load your businesses.</p><button className="text-button" type="button" onClick={() => myBusinessesQuery.refetch()} data-testid="button-retry-my-businesses">Try again</button></div> :
                   sortedBusinesses.length ? <div className="phase-business-list">{sortedBusinesses.map((business) => <article className="phase-business" key={business.id} data-testid={`card-my-business-${business.id}`}>
-                    <div className="phase-business-photo">{business.photoUrls?.[0] ? <img src={business.photoUrls[0]} alt="" /> : <span>{business.category.slice(0, 1)}</span>}</div>
+                    <div className="phase-business-photo">{business.logoUrl || business.photoUrls?.[0] ? <img src={business.logoUrl || business.photoUrls[0]} alt="" className={business.logoUrl ? "is-logo" : undefined} /> : <span>{business.category.slice(0, 1)}</span>}</div>
                     <div className="phase-business-copy"><div className="business-title-line"><h3 data-testid={`text-business-name-${business.id}`}>{business.name}</h3><StatusPill status={business.status} /></div><p className="business-category">{business.category} <span>·</span> {business.pricingText}</p><p>{business.description}</p>
                       {business.status === "rejected" && business.rejectionReason && <div className="rejection-note" data-testid={`text-rejection-reason-${business.id}`}><strong>Review note</strong>{business.rejectionReason}</div>}
                        <div className="phase-business-actions"><button type="button" className="text-button" onClick={() => setEditor(business)} data-testid={`button-edit-business-${business.id}`}>Edit details</button>{business.status === "live" && <button type="button" className="text-button" disabled={pauseBusiness.isPending} onClick={() => setPaused(business)} data-testid={`button-toggle-pause-${business.id}`}>Pause listing</button>}{business.status === "paused" && business.pausedBy === "student" && <button type="button" className="text-button" disabled={pauseBusiness.isPending} onClick={() => setPaused(business)} data-testid={`button-toggle-pause-${business.id}`}>Resume listing</button>}{business.status === "paused" && business.pausedBy === "admin" && <span className="business-category" data-testid={`text-admin-paused-business-${business.id}`}>Paused by Launch Lane</span>}</div>
@@ -227,7 +268,7 @@ export default function DashboardPage() {
                   guardianDashboard.data?.students?.length ? guardianDashboard.data.students.map((student) => <article className="phase-panel guardian-student" key={student.studentId}>
                     <header className="guardian-student-head"><div><p className="eyebrow">Student account · age {student.age}</p><h2>{student.firstName}</h2></div><span className="phase-count">{student.businesses.length} {student.businesses.length === 1 ? "service" : "services"}</span></header>
                     <section className="guardian-subsection"><div className="phase-section-title"><div><p className="eyebrow">Read-only details</p><h3>Services</h3></div></div>
-                      {student.businesses.length ? <div className="guardian-business-grid">{student.businesses.map((business) => <article className="guardian-business" key={business.id}>{business.photoUrls?.[0] && <img src={business.photoUrls[0]} alt="" loading="lazy" />}<div className="business-title-line"><h4>{business.name}</h4><StatusPill status={business.status} /></div><p className="business-category">{business.category} · {business.pricingText}</p><p>{business.description}</p></article>)}</div> : <p className="phase-help">No business listings yet.</p>}
+                      {student.businesses.length ? <div className="guardian-business-grid">{student.businesses.map((business) => <article className="guardian-business" key={business.id}>{business.photoUrls?.[0] && <img src={business.photoUrls[0]} alt="" loading="lazy" />}<div className="business-title-line">{business.logoUrl && <img className="business-logo-sm" src={business.logoUrl} alt="" loading="lazy" />}<h4>{business.name}</h4><StatusPill status={business.status} /></div><p className="business-category">{business.category} · {business.pricingText}</p><p>{business.description}</p></article>)}</div> : <p className="phase-help">No business listings yet.</p>}
                     </section>
                     <section className="guardian-subsection"><div className="phase-section-title"><div><p className="eyebrow">Work activity</p><h3>Bookings & applications</h3></div></div>
                       <div className="guardian-activity-grid"><div><h4>Bookings</h4>{student.bookings.length ? student.bookings.map((booking) => <div className="guardian-activity" key={booking.id}><span>{booking.businessName}</span><span className={`status-pill booking-status-${booking.status}`}>{booking.status.replaceAll("_", " ")}</span></div>) : <p className="phase-help">No bookings yet.</p>}</div><div><h4>Job applications</h4>{student.jobApplications.length ? student.jobApplications.map((application) => <div className="guardian-activity" key={application.id}><span>{application.jobTitle}</span><span className={`status-pill application-status-${application.status}`}>{application.status.replaceAll("_", " ")}</span></div>) : <p className="phase-help">No applications yet.</p>}</div></div>
