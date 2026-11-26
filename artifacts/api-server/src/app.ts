@@ -6,6 +6,12 @@ import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
+// The Vercel Clerk integration names the publishable key
+// NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY; @clerk/express reads CLERK_PUBLISHABLE_KEY.
+if (!process.env.CLERK_PUBLISHABLE_KEY && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+  process.env.CLERK_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+}
+
 const app: Express = express();
 app.set("trust proxy", 1);
 
@@ -41,7 +47,12 @@ const guardianApprovalLimiter = createRateLimiter({
 app.use("/api/guardian/approvals", guardianApprovalLimiter);
 
 // Reads CLERK_SECRET_KEY and CLERK_PUBLISHABLE_KEY from the environment.
-app.use(clerkMiddleware());
+app.use(
+  clerkMiddleware({
+    publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+    secretKey: process.env.CLERK_SECRET_KEY,
+  }),
+);
 
 app.use("/api", router);
 

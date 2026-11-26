@@ -16,7 +16,11 @@ function run(command, env = {}) {
   execSync(command, { cwd: root, stdio: "inherit", env: { ...process.env, ...env } });
 }
 
-const publishableKey = process.env.VITE_CLERK_PUBLISHABLE_KEY || process.env.CLERK_PUBLISHABLE_KEY;
+// The Vercel Clerk integration names it NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.
+const publishableKey =
+  process.env.VITE_CLERK_PUBLISHABLE_KEY ||
+  process.env.CLERK_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 if (!publishableKey) {
   throw new Error(
     "CLERK_PUBLISHABLE_KEY is not set. Add it in Vercel → Settings → Environment Variables, then redeploy.",
